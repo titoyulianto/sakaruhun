@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sakaruhun - Sadulur Sadesa (Desktop)</title>
+<title>Sakaruhun - Sadulur Sadesa</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -36,16 +36,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 .drop-text { font-size: 11px; font-weight: bold; fill: #64748b; pointer-events: none; text-anchor: middle; }
 
 /* Geni-Style Action Badges (D3 Embedded) */
-.action-badge { cursor: pointer; transition: all 0.2s; }
+.action-badge { cursor: pointer; transition: all 0.2s; pointer-events: all; }
 .action-badge rect { stroke-width: 1px; rx: 4px; ry: 4px; }
 .action-badge.blue rect { fill: #dbeafe; stroke: #93c5fd; }
-.action-badge.blue text { fill: #1d4ed8; font-weight: bold; font-size: 10px; text-anchor: middle; }
+.action-badge.blue text { fill: #1d4ed8; font-weight: bold; font-size: 10px; text-anchor: middle; pointer-events: none;}
 .action-badge.pink rect { fill: #fce7f3; stroke: #f9a8d4; }
-.action-badge.pink text { fill: #be185d; font-weight: bold; font-size: 10px; text-anchor: middle; }
+.action-badge.pink text { fill: #be185d; font-weight: bold; font-size: 10px; text-anchor: middle; pointer-events: none;}
 .action-badge.green rect { fill: #d1fae5; stroke: #6ee7b7; }
-.action-badge.green text { fill: #047857; font-weight: bold; font-size: 10px; text-anchor: middle; }
+.action-badge.green text { fill: #047857; font-weight: bold; font-size: 10px; text-anchor: middle; pointer-events: none;}
 .action-badge.gray rect { fill: #f1f5f9; stroke: #cbd5e1; }
-.action-badge.gray text { fill: #475569; font-weight: bold; font-size: 10px; text-anchor: middle; }
+.action-badge.gray text { fill: #475569; font-weight: bold; font-size: 10px; text-anchor: middle; pointer-events: none;}
 .action-badge:hover rect { filter: brightness(0.95); stroke-width: 2px; }
 
 /* Selection Outline */
@@ -129,7 +129,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
     <!-- MODAL TAMBAH DATA BIKIN BARU -->
     <div id="modal-tambah" class="modal">
         <div class="modal-card relative border-t-4 border-emerald-500">
-            <button id="btn-close-modal-tambah" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
+            <button onclick="hideModal('modal-tambah')" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
             <h3 id="modal-tambah-title" class="font-bold text-lg mb-4 text-slate-800">Tambah Individu Baru</h3>
 
             <form id="form-tambah" class="space-y-4">
@@ -163,7 +163,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
     <!-- MODAL KELOLA & PAUTKAN (EDIT) DATA -->
     <div id="modal-edit" class="modal">
         <div class="modal-card relative border-t-4 border-amber-500">
-            <button id="btn-close-modal-edit" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
+            <button onclick="hideModal('modal-edit')" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
             <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-cog text-amber-500 mr-2"></i>Kelola Data / Edit Profil</h3>
 
             <form id="form-edit" class="space-y-4">
@@ -210,6 +210,52 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
+        // ==========================================
+        // EXPOSE FUNCTION KE GLOBAL (WINDOW) AGAR TIDAK ERROR "is not a function"
+        // ==========================================
+        window.$ = id => document.getElementById(id);
+        
+        window.showModal = function(id) { window.$(id).classList.add("open"); };
+        window.hideModal = function(id) { window.$(id).classList.remove("open"); };
+        window.notify = function(msg) { alert(msg); };
+        window.escapeHtml = function(v) { return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); };
+        
+        window.openTambahModal = function(context, targetKey, targetName, targetGender) {
+            window.$("form-tambah").reset();
+            window.$("tambah-context").value = context;
+            window.$("tambah-target").value = targetKey || "";
+            const title = window.$("modal-tambah-title");
+
+            if (context === 'ADD_CHILD') {
+                title.innerHTML = `<i class="fas fa-child text-emerald-600 mr-2"></i>Bikin Anak Baru dari ${escapeHtml(targetName)}`;
+            } else if (context === 'ADD_SPOUSE') {
+                title.innerHTML = `<i class="fas fa-heart text-pink-500 mr-2"></i>Bikin Pasangan Baru untuk ${escapeHtml(targetName)}`;
+                window.$("select-gender").value = targetGender === 'L' ? 'P' : 'L';
+            } else if (context === 'ADD_PARENT') {
+                title.innerHTML = `<i class="fas fa-arrow-up text-blue-600 mr-2"></i>Bikin Ortu Baru untuk ${escapeHtml(targetName)}`;
+            } else if (context === 'ADD_SIBLING') {
+                title.innerHTML = `<i class="fas fa-user-friends text-amber-500 mr-2"></i>Bikin Saudara Baru untuk ${escapeHtml(targetName)}`;
+            } else {
+                title.innerHTML = `<i class="fas fa-user-secret text-purple-600 mr-2"></i>Bikin Garis Keturunan Baru`;
+            }
+            window.showModal('modal-tambah');
+            setTimeout(() => window.$("input-nama").focus(), 100);
+        };
+
+        window.bukaModalEditGeni = function(key, nama, gender, parentId, spouseId) {
+            window.$("edit-dbkey").value = key;
+            window.$("edit-nama").value = nama;
+            window.$("edit-gender").value = gender;
+            
+            fillSelectEdit(window.$("edit-parent"), parentId);
+            fillSelectEdit(window.$("edit-spouse"), spouseId);
+            
+            window.showModal('modal-edit');
+        };
+
+        // ==========================================
+        // FIREBASE SETUP & STATE
+        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyA0JmHvkhB5oXPvnDMvcHJyooqSsLIccGQ",
             authDomain: "sakaruhun-desa.firebaseapp.com",
@@ -220,7 +266,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             appId: "1:69221074382:web:b15104ddc2618c1c70979f"
         };
 
-        const $ = id => document.getElementById(id);
         const DB_PATH = "silsilah_desa_v3";
 
         let db, wargaRef;
@@ -233,58 +278,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         
         let isDragMode = false;
         let draggedNode = null;
-        let dropTarget = null;
         
         // Simpan state siapa yang lagi diklik buat nampilin UI Geni
         let selectedNodeId = null;
 
-        const modalTambah = $("modal-tambah");
-        const modalEdit = $("modal-edit");
-        const formTambah = $("form-tambah");
-        const formEdit = $("form-edit");
-
-        function showModal(el) { el.classList.add("open"); }
-        function hideModal(el) { el.classList.remove("open"); }
-        function notify(msg) { alert(msg); }
-        function escapeHtml(v) { return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
         function randomCoords() { return { lat: -6.832 + (Math.random() - .5) * .005, lng: 108.214 + (Math.random() - .5) * .005 }; }
 
-        // EXPOSE TO WINDOW UNTUK EVENT ONCLICK DARI D3.JS
-        window.bukaModalTambahGeni = function(context, targetKey, targetName, targetGender) {
-            formTambah.reset();
-            $("tambah-context").value = context;
-            $("tambah-target").value = targetKey || "";
-            const title = $("modal-tambah-title");
-
-            if (context === 'ADD_CHILD') {
-                title.innerHTML = `<i class="fas fa-child text-emerald-600 mr-2"></i>Bikin Anak Baru dari ${escapeHtml(targetName)}`;
-            } else if (context === 'ADD_SPOUSE') {
-                title.innerHTML = `<i class="fas fa-heart text-pink-500 mr-2"></i>Bikin Pasangan Baru untuk ${escapeHtml(targetName)}`;
-                $("select-gender").value = targetGender === 'L' ? 'P' : 'L';
-            } else if (context === 'ADD_PARENT') {
-                title.innerHTML = `<i class="fas fa-arrow-up text-blue-600 mr-2"></i>Bikin Ortu Baru untuk ${escapeHtml(targetName)}`;
-            } else if (context === 'ADD_SIBLING') {
-                title.innerHTML = `<i class="fas fa-user-friends text-amber-500 mr-2"></i>Bikin Saudara Baru untuk ${escapeHtml(targetName)}`;
-            } else {
-                title.innerHTML = `<i class="fas fa-user-secret text-purple-600 mr-2"></i>Bikin Garis Keturunan Baru`;
-            }
-            showModal(modalTambah);
-            setTimeout(() => $("input-nama").focus(), 100);
-        };
-
-        window.bukaModalEditGeni = function(key, nama, gender, parentId, spouseId) {
-            $("edit-dbkey").value = key;
-            $("edit-nama").value = nama;
-            $("edit-gender").value = gender;
-            
-            fillSelectEdit($("edit-parent"), parentId);
-            fillSelectEdit($("edit-spouse"), spouseId);
-            
-            showModal(modalEdit);
-        };
-
         function fillSelectEdit(sel, selectedKey) {
-            const currentKey = $("edit-dbkey").value;
+            const currentKey = window.$("edit-dbkey").value;
             let options = '<option value="">-- Kosong / Tidak Dipautkan --</option>';
             dataGlobal.forEach(p => {
                 if (p.dbKey !== currentKey) {
@@ -352,7 +353,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
         function renderTree() {
             if (!window.d3) return;
-            const container = $("tree-container");
+            const container = window.$("tree-container");
             const width = Math.max(container.clientWidth, 600);
             const height = Math.max(container.clientHeight, 500);
 
@@ -361,7 +362,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
             svg.selectAll("*").remove();
             
-            // Klik background untuk deselect node
+            // Background Click untuk Deselect Geni UI
             svg.on("click", () => {
                 if(selectedNodeId) {
                     selectedNodeId = null;
@@ -437,7 +438,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 }
 
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(primary);
-                d3.tree().nodeSize([320, 180])(root);
+                d3.tree().nodeSize([280, 180])(root);
                 const nodes = root.descendants();
                 
                 nodes.forEach(n => {
@@ -454,10 +455,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         const pairKey = [n.data.dbKey, id].sort().join("::");
                         if (pairsRendered.has(pairKey)) return;
                         pairsRendered.add(pairKey);
-                        
                         const person = byIdGlobal.get(id);
                         if(person) {
-                            let sx = n.x + 160, sy = n.y; 
+                            let sx = n.x + 150, sy = n.y; 
                             if (person.manualX !== null && person.manualX !== undefined) sx = person.manualX;
                             if (person.manualY !== null && person.manualY !== undefined) sy = person.manualY;
                             spousePositions.push({ data: { ...person, status: "Pasangan" }, source: n, x: sx, y: sy, isSpouse: true });
@@ -501,7 +501,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 });
                 spousePositions.forEach(s => { drawNodes.push(s); });
 
-                // GAMBAR GARIS 
+                // GAMBAR GARIS POHON & PASANGAN
                 g.selectAll(".link").data(root.links().filter(l => !l.source.data.isDummy)).join("path").attr("class", "link")
                     .attr("d", d => {
                         let startX = d.source.x, startY = d.source.y;
@@ -523,12 +523,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link")
                     .attr("d", sp => `M${sp.source.x+17},${sp.source.y} L${sp.x-17},${sp.y}`);
 
-                // GAMBAR ORANG (NODE)
+                // GAMBAR NODE (ORANG)
                 nodeSelection = g.selectAll(".node").data(drawNodes).join("g")
                     .attr("class", d => `node ${d.data.gender === "P" ? "perempuan" : "laki"} ${d.data.dbKey === selectedNodeId ? "selected" : ""}`)
                     .attr("transform", d => `translate(${d.x},${d.y})`);
 
-                // DRAG LOGIC (Aktif Hanya Jika Mode Geser Hidup)
+                // DRAG LOGIC (Hanya saat mode geser)
                 const dragBehavior = d3.drag()
                     .filter(() => isDragMode)
                     .on("start", function(event, d) {
@@ -539,69 +539,68 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     .on("drag", function(event, d) {
                         d.x += event.dx; d.y += event.dy;
                         d3.select(this).attr("transform", `translate(${d.x},${d.y})`);
-                        // Update link dinamis omitted for brevity, but position is tracked
                     })
                     .on("end", async function(event, d) {
                         d3.select(this).style("pointer-events", "all");
                         await update(ref(db, `${DB_PATH}/${d.data.dbKey}`), { manualX: d.x, manualY: d.y });
                         draggedNode = null;
-                        renderTree(); // Snap back refresh
+                        renderTree(); 
                     });
 
                 // =========================================================================
-                // UI GENI-STYLE: BADGE ACTION (Muncul hanya pada Node yang diklik)
+                // UI GENI-STYLE: BADGE ACTION (Muncul saat Node diklik, jika Mode Geser Off)
                 // =========================================================================
                 nodeSelection.on("click", (event, d) => {
                     if (isDragMode) return;
-                    event.stopPropagation(); // Mencegah klik svg (deselect)
+                    event.stopPropagation(); // Biar svg gak nangkep klik
                     
                     if (selectedNodeId === d.data.dbKey) {
-                        selectedNodeId = null; // Toggle (matikan kalau diklik 2x)
+                        selectedNodeId = null; // Toggle off
                     } else {
                         selectedNodeId = d.data.dbKey;
                     }
-                    renderTree(); // Re-render untuk nampilin badge
+                    renderTree(); 
                 }).call(dragBehavior);
 
                 nodeSelection.append("circle").attr("r", 20);
                 nodeSelection.append("text").attr("dy", -32).attr("text-anchor", "middle").text(d => d.data.name.length > 25 ? d.data.name.slice(0, 23) + "…" : d.data.name);
                 nodeSelection.append("text").attr("class", "status").attr("dy", 35).attr("text-anchor", "middle").text(d => d.data.status);
 
-                // Render Badge Cerdas pada selectedNode
+                // Render Action Badges khusus di Node yang lagi dipilih
                 nodeSelection.each(function(d) {
                     if (d.data.dbKey === selectedNodeId) {
                         const nodeGroup = d3.select(this);
                         const hasParent = d.data.parentId && d.data.parentId !== DUMMY_ROOT;
 
-                        // 1. TOMBOL ATAS: TAMBAH AYAH & IBU (Kalau belum punya)
+                        // TOMBOL ATAS: TAMBAH AYAH & IBU (Kalau belum punya)
                         if (!hasParent) {
                             const btnAyah = nodeGroup.append("g").attr("class", "action-badge blue").attr("transform", "translate(-65, -80)")
                                 .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT', d.data.dbKey, d.data.name, 'L'); });
                             btnAyah.append("rect").attr("width", 60).attr("height", 20);
                             btnAyah.append("text").attr("x", 30).attr("y", 13).text("+ Ayah");
-                            nodeGroup.append("path").attr("d", "M-35,-60 V-20").attr("class", "link"); // Garis
+                            nodeGroup.append("path").attr("d", "M-35,-60 V-20").attr("class", "link"); 
 
                             const btnIbu = nodeGroup.append("g").attr("class", "action-badge pink").attr("transform", "translate(5, -80)")
                                 .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT', d.data.dbKey, d.data.name, 'P'); });
                             btnIbu.append("rect").attr("width", 60).attr("height", 20);
                             btnIbu.append("text").attr("x", 30).attr("y", 13).text("+ Ibu");
-                            nodeGroup.append("path").attr("d", "M35,-60 V-20").attr("class", "link"); // Garis
+                            nodeGroup.append("path").attr("d", "M35,-60 V-20").attr("class", "link"); 
                         }
 
-                        // 2. TOMBOL KANAN: TAMBAH PASANGAN
+                        // TOMBOL KANAN: TAMBAH PASANGAN
                         const btnSpouse = nodeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(40, -10)")
                             .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SPOUSE', d.data.dbKey, d.data.name, d.data.gender === 'L' ? 'P' : 'L'); });
                         btnSpouse.append("rect").attr("width", 75).attr("height", 20);
                         btnSpouse.append("text").attr("x", 37).attr("y", 13).text("+ Pasangan");
 
-                        // 3. TOMBOL BAWAH: TAMBAH ANAK
+                        // TOMBOL BAWAH: TAMBAH ANAK
                         const btnAnak = nodeGroup.append("g").attr("class", "action-badge green").attr("transform", "translate(-35, 50)")
                             .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_CHILD', d.data.dbKey, d.data.name, null); });
                         btnAnak.append("rect").attr("width", 70).attr("height", 20);
                         btnAnak.append("text").attr("x", 35).attr("y", 13).text("+ Anak");
                         nodeGroup.append("path").attr("d", "M0,20 V50").attr("class", "link");
 
-                        // 4. TOMBOL KIRI (EDIT/KELOLA)
+                        // TOMBOL KIRI: EDIT/KELOLA
                         const btnEdit = nodeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(-95, -10)")
                             .on("click", (e) => { e.stopPropagation(); window.bukaModalEditGeni(d.data.dbKey, d.data.name, d.data.gender, d.data.parentId, d.data.spouseId); });
                         btnEdit.append("rect").attr("width", 50).attr("height", 20);
@@ -609,7 +608,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     }
                 });
 
-                // Auto Center View (Pertama kali render atau kalau di klik auto-focus)
                 let validNodes = drawNodes.filter(d => !isNaN(d.x) && !isNaN(d.y));
                 if(validNodes.length > 0 && !selectedNodeId) {
                     const extent = d3.extent(validNodes, d => d.x);
@@ -631,15 +629,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         // =========================================================================
         async function saveNew(e) {
             e.preventDefault();
-            const button = formTambah.querySelector('button[type="submit"]');
+            const button = window.$("form-tambah").querySelector('button[type="submit"]');
             button.disabled = true;
             try {
-                const name = $("input-nama").value.trim();
-                const gender = $("select-gender").value;
+                const name = window.$("input-nama").value.trim();
+                const gender = window.$("select-gender").value;
                 if (!name) throw new Error("Nama wajib diisi.");
                 
-                const ctx = $("tambah-context").value;
-                const targetKey = $("tambah-target").value;
+                const ctx = window.$("tambah-context").value;
+                const targetKey = window.$("tambah-target").value;
                 
                 let parentId = "";
                 let spouseId = "";
@@ -653,13 +651,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 
                 await set(newRef, { name, gender, parentId, spouseId, ...initCoord });
                 
-                // Binding khusus untuk "Tambah Ayah/Ibu" dari bawah ke atas
                 if (ctx === 'ADD_PARENT' && targetKey) {
                     const targetNode = dataMap[targetKey];
                     let mX = targetNode?.manualX !== undefined && targetNode?.manualX !== null ? targetNode.manualX : 0;
                     let mY = targetNode?.manualY !== undefined && targetNode?.manualY !== null ? targetNode.manualY - 180 : -180;
-                    
-                    // Supaya ditaruh di kiri atau kanan berdasarkan gender
                     if (gender === 'L') mX -= 70; else mX += 70;
 
                     await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: newRef.key });
@@ -669,21 +664,22 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     await update(ref(db, `${DB_PATH}/${targetKey}`), { spouseId: newRef.key });
                 }
                 
-                hideModal(modalTambah);
-            } catch (err) { notify("Gagal menyimpan: " + err.message); } 
+                window.hideModal('modal-tambah');
+                selectedNodeId = newRef.key; // Fokus ke node baru
+            } catch (err) { window.notify("Gagal menyimpan: " + err.message); } 
             finally { button.disabled = false; }
         }
 
         async function saveEdit(e) {
             e.preventDefault();
-            const button = formEdit.querySelector('button[type="submit"]');
+            const button = window.$("form-edit").querySelector('button[type="submit"]');
             button.disabled = true;
             try {
-                const key = $("edit-dbkey").value;
-                const name = $("edit-nama").value.trim();
-                const gender = $("edit-gender").value;
-                const parentId = $("edit-parent").value;
-                const spouseId = $("edit-spouse").value;
+                const key = window.$("edit-dbkey").value;
+                const name = window.$("edit-nama").value.trim();
+                const gender = window.$("edit-gender").value;
+                const parentId = window.$("edit-parent").value;
+                const spouseId = window.$("edit-spouse").value;
                 
                 if (!key || !name) throw new Error("Nama wajib diisi.");
 
@@ -714,13 +710,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     await update(ref(db, `${DB_PATH}/${spouseId}`), { spouseId: key });
                 }
 
-                hideModal(modalEdit);
-            } catch (err) { notify("Gagal memperbarui: " + err.message); } 
+                window.hideModal('modal-edit');
+            } catch (err) { window.notify("Gagal memperbarui: " + err.message); } 
             finally { button.disabled = false; }
         }
 
         async function deletePerson() {
-            const key = $("edit-dbkey").value;
+            const key = window.$("edit-dbkey").value;
             if (!key) return;
             if (!confirm("Hapus individu ini? Anak-anak akan diputuskan dari orang tua ini.")) return;
             try {
@@ -735,8 +731,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 
                 if (Object.keys(updates).length) await update(ref(db), updates);
                 await remove(ref(db, `${DB_PATH}/${key}`));
-                hideModal(modalEdit);
-            } catch (err) { notify("Gagal menghapus: " + err.message); }
+                window.hideModal('modal-edit');
+                selectedNodeId = null;
+            } catch (err) { window.notify("Gagal menghapus: " + err.message); }
         }
 
         async function resetLayout() {
@@ -752,16 +749,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 if (Object.keys(updates).length > 0) {
                     await update(ref(db), updates);
                 }
-            } catch (err) { notify("Gagal reset layout."); }
+            } catch (err) { window.notify("Gagal reset layout."); }
         }
 
         function wireEvents() {
-            $("btn-toggle-drag").addEventListener("click", () => {
+            window.$("btn-toggle-drag").addEventListener("click", () => {
                 isDragMode = !isDragMode;
-                const btn = $("btn-toggle-drag");
-                const hint = $("tree-instruction");
+                const btn = window.$("btn-toggle-drag");
+                const hint = window.$("tree-instruction");
                 if (isDragMode) {
-                    selectedNodeId = null; // Matikan pilihan saat geser
+                    selectedNodeId = null; 
                     btn.className = "w-full bg-amber-500 text-white p-4 rounded-xl shadow-md flex items-center justify-center gap-3 transition-colors active:scale-95";
                     btn.innerHTML = '<i class="fas fa-arrows-alt text-xl"></i><div class="text-left leading-tight"><strong class="block text-sm">Mode Geser Aktif</strong><span class="block text-[10px] text-amber-200">Tarik ke profil lain untuk pindah relasi</span></div>';
                     hint.innerHTML = '<i class="fas fa-info-circle"></i> Mode Geser Aktif: Tarik profil untuk memindahkan posisinya.';
@@ -775,24 +772,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 if (treeReady) renderTree();
             });
 
-            $("btn-reset-layout").addEventListener("click", resetLayout);
-            $("btn-tambah-data-main").addEventListener("click", () => window.bukaModalTambahGeni('MAIN', '', '', null));
+            window.$("btn-reset-layout").addEventListener("click", resetLayout);
+            window.$("btn-tambah-data-main").addEventListener("click", () => window.openTambahModal('MAIN', '', '', null));
             
-            $("btn-close-modal-tambah").addEventListener("click", () => hideModal(modalTambah));
-            $("btn-close-modal-edit").addEventListener("click", () => hideModal(modalEdit));
-            modalTambah.addEventListener("click", e => { if (e.target === modalTambah) hideModal(modalTambah); });
-            modalEdit.addEventListener("click", e => { if (e.target === modalEdit) hideModal(modalEdit); });
-            
-            formTambah.addEventListener("submit", saveNew);
-            formEdit.addEventListener("submit", saveEdit);
-            $("btn-hapus-data").addEventListener("click", deletePerson);
+            window.$("form-tambah").addEventListener("submit", saveNew);
+            window.$("form-edit").addEventListener("submit", saveEdit);
+            window.$("btn-hapus-data").addEventListener("click", deletePerson);
 
-            $("input-pencarian").addEventListener("input", () => {
-                const q = $("input-pencarian").value.trim().toLocaleLowerCase("id");
+            window.$("input-pencarian").addEventListener("input", () => {
+                const q = window.$("input-pencarian").value.trim().toLocaleLowerCase("id");
                 if (!nodeSelection) return;
                 nodeSelection.select("circle")
                     .attr("stroke", d => q && d.data.name.toLocaleLowerCase("id").includes(q) ? "#f59e0b" : (d.data.dbKey === selectedNodeId ? "#f59e0b" : "#fff"))
-                    .attr("stroke-width", d => q && d.data.name.toLocaleLowerCase("id").includes(q) ? 5 : (d.data.dbKey === selectedNodeId ? 4 : 3));
+                    .attr("stroke-width", d => q && d.data.name.toLocaleLowerCase("id").includes(q) ? 5 : (d.data.dbKey === selectedNodeId ? 4 : 2));
             });
 
             window.addEventListener("resize", () => { if (treeReady) renderTree(); if (map) setTimeout(() => map.invalidateSize(), 100); });
@@ -807,19 +799,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     try {
                         const raw = snapshot.val();
                         if (!raw) {
-                            // Data awal jika kosong
                             await push(wargaRef, { name: "Pangeran Kertadiningrat", gender: "L", parentId: "", spouseId: "", lat: -6.832, lng: 108.214 });
                             return;
                         }
                         dataMap = normalizeData(raw);
                         dataGlobal = Object.values(dataMap).map(p => ({ ...p, status: statusFor(p.dbKey) }));
-                        $("stats-warga").textContent = `${dataGlobal.length} Warga`;
+                        window.$("stats-warga").textContent = `${dataGlobal.length} Warga`;
                         
                         renderTree();
                         drawMap();
-                    } catch (err) { notify("Data terbaca tetapi gagal ditampilkan: " + err.message); }
+                    } catch (err) { window.notify("Data terbaca tetapi gagal ditampilkan: " + err.message); }
                 });
-            } catch (err) { notify("Firebase gagal diinisialisasi: " + err.message); }
+            } catch (err) { window.notify("Firebase gagal diinisialisasi: " + err.message); }
         }
 
         wireEvents();
