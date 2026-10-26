@@ -19,7 +19,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         .bg-pattern { background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4H6zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
-        .leaflet-container { z-index: 10 !important; }
+        .leaflet-container { z-index: 10 !important; pointer-events: auto !important; }
         
         /* CSS D3.js dengan Pointer Events Aktif */
         .node { cursor: pointer; pointer-events: all !important; }
@@ -58,7 +58,7 @@
     <main class="max-w-md mx-auto px-5 -mt-6 relative z-20 space-y-5">
         
         <div class="grid grid-cols-2 gap-4">
-            <button class="bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-200 flex flex-col items-center justify-center gap-3 ring-2 ring-emerald-400 ring-offset-1 cursor-pointer" style="position: relative; z-index: 50;" onclick="alert('Fitur Pohon Karuhun Full Screen segera hadir!')">
+            <button class="bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-200 flex flex-col items-center justify-center gap-3 ring-2 ring-emerald-400 ring-offset-1 cursor-pointer" onclick="alert('Fitur Pohon Karuhun Full Screen segera hadir!')">
                 <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 pointer-events-none">
                     <i class="fas fa-network-wired text-xl animate-pulse"></i>
                 </div>
@@ -67,7 +67,7 @@
                     <span class="block text-[9px] text-slate-500 mt-0.5">Lihat grafis silsilah</span>
                 </div>
             </button>
-            <button id="btn-tambah-data-main" class="bg-purple-600 p-4 rounded-2xl shadow-md border border-purple-500 flex flex-col items-center justify-center gap-3 hover:bg-purple-700 transition-colors active:scale-95 cursor-pointer text-white" style="position: relative; z-index: 50;">
+            <button id="btn-tambah-data-main" class="bg-purple-600 p-4 rounded-2xl shadow-md border border-purple-500 flex flex-col items-center justify-center gap-3 hover:bg-purple-700 transition-colors active:scale-95 cursor-pointer text-white">
                 <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white pointer-events-none">
                     <i class="fas fa-user-plus text-xl"></i>
                 </div>
@@ -238,48 +238,60 @@
         const zoom = d3.zoom().scaleExtent([0.5, 3]).on("zoom", (event) => { g.attr("transform", event.transform); });
         svg.call(zoom);
 
-        // Kalkulator Otomatis Pancakaki
+        // PENCEGAH HANG: Kalkulator Otomatis Pancakaki dengan Cycle Detection
         function hitungPancakakiOtomatis(nodeKey, allDataMap) {
             let node = allDataMap[nodeKey];
             if (!node || !node.parentId || node.parentId === "" || node.parentId === "akar_utama") return "Karuhun Utama";
+            
             let generationCount = 1;
             let currentParentId = node.parentId;
+            let visited = new Set();
+            visited.add(nodeKey); // Kunci agar tidak muter balik ke diri sendiri
+
             while (currentParentId && allDataMap[currentParentId]) {
+                if (visited.has(currentParentId)) {
+                    console.warn("Rantai melingkar terdeteksi di:", currentParentId);
+                    break; // PUTUS RANTAI SETAN AGAR BROWSER TIDAK FREEZE
+                }
+                visited.add(currentParentId);
                 generationCount++;
                 currentParentId = allDataMap[currentParentId].parentId;
             }
+            
             const kamusPancakaki = { 1: "Karuhun Utama", 2: "Bapak / Indung (Gen-2)", 3: "Aki / Nini (Gen-3)", 4: "Buyut (Cicit)", 5: "Bao", 6: "Janggawaréng", 7: "Udeg-udeg", 8: "Gantung-siwur" };
             return kamusPancakaki[generationCount] || `Keturunan Gen-${generationCount}`;
         }
 
-        // --- GLOBAL EVENT LISTENERS UNTUK MENGATASI TOMBOL MATI ---
+        // Modal Handlers
+        const modalTambah = document.getElementById('modal-tambah');
+        const formTambah = document.getElementById('form-tambah');
+        const selectParent = document.getElementById('select-parent');
+        const inputParentManual = document.getElementById('input-parent-manual');
+        const selectSpouse = document.getElementById('select-spouse');
+        const inputSpouseManual = document.getElementById('input-spouse-manual');
         
-        // Modal Tambah
-        document.getElementById('btn-tambah-data-main').addEventListener('click', (e) => {
-            e.preventDefault();
-            const modalTambah = document.getElementById('modal-tambah');
+        document.getElementById('btn-tambah-data-main').addEventListener('click', () => { 
             modalTambah.classList.remove('hidden'); 
             modalTambah.classList.add('flex'); 
         });
-
-        document.getElementById('btn-close-modal-tambah').addEventListener('click', (e) => {
-            e.preventDefault();
-            const modalTambah = document.getElementById('modal-tambah');
+        document.getElementById('btn-close-modal-tambah').addEventListener('click', () => { 
             modalTambah.classList.add('hidden'); 
             modalTambah.classList.remove('flex'); 
         });
 
-        // Modal Edit Close
-        document.getElementById('btn-close-modal-edit').addEventListener('click', (e) => {
-            e.preventDefault();
-            const modalEdit = document.getElementById('modal-edit');
+        const modalEdit = document.getElementById('modal-edit');
+        const formEdit = document.getElementById('form-edit');
+        const editGender = document.getElementById('edit-gender');
+        const editParent = document.getElementById('edit-parent');
+        const editParentManual = document.getElementById('edit-parent-manual');
+        const editSpouse = document.getElementById('edit-spouse');
+        const editSpouseManual = document.getElementById('edit-spouse-manual');
+        document.getElementById('btn-close-modal-edit').addEventListener('click', () => { 
             modalEdit.classList.add('hidden'); 
             modalEdit.classList.remove('flex'); 
         });
 
-        // Toggle Manual Inputs
-        document.getElementById('select-parent').addEventListener('change', (e) => {
-            const inputParentManual = document.getElementById('input-parent-manual');
+        selectParent.addEventListener('change', (e) => {
             if (e.target.value === 'manual') {
                 inputParentManual.classList.remove('hidden');
                 inputParentManual.setAttribute('required', 'true');
@@ -289,8 +301,7 @@
             }
         });
 
-        document.getElementById('select-spouse').addEventListener('change', (e) => {
-            const inputSpouseManual = document.getElementById('input-spouse-manual');
+        selectSpouse.addEventListener('change', (e) => {
             if (e.target.value === 'manual') {
                 inputSpouseManual.classList.remove('hidden');
                 inputSpouseManual.setAttribute('required', 'true');
@@ -300,8 +311,7 @@
             }
         });
 
-        document.getElementById('edit-parent').addEventListener('change', (e) => {
-            const editParentManual = document.getElementById('edit-parent-manual');
+        editParent.addEventListener('change', (e) => {
             if (e.target.value === 'manual') {
                 editParentManual.classList.remove('hidden');
                 editParentManual.setAttribute('required', 'true');
@@ -311,8 +321,7 @@
             }
         });
 
-        document.getElementById('edit-spouse').addEventListener('change', (e) => {
-            const editSpouseManual = document.getElementById('edit-spouse-manual');
+        editSpouse.addEventListener('change', (e) => {
             if (e.target.value === 'manual') {
                 editSpouseManual.classList.remove('hidden');
                 editSpouseManual.setAttribute('required', 'true');
@@ -322,29 +331,24 @@
             }
         });
 
-        // Hapus & Tambah Cabang
-        document.getElementById('btn-hapus-data').addEventListener('click', (e) => {
-            e.preventDefault();
+        document.getElementById('btn-hapus-data').addEventListener('click', () => {
             const dbKey = document.getElementById('edit-dbkey').value;
             if (dbKey === 'akar_utama') { alert("Karuhun Utama tidak dapat dihapus!"); return; }
             if (confirm("Yakin ingin menghapus data ini? Keturunannya otomatis terhubung ke karuhun utama.")) {
                 remove(ref(db, 'silsilah_desa_v3/' + dbKey)).then(() => { 
-                    document.getElementById('modal-edit').classList.add('hidden'); 
-                    document.getElementById('modal-edit').classList.remove('flex'); 
+                    modalEdit.classList.add('hidden'); 
+                    modalEdit.classList.remove('flex'); 
                 });
             }
         });
 
-        document.getElementById('btn-tambah-cabang').addEventListener('click', (e) => {
-            e.preventDefault();
+        document.getElementById('btn-tambah-cabang').addEventListener('click', () => {
             const dbKey = document.getElementById('edit-dbkey').value;
-            document.getElementById('modal-edit').classList.add('hidden'); 
-            document.getElementById('modal-edit').classList.remove('flex');
-            
-            const modalTambah = document.getElementById('modal-tambah');
+            modalEdit.classList.add('hidden'); 
+            modalEdit.classList.remove('flex');
             modalTambah.classList.remove('hidden'); 
             modalTambah.classList.add('flex');
-            document.getElementById('select-parent').value = dbKey;
+            selectParent.value = dbKey;
             document.getElementById('input-nama').focus();
         });
 
@@ -398,10 +402,30 @@
                 }
             });
 
+            // PENCEGAH CRASH D3.JS: Sanitasi Data dari Rantai Melingkar sebelum Stratify
+            let safeDataGlobal = dataGlobal.map(d => ({...d}));
+            safeDataGlobal.forEach(d => {
+                let currentId = d.parentId;
+                let visited = new Set([d.dbKey]);
+                let isCycle = false;
+                while(currentId && dataMap[currentId]) {
+                    if(visited.has(currentId)) {
+                        isCycle = true;
+                        break;
+                    }
+                    visited.add(currentId);
+                    currentId = dataMap[currentId].parentId;
+                }
+                if(isCycle) {
+                    console.warn(`Memutus silsilah melingkar pada ID: ${d.dbKey}`);
+                    d.parentId = "akar_utama"; // Tolong ke akar utama agar D3.js tidak error
+                }
+            });
+
             // 🌳 RENDER D3.JS VERTIKAL (COUPLE LAYOUT)
             g.selectAll("*").remove(); 
             try {
-                const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(dataGlobal);
+                const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(safeDataGlobal);
                 
                 const treeLayout = d3.tree().nodeSize([240, 160]); 
                 treeLayout(root);
@@ -461,7 +485,7 @@
                 const node = g.selectAll(".node").data(root.descendants()).enter().append("g")
                     .attr("class", d => `node ${d.data.gender === 'L' ? 'laki' : 'perempuan'}`)
                     .attr("transform", d => `translate(${d.x},${d.y})`)
-                    .style("pointer-events", "all") // FIX POINTER
+                    .style("pointer-events", "all")
                     .on("click", (event, d) => {
                         event.preventDefault();
                         event.stopPropagation();
@@ -491,6 +515,7 @@
                     .attr("dy", -28)
                     .attr("x", 0)
                     .style("text-anchor", "middle")
+                    .style("pointer-events", "all")
                     .each(function(d) {
                         let teksLengkap = d.data.name;
                         let el = d3.select(this);
