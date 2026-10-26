@@ -344,7 +344,7 @@
             g.selectAll("*").remove(); 
             try {
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(dataGlobal);
-                const treeLayout = d3.tree().nodeSize([40, 140]); 
+                const treeLayout = d3.tree().nodeSize([90, 300]); 
                 treeLayout(root);
                 
                 g.selectAll(".link").data(root.links()).enter().append("path").attr("class", "link")
