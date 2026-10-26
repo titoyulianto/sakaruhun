@@ -306,10 +306,31 @@
                 node.append("circle").attr("r", 14).attr("fill", "transparent").attr("stroke", "transparent"); 
                 node.append("circle").attr("r", 8).style("pointer-events", "none");
                 
-                // Teks Nama + Pasangan
-                node.append("text").attr("dy", -15).attr("x", 0).style("text-anchor", "middle").text(d => {
-                    return d.data.pasangan ? `${d.data.name} & ${d.data.pasangan}` : d.data.name;
-                });
+                // Render Teks Nama & Pasangan (Otomatis potong baris jika panjang)
+                node.append("text")
+                    .attr("dy", -15)
+                    .attr("x", 0)
+                    .style("text-anchor", "middle")
+                    .each(function(d) {
+                        let teksLengkap = d.data.pasangan ? `${d.data.name} & ${d.data.pasangan}` : d.data.name;
+                        let el = d3.select(this);
+                        
+                        // Kalau kepanjangan, kita bagi jadi dua baris secara otomatis
+                        if (teksLengkap.length > 18) {
+                            let tengah = Math.floor(teksLengkap.length / 2);
+                            let spasiIdx = teksLengkap.indexOf(' ', tengah);
+                            if (spasiIdx === -1) spasiIdx = tengah;
+                            
+                            let baris1 = teksLengkap.substring(0, spasiIdx);
+                            let baris2 = teksLengkap.substring(spasiIdx + 1);
+                            
+                            el.text(""); // Kosongkan teks utama
+                            el.append("tspan").attr("x", 0).attr("dy", "-0.4em").text(baris1);
+                            el.append("tspan").attr("x", 0).attr("dy", "1.1em").text(baris2);
+                        } else {
+                            el.text(teksLengkap);
+                        }
+                    });
                 
                 // Teks Status Pancakaki
                 node.append("text").attr("class", "status").attr("dy", 22).attr("x", 0).style("text-anchor", "middle").text(d => d.data.status);
