@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sakaruhun - Sadulur Sadesa</title>
+<title>Sakaruhun - Sadulur Sadesa (Desktop)</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,88 +12,108 @@
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: hidden;}
 .bg-pattern{background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.12'%3E%3Cpath d='M30 0v60M0 30h60'/%3E%3C/g%3E%3C/svg%3E")}
-#tree-container{height:480px;overflow:hidden;position:relative;touch-action:none}
+#tree-container{width:100%; height:80vh; min-height:600px; overflow:hidden; position:relative; touch-action:none; background:#ffffff;}
 .node{cursor:pointer; pointer-events:all;}
 .node circle{stroke:#fff;stroke-width:2; pointer-events:all; transition:stroke 0.2s, transform 0.2s;}
 .node.laki circle{fill:#3b82f6}
 .node.perempuan circle{fill:#ec4899}
-.node text{font-size:11px;font-weight:800;fill:#1e293b;pointer-events:none; user-select:none;}
-.node text.status{font-size:9px;font-weight:600;fill:#059669}
+.node text{font-size:12px;font-weight:800;fill:#1e293b;pointer-events:none; user-select:none;}
+.node text.status{font-size:10px;font-weight:600;fill:#059669}
 .link{fill:none;stroke:#cbd5e1;stroke-width:2;pointer-events:none}
 .spouse-link{fill:none;stroke:#ec4899;stroke-width:2;stroke-dasharray:4 4;pointer-events:none}
-#map{height:250px; z-index: 10;}
+#map{height:300px; z-index: 10; width:100%;}
 .leaflet-container { z-index: 10 !important; }
 .modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter: blur(4px);}
 .modal.open{display:flex !important}
-.modal-card{background:white;border-radius:24px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);}
+.modal-card{background:white;border-radius:24px;padding:24px;width:100%;max-width:450px;max-height:90vh;overflow-y:auto;box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);}
 
-/* Drop Zone: Hanya muncul saat node ditarik mendekat */
+/* Drop Zone Styles */
 .drop-zone { fill: rgba(255,255,255,0.95); stroke: #94a3b8; stroke-dasharray: 4,4; stroke-width: 2px; transition: all 0.2s; cursor: crosshair;}
 .drop-zone.active-parent { fill: #dbeafe; stroke: #3b82f6; stroke-width: 3px; }
 .drop-zone.active-child { fill: #d1fae5; stroke: #10b981; stroke-width: 3px; }
-.drop-text { font-size: 10px; font-weight: bold; fill: #64748b; pointer-events: none; text-anchor: middle; }
+.drop-text { font-size: 11px; font-weight: bold; fill: #64748b; pointer-events: none; text-anchor: middle; }
 </style>
 </head>
 
-<body class="text-slate-800 pb-20">
+<body class="text-slate-800 flex flex-col min-h-screen">
 
-    <header class="bg-emerald-700 rounded-b-[2.5rem] shadow-lg pt-10 pb-16 px-5 bg-pattern relative z-20">
-        <div class="max-w-md mx-auto text-center relative z-10">
-            <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl text-white mb-3 shadow-sm">
-                <i class="fas fa-tree text-2xl"></i>
+    <!-- HEADER DESKTOP LEBAR -->
+    <header class="bg-emerald-700 shadow-md py-6 px-8 bg-pattern relative z-20 shrink-0">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl text-white shadow-sm">
+                    <i class="fas fa-tree text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-extrabold text-white leading-tight">Sakaruhun</h1>
+                    <p class="text-emerald-100 text-xs tracking-widest uppercase font-semibold">Sadulur Sadesa</p>
+                </div>
             </div>
-            <h1 class="text-3xl font-extrabold text-white">Sakaruhun</h1>
-            <p class="text-emerald-100 text-xs tracking-widest uppercase">Sadulur Sadesa</p>
-            <div class="mt-6 relative">
-                <input id="input-pencarian" type="search" placeholder="Cari dulur atau karuhun..." class="w-full bg-white py-3.5 pl-12 pr-5 rounded-2xl text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-400">
-                <i class="fas fa-search absolute left-4 top-4 text-slate-400"></i>
+            
+            <div class="flex-1 max-w-md relative">
+                <input id="input-pencarian" type="search" placeholder="Cari nama keluarga..." class="w-full bg-white py-3 pl-12 pr-5 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
             </div>
-            <div class="mt-3 text-xs text-emerald-100">
-                <i class="fas fa-users mr-1"></i> Terhubung: <strong id="stats-warga">Memuat...</strong>
+            
+            <div class="text-sm text-emerald-100 bg-black/20 px-4 py-2 rounded-xl border border-white/10 shadow-inner">
+                <i class="fas fa-users mr-2"></i><strong id="stats-warga">Memuat...</strong>
             </div>
         </div>
     </header>
 
-    <main class="max-w-md mx-auto px-5 -mt-6 relative z-30 space-y-5">
-        <div class="grid grid-cols-2 gap-4">
-            <button id="btn-lihat-pohon" type="button" class="bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-200 flex flex-col items-center gap-3 hover:bg-emerald-100 transition-colors">
-                <i class="fas fa-network-wired text-2xl text-emerald-600"></i>
-                <div class="text-center">
-                    <strong class="block text-xs text-slate-700">Pohon Karuhun</strong>
-                    <span class="block text-[9px] text-slate-500 mt-0.5">Lihat grafis silsilah</span>
-                </div>
-            </button>
+    <!-- MAIN DESKTOP GRID -->
+    <main class="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- SIDEBAR KIRI (Kontrol & Peta) -->
+        <aside class="col-span-1 flex flex-col gap-5">
+            <!-- Panel Kontrol Utama -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200">
+                <h2 class="text-sm font-bold mb-4 text-slate-800 uppercase tracking-wider"><i class="fas fa-sliders-h text-emerald-600 mr-2"></i>Kontrol Panel</h2>
+                
+                <div class="flex flex-col gap-3">
+                    <button id="btn-tambah-data-main" type="button" class="w-full bg-purple-600 text-white p-4 rounded-xl shadow-md flex items-center justify-center gap-3 hover:bg-purple-700 transition-colors active:scale-95">
+                        <i class="fas fa-user-plus text-xl"></i>
+                        <div class="text-left leading-tight">
+                            <strong class="block text-sm">Tambah Garis Baru</strong>
+                            <span class="block text-[10px] text-purple-200">Mulai silsilah dari awal</span>
+                        </div>
+                    </button>
+                    
+                    <hr class="border-slate-100 my-1">
 
-            <button id="btn-tambah-data-main" type="button" class="bg-purple-600 text-white p-4 rounded-2xl shadow-md border border-purple-500 flex flex-col items-center gap-3 hover:bg-purple-700 transition-colors active:scale-95">
-                <i class="fas fa-user-plus text-2xl"></i>
-                <div class="text-center">
-                    <strong class="block text-xs">Tambah Orang Asing</strong>
-                    <span class="block text-[9px] text-purple-200 mt-0.5">Mulai dari garis baru</span>
-                </div>
-            </button>
-        </div>
+                    <button id="btn-toggle-drag" type="button" class="w-full bg-slate-100 text-slate-600 border border-slate-200 p-4 rounded-xl shadow-sm flex items-center gap-3 hover:bg-slate-200 transition-colors">
+                        <i class="fas fa-lock text-xl w-6 text-center"></i>
+                        <div class="text-left leading-tight">
+                            <strong class="block text-sm">Silsilah Terkunci</strong>
+                            <span class="block text-[10px] text-slate-500">Klik untuk geser posisi</span>
+                        </div>
+                    </button>
 
-        <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 relative z-40">
-            <div class="flex justify-between items-center mb-3">
-                <h2 class="text-sm font-bold text-slate-800"><i class="fas fa-sitemap text-emerald-600 mr-1.5"></i> Pohon Silsilah</h2>
-                <button id="btn-toggle-drag" class="text-[9px] text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full font-bold border border-slate-200 transition-colors shadow-sm">
-                    <i class="fas fa-lock"></i> Silsilah Terkunci
-                </button>
+                    <button id="btn-reset-layout" type="button" class="w-full bg-blue-50 text-blue-600 border border-blue-200 p-3 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors mt-2">
+                        <i class="fas fa-magic"></i> <strong class="text-xs">Rapihkan Posisi Otomatis</strong>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel Peta -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex-1 flex flex-col">
+                <h2 class="text-sm font-bold mb-3 text-slate-800"><i class="fas fa-map-pin text-amber-600 mr-2"></i>Radar Sebaran</h2>
+                <div id="map" class="rounded-2xl border border-slate-200 flex-1 min-h-[250px]"></div>
+            </div>
+        </aside>
+
+        <!-- KANVAS SILSILAH UTAMA (Kanan - Lebar) -->
+        <section class="col-span-1 lg:col-span-3 bg-white rounded-3xl shadow-md border border-slate-200 flex flex-col relative">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-3xl">
+                <h2 class="text-base font-bold text-slate-800"><i class="fas fa-project-diagram text-emerald-600 mr-2"></i>Pohon Genealogi</h2>
+                <p id="tree-instruction" class="text-xs text-emerald-600 font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+                    <i class="fas fa-hand-pointer mr-1"></i> Klik nama untuk kelola | Klik (+) di garis untuk anak.
+                </p>
             </div>
             
-            <div id="tree-container" class="rounded-2xl border border-slate-200 bg-slate-50"></div>
-            <p id="tree-instruction" class="text-[10px] text-center text-emerald-600 mt-3 font-bold">
-                <i class="fas fa-hand-pointer mr-1"></i> Sentuh nama untuk kelola, atau sentuh (+) di garis untuk anak.
-            </p>
-        </section>
-
-        <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 relative z-10">
-            <h2 class="text-sm font-bold mb-3 flex items-center text-slate-800">
-                <i class="fas fa-map-pin text-amber-600 mr-2"></i> Radar Peta Desa
-            </h2>
-            <div id="map" class="rounded-2xl border border-slate-200 bg-slate-50"></div>
+            <div id="tree-container" class="rounded-b-3xl flex-1 cursor-move"></div>
         </section>
     </main>
 
@@ -101,15 +121,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
     <div id="modal-tambah" class="modal">
         <div class="modal-card relative border-t-4 border-emerald-500">
             <button id="btn-close-modal-tambah" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
-            <h3 id="modal-tambah-title" class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-user-plus text-emerald-600 mr-2"></i>Tambah Individu</h3>
+            <h3 id="modal-tambah-title" class="font-bold text-lg mb-4 text-slate-800">Tambah Individu</h3>
 
             <form id="form-tambah" class="space-y-4">
                 <input type="hidden" id="tambah-context" value="MAIN">
                 <input type="hidden" id="tambah-target" value="">
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap Orang Baru Ini</label>
-                    <input id="input-nama" required placeholder="Ketik nama..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap</label>
+                    <input id="input-nama" required placeholder="Ketik nama lengkap..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
                 <div>
@@ -120,12 +140,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     </select>
                 </div>
 
-                <div id="wrapper-manual-tambah" class="hidden border-t border-slate-100 pt-3">
-                    <p class="text-[10px] text-amber-600 font-semibold mb-2"><i class="fas fa-info-circle"></i> Mode Orang Asing: Ini akan membuat garis keturunan baru secara mandiri.</p>
-                </div>
-
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl p-3 font-bold text-sm transition-colors mt-2 shadow-md">
-                    Simpan Data
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl p-3.5 font-bold text-sm transition-colors mt-2 shadow-md">
+                    <i class="fas fa-check mr-2"></i>Simpan Data
                 </button>
             </form>
         </div>
@@ -135,7 +151,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
     <div id="modal-edit" class="modal">
         <div class="modal-card relative border-t-4 border-amber-500">
             <button id="btn-close-modal-edit" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
-            <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-cog text-amber-500 mr-2"></i>Kelola Individu</h3>
+            <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-cog text-amber-500 mr-2"></i>Kelola Data</h3>
 
             <form id="form-edit" class="space-y-4">
                 <input type="hidden" id="edit-dbkey">
@@ -155,25 +171,29 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
 
                 <div class="flex gap-2 pt-2">
                     <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl p-3 font-bold text-sm shadow-md transition-colors">
-                        <i class="fas fa-save mr-1"></i> Update Nama/Gender
+                        <i class="fas fa-save mr-1"></i> Update
                     </button>
-                    <button id="btn-hapus-data" type="button" class="bg-red-100 hover:bg-red-200 text-red-600 rounded-xl px-4 transition-colors" title="Hapus Individu Ini">
-                        <i class="fas fa-trash-alt"></i>
+                    <button id="btn-hapus-data" type="button" class="bg-red-100 hover:bg-red-200 text-red-600 rounded-xl px-5 transition-colors font-bold" title="Hapus Permanen">
+                        <i class="fas fa-trash-alt"></i> Hapus
                     </button>
                 </div>
             </form>
 
-            <hr class="my-5 border-slate-100">
+            <div class="my-5 flex items-center gap-3">
+                <div class="h-px bg-slate-200 flex-1"></div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tambah Relasi</span>
+                <div class="h-px bg-slate-200 flex-1"></div>
+            </div>
 
-            <div class="flex flex-col gap-3">
-                <button id="btn-tambah-ortu" type="button" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl p-3 font-bold text-sm shadow-sm transition-colors text-left pl-4">
-                    <i class="fas fa-arrow-up w-6 text-center"></i> Tambah Orang Tua Ke Atas
+            <div class="grid grid-cols-1 gap-3">
+                <button id="btn-tambah-ortu" type="button" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl p-3 font-bold text-sm shadow-sm transition-colors text-left flex items-center">
+                    <div class="bg-blue-200 w-8 h-8 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-arrow-up"></i></div> Jadikan Anak dari (Tambah Ortu)
                 </button>
-                <button id="btn-tambah-pasangan" type="button" class="w-full bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 rounded-xl p-3 font-bold text-sm shadow-sm transition-colors text-left pl-4">
-                    <i class="fas fa-heart w-6 text-center"></i> Tambah Suami / Istri Baru
+                <button id="btn-tambah-pasangan" type="button" class="w-full bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 rounded-xl p-3 font-bold text-sm shadow-sm transition-colors text-left flex items-center">
+                    <div class="bg-pink-200 w-8 h-8 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-heart"></i></div> Tambah Suami / Istri Baru
                 </button>
-                <button id="btn-tambah-cabang" type="button" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl p-3 font-bold text-sm shadow-sm transition-colors text-left pl-4">
-                    <i class="fas fa-child w-6 text-center"></i> Tambah Anak
+                <button id="btn-tambah-cabang" type="button" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl p-3 font-bold text-sm shadow-sm transition-colors text-left flex items-center">
+                    <div class="bg-emerald-200 w-8 h-8 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-child"></i></div> Tambah Anak Langsung
                 </button>
             </div>
         </div>
@@ -225,48 +245,49 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             formTambah.reset();
             $("tambah-context").value = context;
             $("tambah-target").value = targetKey || "";
-            
-            const wrapperManual = $("wrapper-manual-tambah");
             const title = $("modal-tambah-title");
 
             if (context === 'ADD_CHILD') {
                 title.innerHTML = `<i class="fas fa-child text-emerald-600 mr-2"></i>Anak dari ${escapeHtml(targetName)}`;
-                wrapperManual.classList.add('hidden');
             } else if (context === 'ADD_SPOUSE') {
                 title.innerHTML = `<i class="fas fa-heart text-pink-500 mr-2"></i>Pasangan untuk ${escapeHtml(targetName)}`;
-                wrapperManual.classList.add('hidden');
                 $("select-gender").value = targetGender === 'L' ? 'P' : 'L';
             } else if (context === 'ADD_PARENT') {
                 title.innerHTML = `<i class="fas fa-arrow-up text-blue-600 mr-2"></i>Orang Tua dari ${escapeHtml(targetName)}`;
-                wrapperManual.classList.add('hidden');
             } else {
-                title.innerHTML = `<i class="fas fa-user-secret text-purple-600 mr-2"></i>Tambah Orang Asing`;
-                wrapperManual.classList.remove('hidden');
+                title.innerHTML = `<i class="fas fa-user-secret text-purple-600 mr-2"></i>Garis Keturunan Baru`;
             }
-            
             showModal(modalTambah);
             setTimeout(() => $("input-nama").focus(), 100);
         }
 
+        // AUTO-KOREKSI NAN (ANTI-BLANK)
         function normalizeData(raw) {
             const result = {};
             Object.entries(raw || {}).forEach(([key, v]) => {
                 if (!v || typeof v !== "object") return;
+                
+                // Pastikan koordinat angka valid, kalau error kasih null
+                let mx = (v.manualX != null && v.manualX !== "" && !isNaN(v.manualX)) ? Number(v.manualX) : null;
+                let my = (v.manualY != null && v.manualY !== "" && !isNaN(v.manualY)) ? Number(v.manualY) : null;
+
                 result[key] = {
                     dbKey: key,
                     name: String(v.name || "Tanpa Nama"),
                     gender: v.gender === "P" ? "P" : "L",
                     parentId: v.parentId || "",
                     spouseId: v.spouseId || "",
-                    lat: Number(v.lat),
-                    lng: Number(v.lng),
-                    // Perbaikan parsing null agar tidak numpuk di koordinat 0
-                    manualX: (v.manualX != null && v.manualX !== "") ? Number(v.manualX) : undefined,
-                    manualY: (v.manualY != null && v.manualY !== "") ? Number(v.manualY) : undefined
+                    lat: Number(v.lat) || -6.832,
+                    lng: Number(v.lng) || 108.214,
+                    manualX: mx,
+                    manualY: my
                 };
             });
+            
+            // Bersihkan koneksi yatim piatu
             Object.values(result).forEach(p => {
                 if (p.parentId && !result[p.parentId]) { p.parentId = ""; }
+                if (p.spouseId && !result[p.spouseId]) { p.spouseId = ""; }
             });
             return result;
         }
@@ -303,22 +324,22 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
         function renderTree() {
             if (!window.d3) return;
             const container = $("tree-container");
-            const width = Math.max(container.clientWidth, 320);
-            const height = Math.max(container.clientHeight, 400);
+            const width = Math.max(container.clientWidth, 600);
+            const height = Math.max(container.clientHeight, 500);
 
             const svg = d3.select(container).selectAll("svg").data([null]).join("svg")
                 .attr("width", "100%").attr("height", "100%").attr("viewBox", `0 0 ${width} ${height}`);
 
             svg.selectAll("*").remove();
             const g = svg.append("g");
-            zoomBehavior = d3.zoom().scaleExtent([.15, 2.5]).on("zoom", e => g.attr("transform", e.transform));
+            zoomBehavior = d3.zoom().scaleExtent([.1, 3]).on("zoom", e => g.attr("transform", e.transform));
             svg.call(zoomBehavior).on("dblclick.zoom", null);
 
             try {
                 let safeDataGlobal = dataGlobal.map(d => ({...d}));
                 const byIdGlobal = new Map(safeDataGlobal.map(p => [p.dbKey, p]));
                 
-                // 1. DITEKSI PASANGAN (SPOUSES)
+                // MENCARI PASANGAN (SPOUSES) DENGAN CERDAS
                 const spouseOf = new Map();
                 const isSpouseNode = new Set();
                 const renderedPairs = new Set();
@@ -336,18 +357,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                             const p1 = byIdGlobal.get(p.dbKey);
                             const p2 = byIdGlobal.get(p.spouseId);
                             if (p1 && p2) {
+                                // Yang gak punya bapak, dianggep pendatang (Spouse)
                                 if (p1.parentId && !p2.parentId) isSpouseNode.add(p2.dbKey);
                                 else if (p2.parentId && !p1.parentId) isSpouseNode.add(p1.dbKey);
-                                else isSpouseNode.add(p2.dbKey); 
+                                else isSpouseNode.add(p2.dbKey); // Default
                             }
                         }
                     }
                 });
 
-                // 2. AMBIL NODE UTAMA & KOREKSI PARENT
+                // ORANG UTAMA (Vertical Hierarchy)
                 let primary = safeDataGlobal.filter(p => !isSpouseNode.has(p.dbKey));
                 let primaryIds = new Set(primary.map(p => p.dbKey));
 
+                // Benerin anak yang nyangkut di Spouse
                 primary.forEach(p => {
                     if (p.parentId && !primaryIds.has(p.parentId)) {
                         let alts = spouseOf.get(p.parentId) || [];
@@ -356,7 +379,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     }
                 });
 
-                // 3. PUTUS RANTAI SIKLUS
+                // ANTI-CYCLE / RANTAI SETAN
                 primary.forEach(p => {
                     let curr = p.parentId;
                     let visited = new Set([p.dbKey]);
@@ -370,7 +393,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     if (cycle) p.parentId = "";
                 });
 
-                // 4. SATUKAN MULTIPLE ROOTS KE 1 ROOT AGAR D3 TIDAK CRASH
+                // AUTO MERGE MULTIPLE ROOTS
                 let roots = primary.filter(p => !p.parentId || p.parentId === "");
                 if (roots.length === 0 && primary.length > 0) { primary[0].parentId = ""; roots = [primary[0]]; }
                 if (roots.length > 1) {
@@ -380,17 +403,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     }
                 }
 
-                // 5. STRUKTUR D3
+                // D3 HIERARCHY
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(primary);
-                d3.tree().nodeSize([240, 160])(root);
+                d3.tree().nodeSize([280, 180])(root); // Lebih lega jaraknya
                 const nodes = root.descendants();
                 
+                // APLIKASI POSISI GESER MANUAL
                 nodes.forEach(n => {
-                    if (n.data.manualX !== undefined) n.x = n.data.manualX;
-                    if (n.data.manualY !== undefined) n.y = n.data.manualY;
+                    if (n.data.manualX !== null) n.x = n.data.manualX;
+                    if (n.data.manualY !== null) n.y = n.data.manualY;
                 });
 
-                // 6. POSISI PASANGAN KESAMPING
                 const spousePositions = [];
                 const pairsRendered = new Set();
                 nodes.forEach(n => {
@@ -402,9 +425,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                         
                         const person = byIdGlobal.get(id);
                         if(person) {
-                            let sx = n.x + 140, sy = n.y;
-                            if (person.manualX !== undefined) sx = person.manualX;
-                            if (person.manualY !== undefined) sy = person.manualY;
+                            let sx = n.x + 150, sy = n.y; // Spasi istri 150px
+                            if (person.manualX !== null) sx = person.manualX;
+                            if (person.manualY !== null) sy = person.manualY;
                             spousePositions.push({ data: { ...person, status: "Pasangan" }, source: n, x: sx, y: sy, isSpouse: true });
                         }
                     });
@@ -425,12 +448,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     g.selectAll(".add-child-btn").attr("transform", sp => `translate(${(sp.source.x + sp.x) / 2}, ${(sp.source.y + sp.y) / 2})`);
                 }
 
-                // 7. RENDER GARIS
+                // RENDER GARIS
                 const links = root.links();
                 g.selectAll(".link").data(links).join("path").attr("class", "link");
                 g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link");
 
-                // TOMBOL TAMBAH ANAK DI TENGAH PASANGAN
+                // TOMBOL PLUS ANAK DI PASANGAN
                 const addChildBtn = g.selectAll(".add-child-btn").data(spousePositions).join("g")
                     .attr("class", "add-child-btn")
                     .style("cursor", "pointer")
@@ -442,29 +465,29 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                         openTambahModal('ADD_CHILD', d.source.data.dbKey, d.source.data.name + " & " + d.data.name, null);
                     });
 
-                addChildBtn.append("circle").attr("r", 12).attr("fill", "#10b981").attr("stroke", "#ffffff").attr("stroke-width", 2)
+                addChildBtn.append("circle").attr("r", 13).attr("fill", "#10b981").attr("stroke", "#ffffff").attr("stroke-width", 2)
                     .on("mouseover", function() { if(!isDragMode) d3.select(this).style("transform", "scale(1.2)"); })
                     .on("mouseout", function() { d3.select(this).style("transform", "scale(1)"); });
-                addChildBtn.append("text").attr("dy", 4).attr("x", 0).attr("text-anchor", "middle").style("fill", "#ffffff").style("font-size", "14px").style("font-weight", "bold").style("pointer-events", "none").text("+");
+                addChildBtn.append("text").attr("dy", 4.5).attr("x", 0).attr("text-anchor", "middle").style("fill", "#ffffff").style("font-size", "14px").style("font-weight", "bold").style("pointer-events", "none").text("+");
 
-                // 8. RENDER ORANG
+                // RENDER INDIVIDU (NODE)
                 nodeSelection = g.selectAll(".node").data(drawNodes).join("g")
                     .attr("class", d => "node " + (d.data.gender === "P" ? "perempuan" : "laki"))
                     .attr("transform", d => `translate(${d.x},${d.y})`);
 
-                // 9. AREA DROP ZONE PINTAR (HANYA MUNCUL SAAT DIDEKATI)
+                // AREA DROP ZONES EKSKLUSIF (HANYA MUNCUL DEKAT)
                 const dropZones = nodeSelection.append("g")
                     .attr("class", "drop-zones-group")
                     .style("opacity", 0)
                     .style("pointer-events", "none");
 
-                dropZones.append("rect").attr("class", "drop-zone zone-parent").attr("x", -45).attr("y", -60).attr("width", 90).attr("height", 30).attr("rx", 6);
-                dropZones.append("text").attr("class", "drop-text").attr("x", 0).attr("y", -40).text("⬆️ Jd Orang Tua");
+                dropZones.append("rect").attr("class", "drop-zone zone-parent").attr("x", -50).attr("y", -65).attr("width", 100).attr("height", 32).attr("rx", 6);
+                dropZones.append("text").attr("class", "drop-text").attr("x", 0).attr("y", -43).text("⬆️ Jd Orang Tua");
 
-                dropZones.append("rect").attr("class", "drop-zone zone-child").attr("x", -40).attr("y", 35).attr("width", 80).attr("height", 30).attr("rx", 6);
-                dropZones.append("text").attr("class", "drop-text").attr("x", 0).attr("y", 54).text("⬇️ Jd Anak");
+                dropZones.append("rect").attr("class", "drop-zone zone-child").attr("x", -45).attr("y", 35).attr("width", 90).attr("height", 32).attr("rx", 6);
+                dropZones.append("text").attr("class", "drop-text").attr("x", 0).attr("y", 55).text("⬇️ Jd Anak");
 
-                // 10. DRAG & DROP LOGIC
+                // DRAG & DROP FUSION LOGIC
                 const dragBehavior = d3.drag()
                     .filter(() => isDragMode)
                     .on("start", function(event, d) {
@@ -477,9 +500,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                         d3.select(this).attr("transform", `translate(${d.x},${d.y})`);
                         updateLinks();
 
-                        // Deteksi orang terdekat dalam radius 120px
                         let closestNode = null;
-                        let minDist = 120; 
+                        let minDist = 130; // Radius deteksi
 
                         nodeSelection.each(function(targetData) {
                             if (targetData.data.dbKey === d.data.dbKey) return;
@@ -487,7 +509,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                             if (dist < minDist) { minDist = dist; closestNode = this; }
                         });
 
-                        g.selectAll(".drop-zones-group").style("opacity", 0).style("pointer-events", "none");
+                        g.selectAll(".drop-zones-group").style("opacity", 0);
                         g.selectAll(".drop-zone").classed("active-parent active-child", false);
                         dropTarget = null;
 
@@ -496,10 +518,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                             dz.style("opacity", 1);
                             const tData = d3.select(closestNode).datum();
                             const dy = d.y - tData.y;
-                            if (dy < -20) {
+                            
+                            if (dy < -15) {
                                 dropTarget = { node: tData, type: 'parent' };
                                 dz.select(".zone-parent").classed("active-parent", true);
-                            } else if (dy > 20) {
+                            } else if (dy > 15) {
                                 dropTarget = { node: tData, type: 'child' }; 
                                 dz.select(".zone-child").classed("active-child", true);
                             }
@@ -514,7 +537,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                             const targetKey = dropTarget.node.data.dbKey;
                             const draggedKey = d.data.dbKey;
                             
-                            // Cegah silsilah muter balik
+                            // Validasi Rantai
                             let curr = dropTarget.node;
                             let cycle = false;
                             while(curr) {
@@ -532,7 +555,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                                 
                                 if (confirm(msg)) {
                                     try {
-                                        // PENTING: Hapus koordinat manual saat dipasang ke relasi baru biar rapi
+                                        // PENTING: CLEAR MANUAL POSITION SAAT RELASI BARU TERBENTUK (AGAR AUTO RAPIH)
                                         if (dropTarget.type === 'parent') {
                                             await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: draggedKey, manualX: null, manualY: null });
                                             await update(ref(db, `${DB_PATH}/${draggedKey}`), { manualX: null, manualY: null });
@@ -543,6 +566,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                                 } else { renderTree(); }
                             }
                         } else {
+                            // Simpan Posisi Custom
                             await update(ref(db, `${DB_PATH}/${d.data.dbKey}`), { manualX: d.x, manualY: d.y });
                         }
                         draggedNode = null;
@@ -555,14 +579,21 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     openEdit(d.data);
                 }).call(dragBehavior);
 
+                nodeSelection.append("circle").attr("r", 18);
+                nodeSelection.append("text").attr("dy", -30).attr("text-anchor", "middle").text(d => d.data.name.length > 25 ? d.data.name.slice(0, 23) + "…" : d.data.name);
+                nodeSelection.append("text").attr("class", "status").attr("dy", 32).attr("text-anchor", "middle").text(d => d.data.status);
+
                 updateLinks(); 
 
-                const extent = d3.extent(drawNodes, d => d.x);
-                const extentY = d3.extent(drawNodes, d => d.y);
-                if (extent[0] !== undefined) {
-                    const cx = (extent[0] + extent[1]) / 2;
-                    const cy = (extentY[0] + extentY[1]) / 2;
-                    svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - cx, height / 2 - cy + 20));
+                // AUTO-FIT LAYAR CERDAS (ANTI-NAN)
+                let validNodes = drawNodes.filter(d => !isNaN(d.x) && !isNaN(d.y));
+                if(validNodes.length > 0) {
+                    const extent = d3.extent(validNodes, d => d.x);
+                    const extentY = d3.extent(validNodes, d => d.y);
+                    let cx = (extent[0] + extent[1]) / 2;
+                    let cy = (extentY[0] + extentY[1]) / 2;
+                    if(isNaN(cx)) cx = 0; if(isNaN(cy)) cy = 0;
+                    svg.transition().duration(500).call(zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - cx, height / 2 - cy + 20));
                 }
                 treeReady = true;
             } catch (err) {
@@ -607,7 +638,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 await set(newRef, { name, gender, parentId, spouseId, ...randomCoords() });
                 
                 if (ctx === 'ADD_PARENT' && targetKey) {
-                    // Update anak supaya parentId mengarah ke ortu baru
                     await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: newRef.key, manualX: null, manualY: null });
                 }
                 if (ctx === 'ADD_SPOUSE' && targetKey) {
@@ -655,31 +685,46 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             } catch (err) { notify("Gagal menghapus: " + err.message); }
         }
 
+        // TUGAS TOMBOL RESET POSISI
+        async function resetLayout() {
+            if(!confirm("Kembalikan seluruh pohon ke susunan otomatis? Semua posisi hasil geseran akan dirapikan kembali.")) return;
+            try {
+                const updates = {};
+                dataGlobal.forEach(p => {
+                    if (p.manualX !== null || p.manualY !== null) {
+                        updates[`${DB_PATH}/${p.dbKey}/manualX`] = null;
+                        updates[`${DB_PATH}/${p.dbKey}/manualY`] = null;
+                    }
+                });
+                if (Object.keys(updates).length > 0) {
+                    await update(ref(db), updates);
+                    notify("Posisi berhasil dirapikan!");
+                }
+            } catch (err) { notify("Gagal reset layout."); }
+        }
+
         function wireEvents() {
             $("btn-toggle-drag").addEventListener("click", () => {
                 isDragMode = !isDragMode;
                 const btn = $("btn-toggle-drag");
                 const hint = $("tree-instruction");
                 if (isDragMode) {
-                    btn.className = "text-[9px] text-white bg-amber-500 px-3 py-1.5 rounded-full font-bold shadow-md transition-colors";
-                    btn.innerHTML = '<i class="fas fa-arrows-alt"></i> Silsilah Bisa Digeser';
-                    hint.innerHTML = '<i class="fas fa-info-circle"></i> Tarik profil & dekatkan ke profil lain untuk memindahkan Posisi Relasinya.';
-                    hint.className = "text-[10px] text-center text-amber-600 mt-3 font-bold";
+                    btn.className = "w-full bg-amber-500 text-white p-4 rounded-xl shadow-md flex items-center justify-center gap-3 transition-colors active:scale-95";
+                    btn.innerHTML = '<i class="fas fa-arrows-alt text-xl"></i><div class="text-left leading-tight"><strong class="block text-sm">Mode Geser Aktif</strong><span class="block text-[10px] text-amber-200">Tarik ke frame untuk pindah ortu/anak</span></div>';
+                    hint.innerHTML = '<i class="fas fa-info-circle"></i> Mode Geser Aktif: Tarik profil & dekatkan ke profil lain untuk memindahkan Posisi Relasinya.';
+                    hint.className = "text-[12px] text-center text-amber-600 mt-3 font-bold";
                 } else {
-                    btn.className = "text-[9px] text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full font-bold border border-slate-200 transition-colors";
-                    btn.innerHTML = '<i class="fas fa-lock"></i> Silsilah Terkunci';
-                    hint.innerHTML = '<i class="fas fa-hand-pointer mr-1"></i> Sentuh nama untuk kelola, atau sentuh (+) di garis untuk anak.';
-                    hint.className = "text-[10px] text-center text-emerald-600 mt-3 font-bold";
+                    btn.className = "w-full bg-slate-100 text-slate-600 border border-slate-200 p-4 rounded-xl shadow-sm flex items-center gap-3 hover:bg-slate-200 transition-colors";
+                    btn.innerHTML = '<i class="fas fa-lock text-xl w-6 text-center"></i><div class="text-left leading-tight"><strong class="block text-sm">Silsilah Terkunci</strong><span class="block text-[10px] text-slate-500">Klik untuk geser posisi</span></div>';
+                    hint.innerHTML = '<i class="fas fa-hand-pointer mr-1"></i> Klik nama untuk kelola, klik (+) di garis untuk tambah anak.';
+                    hint.className = "text-[12px] text-center text-emerald-600 mt-3 font-bold";
                 }
                 if (treeReady) renderTree();
             });
 
+            $("btn-reset-layout").addEventListener("click", resetLayout);
             $("btn-tambah-data-main").addEventListener("click", () => openTambahModal('MAIN', '', '', null));
-            $("btn-lihat-pohon").addEventListener("click", () => {
-                $("tree-container").scrollIntoView({ behavior: "smooth", block: "center" });
-                if (treeReady) renderTree();
-            });
-
+            $("btn-lihat-pohon").addEventListener("click", () => { $("tree-container").scrollIntoView({ behavior: "smooth", block: "center" }); if (treeReady) renderTree(); });
             $("btn-close-modal-tambah").addEventListener("click", () => hideModal(modalTambah));
             $("btn-close-modal-edit").addEventListener("click", () => hideModal(modalEdit));
             modalTambah.addEventListener("click", e => { if (e.target === modalTambah) hideModal(modalTambah); });
@@ -690,25 +735,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             $("btn-hapus-data").addEventListener("click", deletePerson);
 
             $("btn-tambah-ortu").addEventListener("click", () => {
-                const key = $("edit-dbkey").value;
-                const name = $("edit-nama").value;
-                hideModal(modalEdit);
-                openTambahModal('ADD_PARENT', key, name, null);
+                const key = $("edit-dbkey").value; const name = $("edit-nama").value;
+                hideModal(modalEdit); openTambahModal('ADD_PARENT', key, name, null);
             });
-
             $("btn-tambah-pasangan").addEventListener("click", () => {
-                const key = $("edit-dbkey").value;
-                const name = $("edit-nama").value;
-                const gender = $("edit-gender").value;
-                hideModal(modalEdit);
-                openTambahModal('ADD_SPOUSE', key, name, gender);
+                const key = $("edit-dbkey").value; const name = $("edit-nama").value; const gender = $("edit-gender").value;
+                hideModal(modalEdit); openTambahModal('ADD_SPOUSE', key, name, gender);
             });
-
             $("btn-tambah-cabang").addEventListener("click", () => {
-                const key = $("edit-dbkey").value;
-                const name = $("edit-nama").value;
-                hideModal(modalEdit);
-                openTambahModal('ADD_CHILD', key, name, null);
+                const key = $("edit-dbkey").value; const name = $("edit-nama").value;
+                hideModal(modalEdit); openTambahModal('ADD_CHILD', key, name, null);
             });
 
             $("input-pencarian").addEventListener("input", refreshSearch);
