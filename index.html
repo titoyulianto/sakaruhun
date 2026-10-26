@@ -107,7 +107,7 @@
             <form id="form-tambah" class="space-y-4">
                 <div>
                     <label class="text-xs font-bold text-slate-600">Nama Lengkap</label>
-                    <input type="text" id="input-nama" required placeholder="Contoh: Pangeran Kertadiningrat" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <input type="text" id="input-nama" required placeholder="Contoh: Nyimas Lampeg" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-slate-600">Jenis Kelamin</label>
@@ -168,7 +168,9 @@
                     <select id="edit-parent" required class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                         <option value="akar_utama">🌟 JADIKAN LELUHUR UTAMA 🌟</option>
                         <option value="unknown">❓ Belum Diketahui</option>
+                        <option value="manual">✍️ Ketik Manual (Nama Baru)</option>
                     </select>
+                    <input type="text" id="edit-parent-manual" placeholder="Ketik nama orang tua secara manual..." class="hidden w-full mt-2 bg-white border border-amber-300 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-inner">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-slate-600">Pasangan (Suami / Istri)</label>
@@ -177,7 +179,7 @@
                         <option value="unknown">❓ Belum Diketahui</option>
                         <option value="manual">✍️ Ketik Manual (Nama Baru)</option>
                     </select>
-                    <input type="text" id="edit-spouse-manual" placeholder="Ketik nama pasangan manual..." class="hidden w-full mt-2 bg-white border border-amber-300 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-inner">
+                    <input type="text" id="edit-spouse-manual" placeholder="Ketik nama pasangan secara manual..." class="hidden w-full mt-2 bg-white border border-amber-300 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-inner">
                 </div>
                 
                 <div class="flex gap-2 pt-2">
@@ -264,6 +266,7 @@
         const formEdit = document.getElementById('form-edit');
         const editGender = document.getElementById('edit-gender');
         const editParent = document.getElementById('edit-parent');
+        const editParentManual = document.getElementById('edit-parent-manual');
         const editSpouse = document.getElementById('edit-spouse');
         const editSpouseManual = document.getElementById('edit-spouse-manual');
         document.getElementById('btn-close-edit').addEventListener('click', () => { modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex'); });
@@ -285,6 +288,16 @@
             } else {
                 inputSpouseManual.classList.add('hidden');
                 inputSpouseManual.removeAttribute('required');
+            }
+        });
+
+        editParent.addEventListener('change', (e) => {
+            if (e.target.value === 'manual') {
+                editParentManual.classList.remove('hidden');
+                editParentManual.setAttribute('required', 'true');
+            } else {
+                editParentManual.classList.add('hidden');
+                editParentManual.removeAttribute('required');
             }
         });
 
@@ -339,17 +352,14 @@
                 optionsHTML += `<option value="${w.dbKey}">${w.name} (${w.gender === 'L' ? 'Laki-laki' : 'Perempuan'})</option>`;
             });
 
-            selectParent.innerHTML = `
-                <option value="">-- Pilih Orang Tua --</option>
+            const parentOptionsHTML = `
                 <option value="akar_utama">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option>
                 <option value="unknown">❓ Belum Diketahui</option>
                 <option value="manual">✍️ Ketik Manual (Nama Baru)</option>
             ` + optionsHTML;
 
-            editParent.innerHTML = `
-                <option value="akar_utama">🌟 JADIKAN LELUHUR UTAMA 🌟</option>
-                <option value="unknown">❓ Belum Diketahui</option>
-            ` + optionsHTML;
+            selectParent.innerHTML = '<option value="">-- Pilih Orang Tua --</option>' + parentOptionsHTML;
+            editParent.innerHTML = parentOptionsHTML;
 
             const spouseOptionsHTML = `
                 <option value="">-- Belum Menikah / Lajang --</option>
@@ -409,7 +419,8 @@
                         document.getElementById('edit-nama').value = d.data.name;
                         editGender.value = d.data.gender || 'L';
                         editParent.value = d.data.parentId || 'akar_utama';
-                        
+                        editParentManual.classList.add('hidden');
+
                         if (d.data.spouseId && dataMap[d.data.spouseId]) {
                             editSpouse.value = d.data.spouseId;
                             editSpouseManual.classList.add('hidden');
@@ -527,8 +538,23 @@
             const dbKey = document.getElementById('edit-dbkey').value;
             const namaBaru = document.getElementById('edit-nama').value;
             const genderBaru = editGender.value;
-            const parentBaru = editParent.value;
             
+            let parentBaru = editParent.value;
+            if (parentBaru === 'manual') {
+                const manualParentName = editParentManual.value;
+                if (manualParentName) {
+                    const newParentRef = push(wargaRef, {
+                        parentId: 'akar_utama',
+                        name: manualParentName,
+                        gender: genderBaru === 'L' ? 'P' : 'L',
+                        spouseId: '',
+                        lat: -6.8320 + (Math.random() - 0.5) * 0.005,
+                        lng: 108.2140 + (Math.random() - 0.5) * 0.005
+                    });
+                    parentBaru = newParentRef.key;
+                }
+            }
+
             let spouseBaru = editSpouse.value;
             if (spouseBaru === 'manual') {
                 const manualSpouseName = editSpouseManual.value;
@@ -552,6 +578,7 @@
                 spouseId: spouseBaru === 'unknown' ? '' : spouseBaru 
             }).then(() => {
                 modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex');
+                editParentManual.classList.add('hidden');
                 editSpouseManual.classList.add('hidden');
             });
         });
