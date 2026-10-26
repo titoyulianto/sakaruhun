@@ -108,7 +108,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     </select>
                 </div>
 
-                <div>
+                <!-- Bagian ini akan disembunyikan otomatis jika menambah dari tombol (+) -->
+                <div id="wrapper-parent-tambah">
                     <label class="block text-xs font-bold text-slate-600">Orang Tua Kandung dari Orang Ini</label>
                     <select id="select-parent" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
                     <input id="input-parent-manual" placeholder="Ketik nama orang tuanya..." class="hidden w-full bg-white border border-emerald-300 rounded-xl p-3 mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
@@ -170,6 +171,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     </button>
                 </div>
             </form>
+
+            <hr class="my-5 border-slate-100">
+
+            <button id="btn-tambah-cabang" type="button" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl p-3 font-bold text-xs transition-colors">
+                <i class="fas fa-code-branch mr-2"></i>Tambah Anak Dari Orang Ini
+            </button>
         </div>
     </div>
 
@@ -384,7 +391,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link")
                     .attr("d", d => `M${d.source.x + 17},${d.source.y} L${d.x - 17},${d.y}`);
 
-                // TOMBOL PLUS DI TENGAH PASANGAN
+                // TOMBOL PLUS DI TENGAH PASANGAN (TAMBAH ANAK DARI PASANGAN INI)
                 const addChildBtn = g.selectAll(".add-child-btn").data(spousePositions).join("g")
                     .attr("class", "add-child-btn")
                     .attr("transform", d => `translate(${(d.source.x + d.x) / 2}, ${d.source.y})`)
@@ -401,6 +408,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                         // Isi Orang Tua otomatis dari node sumber pasangan
                         fillSelect($("select-parent"), "parent", d.source.data.dbKey);
                         fillSelect($("select-spouse"), "spouse", "");
+                        
+                        // LOGIKA BARU: Sembunyikan field orang tua kandung karena sudah pasti
+                        $("wrapper-parent-tambah").classList.add("hidden");
                         
                         showModal(modalTambah);
                         $("input-nama").focus();
@@ -566,6 +576,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
         function wireEvents() {
             $("btn-tambah-data").addEventListener("click", () => {
                 formTambah.reset();
+                $("wrapper-parent-tambah").classList.remove("hidden"); // Tampilkan lagi
                 fillSelect($("select-parent"), "parent", "akar_utama");
                 fillSelect($("select-spouse"), "spouse", "");
                 syncManual($("select-parent"), $("input-parent-manual"));
@@ -589,6 +600,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             formTambah.addEventListener("submit", saveNew);
             formEdit.addEventListener("submit", saveEdit);
             $("btn-hapus-data").addEventListener("click", deletePerson);
+
+            $("btn-tambah-cabang").addEventListener("click", () => {
+                const key = $("edit-dbkey").value;
+                hideModal(modalEdit);
+                formTambah.reset();
+                $("wrapper-parent-tambah").classList.add("hidden"); // Sembunyikan karena sudah pasti
+                fillSelect($("select-parent"), "parent", key);
+                fillSelect($("select-spouse"), "spouse", "");
+                syncManual($("select-parent"), $("input-parent-manual"));
+                syncManual($("select-spouse"), $("input-spouse-manual"));
+                showModal(modalTambah);
+                $("input-nama").focus();
+            });
 
             $("input-pencarian").addEventListener("input", refreshSearch);
             window.addEventListener("resize", () => { if (treeReady) renderTree(); if (map) setTimeout(() => map.invalidateSize(), 100); });
