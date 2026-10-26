@@ -29,12 +29,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 .modal.open{display:flex !important}
 .modal-card{background:white;border-radius:24px;padding:24px;width:100%;max-width:450px;max-height:90vh;overflow-y:auto;box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);}
 
-/* Drop Zone Styles */
-.drop-zone { fill: rgba(255,255,255,0.95); stroke: #94a3b8; stroke-dasharray: 4,4; stroke-width: 2px; transition: all 0.2s; cursor: crosshair;}
-.drop-zone.active-parent { fill: #dbeafe; stroke: #3b82f6; stroke-width: 3px; }
-.drop-zone.active-child { fill: #d1fae5; stroke: #10b981; stroke-width: 3px; }
-.drop-text { font-size: 11px; font-weight: bold; fill: #64748b; pointer-events: none; text-anchor: middle; }
-
 /* Geni-Style Action Badges (D3 Embedded) */
 .action-badge { cursor: pointer; transition: all 0.2s; pointer-events: all; }
 .action-badge rect { stroke-width: 1px; rx: 4px; ry: 4px; }
@@ -153,6 +147,21 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     </select>
                 </div>
 
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600">Dusun / Blok</label>
+                        <input type="text" id="input-dusun-tambah" placeholder="Cilaja" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600">RT</label>
+                        <input type="text" id="input-rt-tambah" placeholder="001" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600">RW</label>
+                        <input type="text" id="input-rw-tambah" placeholder="002" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                </div>
+
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl p-3.5 font-bold text-sm transition-colors mt-2 shadow-md">
                     <i class="fas fa-check mr-2"></i>Simpan Orang Baru
                 </button>
@@ -182,14 +191,31 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     </select>
                 </div>
 
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600">Dusun</label>
+                        <input type="text" id="edit-dusun" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600">RT</label>
+                        <input type="text" id="edit-rt" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600">RW</label>
+                        <input type="text" id="edit-rw" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                    </div>
+                </div>
+
                 <div class="border-t border-slate-200 pt-3 mt-2">
                     <label class="block text-xs font-bold text-slate-800"><i class="fas fa-link text-blue-500 mr-1"></i> PAUTKAN KE ORANG TUA (JIKA SUDAH ADA)</label>
                     <select id="edit-parent" class="w-full bg-blue-50 border border-blue-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
                 </div>
                 
                 <div>
-                    <label class="block text-xs font-bold text-slate-800"><i class="fas fa-link text-pink-500 mr-1"></i> PAUTKAN KE PASANGAN (JIKA SUDAH ADA)</label>
-                    <select id="edit-spouse" class="w-full bg-pink-50 border border-pink-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"></select>
+                    <label class="block text-xs font-bold text-slate-800"><i class="fas fa-heart text-pink-500 mr-1"></i> DAFTAR PASANGAN / ISTRI-SUAMI</label>
+                    <div id="spouse-list-container" class="space-y-2 bg-pink-50/50 border border-pink-100 rounded-xl p-3 max-h-40 overflow-y-auto">
+                        <!-- Rendered via JS -->
+                    </div>
                 </div>
 
                 <div class="flex gap-2 pt-2">
@@ -211,9 +237,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         // ==========================================
-        // EXPOSE FUNCTION KE GLOBAL (WINDOW) AGAR TIDAK ERROR "is not a function"
+        // EXPOSE FUNCTION KE GLOBAL AGAR TIDAK ERROR
         // ==========================================
         window.$ = id => document.getElementById(id);
+        const $ = window.$;
         
         window.showModal = function(id) { window.$(id).classList.add("open"); };
         window.hideModal = function(id) { window.$(id).classList.remove("open"); };
@@ -231,10 +258,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             } else if (context === 'ADD_SPOUSE') {
                 title.innerHTML = `<i class="fas fa-heart text-pink-500 mr-2"></i>Bikin Pasangan Baru untuk ${escapeHtml(targetName)}`;
                 window.$("select-gender").value = targetGender === 'L' ? 'P' : 'L';
-            } else if (context === 'ADD_PARENT') {
-                title.innerHTML = `<i class="fas fa-arrow-up text-blue-600 mr-2"></i>Bikin Ortu Baru untuk ${escapeHtml(targetName)}`;
-            } else if (context === 'ADD_SIBLING') {
-                title.innerHTML = `<i class="fas fa-user-friends text-amber-500 mr-2"></i>Bikin Saudara Baru untuk ${escapeHtml(targetName)}`;
+            } else if (context === 'ADD_PARENT_FATHER') {
+                title.innerHTML = `<i class="fas fa-male text-blue-600 mr-2"></i>Bikin Ayah Baru untuk ${escapeHtml(targetName)}`;
+                window.$("select-gender").value = "L";
+            } else if (context === 'ADD_PARENT_MOTHER') {
+                title.innerHTML = `<i class="fas fa-female text-pink-600 mr-2"></i>Bikin Ibu Baru untuk ${escapeHtml(targetName)}`;
+                window.$("select-gender").value = "P";
             } else {
                 title.innerHTML = `<i class="fas fa-user-secret text-purple-600 mr-2"></i>Bikin Garis Keturunan Baru`;
             }
@@ -242,16 +271,52 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             setTimeout(() => window.$("input-nama").focus(), 100);
         };
 
-        window.bukaModalEditGeni = function(key, nama, gender, parentId, spouseId) {
+        window.bukaModalEditGeni = function(key, nama, gender, dusun, rt, rw, parentId, spouseIds) {
             window.$("edit-dbkey").value = key;
             window.$("edit-nama").value = nama;
             window.$("edit-gender").value = gender;
+            window.$("edit-dusun").value = dusun || "";
+            window.$("edit-rt").value = rt || "";
+            window.$("edit-rw").value = rw || "";
             
             fillSelectEdit(window.$("edit-parent"), parentId);
-            fillSelectEdit(window.$("edit-spouse"), spouseId);
+            window.renderSpouseCheckboxes(key, spouseIds);
             
             window.showModal('modal-edit');
         };
+
+        window.renderSpouseCheckboxes = function(currentPersonKey, spouseIds) {
+            const container = window.$("spouse-list-container");
+            const currentSpouses = spouseIds || [];
+            let html = '';
+            let availablePeople = dataGlobal.filter(p => p.dbKey !== currentPersonKey);
+            
+            if (availablePeople.length === 0) {
+                container.innerHTML = '<span class="text-[11px] text-slate-400">Belum ada warga lain.</span>';
+                return;
+            }
+            availablePeople.forEach(p => {
+                const isChecked = currentSpouses.includes(p.dbKey) ? 'checked' : '';
+                html += `
+                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white p-2 rounded-lg border border-pink-100 hover:bg-pink-50/50 cursor-pointer">
+                        <input type="checkbox" name="spouseCheckbox" value="${p.dbKey}" ${isChecked} class="w-4 h-4 text-pink-600 rounded border-slate-300 focus:ring-pink-500">
+                        <span>${escapeHtml(p.nama)} (${p.gender === 'L' ? 'L' : 'P'})</span>
+                    </label>`;
+            });
+            container.innerHTML = html;
+        };
+
+        function fillSelectEdit(sel, selectedKey) {
+            const currentKey = window.$("edit-dbkey").value;
+            let options = '<option value="">-- Kosong / Tidak Dipautkan --</option>';
+            dataGlobal.forEach(p => {
+                if (p.dbKey !== currentKey) {
+                    options += `<option value="${escapeHtml(p.dbKey)}">${escapeHtml(p.nama)} (${p.gender === 'L' ? 'L' : 'P'})</option>`;
+                }
+            });
+            sel.innerHTML = options;
+            if (selectedKey) sel.value = selectedKey;
+        }
 
         // ==========================================
         // FIREBASE SETUP & STATE
@@ -278,23 +343,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         
         let isDragMode = false;
         let draggedNode = null;
-        
-        // Simpan state siapa yang lagi diklik buat nampilin UI Geni
-        let selectedNodeId = null;
+        let selectedNodeId = null; // State node aktif ala Geni
 
         function randomCoords() { return { lat: -6.832 + (Math.random() - .5) * .005, lng: 108.214 + (Math.random() - .5) * .005 }; }
-
-        function fillSelectEdit(sel, selectedKey) {
-            const currentKey = window.$("edit-dbkey").value;
-            let options = '<option value="">-- Kosong / Tidak Dipautkan --</option>';
-            dataGlobal.forEach(p => {
-                if (p.dbKey !== currentKey) {
-                    options += `<option value="${escapeHtml(p.dbKey)}">${escapeHtml(p.name)} (${p.gender === 'L' ? 'L' : 'P'})</option>`;
-                }
-            });
-            sel.innerHTML = options;
-            if (selectedKey) sel.value = selectedKey;
-        }
 
         function normalizeData(raw) {
             const result = {};
@@ -303,34 +354,33 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 let mx = (v.manualX != null && v.manualX !== "" && !isNaN(v.manualX)) ? Number(v.manualX) : null;
                 let my = (v.manualY != null && v.manualY !== "" && !isNaN(v.manualY)) ? Number(v.manualY) : null;
 
+                let sIds = [];
+                if (Array.isArray(v.spouseIds)) { sIds = v.spouseIds; } 
+                else if (v.spouseId) { sIds = [v.spouseId]; }
+
                 result[key] = {
                     dbKey: key,
                     name: String(v.name || "Tanpa Nama"),
+                    nama: String(v.nama || v.name || "Tanpa Nama"),
                     gender: v.gender === "P" ? "P" : "L",
                     parentId: v.parentId || "",
-                    spouseId: v.spouseId || "",
+                    fatherId: v.fatherId || "", 
+                    motherId: v.motherId || "",
+                    spouseIds: sIds,
+                    dusun: v.dusun || '', rt: v.rt || '', rw: v.rw || '',
                     lat: Number(v.lat) || -6.832,
                     lng: Number(v.lng) || 108.214,
                     manualX: mx,
                     manualY: my
                 };
             });
+            // Bersihkan yatim piatu
             Object.values(result).forEach(p => {
                 if (p.parentId && !result[p.parentId]) { p.parentId = ""; }
-                if (p.spouseId && !result[p.spouseId]) { p.spouseId = ""; }
+                if (p.fatherId && !result[p.fatherId]) { p.fatherId = ""; }
+                if (p.motherId && !result[p.motherId]) { p.motherId = ""; }
             });
             return result;
-        }
-
-        function statusFor(key) {
-            let p = dataMap[key], depth = 1, seen = new Set([key]);
-            while (p && p.parentId && dataMap[p.parentId] && !seen.has(p.parentId)) {
-                seen.add(p.parentId);
-                depth++;
-                p = dataMap[p.parentId];
-            }
-            const kamus = { 1: "Karuhun Utama", 2: "Bapak / Indung (Gen-2)", 3: "Aki / Nini (Gen-3)", 4: "Buyut (Cicit)", 5: "Bao", 6: "Janggawaréng", 7: "Udeg-udeg", 8: "Gantung-siwur" };
-            return kamus[depth] || `Keturunan Gen-${depth}`;
         }
 
         function initMap() {
@@ -346,14 +396,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             layerGroup.clearLayers();
             dataGlobal.forEach(p => {
                 if (Number.isFinite(p.lat) && Number.isFinite(p.lng)) {
-                    L.marker([p.lat, p.lng]).addTo(layerGroup).bindPopup(`<b>${escapeHtml(p.name)}</b><br><span style="font-size:10px">${p.gender === "L" ? "Laki-laki" : "Perempuan"}</span>`);
+                    L.marker([p.lat, p.lng]).addTo(layerGroup).bindPopup(`<b>${escapeHtml(p.nama)}</b><br><span style="font-size:10px">${p.gender === "L" ? "Laki-laki" : "Perempuan"}</span>`);
                 }
             });
         }
 
         function renderTree() {
             if (!window.d3) return;
-            const container = window.$("tree-container");
+            const container = $("tree-container");
             const width = Math.max(container.clientWidth, 600);
             const height = Math.max(container.clientHeight, 500);
 
@@ -362,7 +412,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
             svg.selectAll("*").remove();
             
-            // Background Click untuk Deselect Geni UI
+            // Klik kosong mematikan select
             svg.on("click", () => {
                 if(selectedNodeId) {
                     selectedNodeId = null;
@@ -375,43 +425,37 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             svg.call(zoomBehavior).on("dblclick.zoom", null);
 
             try {
-                let safeDataGlobal = dataGlobal.map(d => ({...d}));
-                const byIdGlobal = new Map(safeDataGlobal.map(p => [p.dbKey, p]));
+                let primary = dataGlobal.map(d => ({...d}));
+                const byIdGlobal = new Map(primary.map(p => [p.dbKey, p]));
                 
                 const spouseOf = new Map();
                 const isSpouseNode = new Set();
-                const renderedPairs = new Set();
                 
-                safeDataGlobal.forEach(p => {
-                    if (p.spouseId) {
+                primary.forEach(p => {
+                    const sList = p.spouseIds || [];
+                    sList.forEach(sId => {
+                        if (!byIdGlobal.has(sId)) return;
                         if(!spouseOf.has(p.dbKey)) spouseOf.set(p.dbKey, []);
-                        if(!spouseOf.has(p.spouseId)) spouseOf.set(p.spouseId, []);
-                        if(!spouseOf.get(p.dbKey).includes(p.spouseId)) spouseOf.get(p.dbKey).push(p.spouseId);
-                        if(!spouseOf.get(p.spouseId).includes(p.dbKey)) spouseOf.get(p.spouseId).push(p.dbKey);
-
-                        const pairKey = [p.dbKey, p.spouseId].sort().join("::");
-                        if (!renderedPairs.has(pairKey)) {
-                            renderedPairs.add(pairKey);
-                            const p1 = byIdGlobal.get(p.dbKey);
-                            const p2 = byIdGlobal.get(p.spouseId);
-                            if (p1 && p2) {
-                                if (p1.parentId && !p2.parentId) isSpouseNode.add(p2.dbKey);
-                                else if (p2.parentId && !p1.parentId) isSpouseNode.add(p1.dbKey);
-                                else isSpouseNode.add(p2.dbKey); 
-                            }
-                        }
-                    }
+                        if(!spouseOf.has(sId)) spouseOf.set(sId, []);
+                        if(!spouseOf.get(p.dbKey).includes(sId)) spouseOf.get(p.dbKey).push(sId);
+                        if(!spouseOf.get(sId).includes(p.dbKey)) spouseOf.get(sId).push(p.dbKey);
+                        isSpouseNode.add(sId);
+                    });
                 });
 
-                let primary = safeDataGlobal.filter(p => !isSpouseNode.has(p.dbKey));
-                let primaryIds = new Set(primary.map(p => p.dbKey));
-
+                primary = primary.filter(p => !isSpouseNode.has(p.dbKey));
+                
+                // MENGATUR PARENT BERDASARKAN FATHER / MOTHER
                 primary.forEach(p => {
-                    if (p.parentId && !primaryIds.has(p.parentId)) {
-                        let alts = spouseOf.get(p.parentId) || [];
-                        let valid = alts.find(id => primaryIds.has(id));
-                        p.parentId = valid || ""; 
-                    }
+                    if (p.fatherId && !isSpouseNode.has(p.fatherId)) p.parentId = p.fatherId;
+                    else if (p.motherId && !isSpouseNode.has(p.motherId)) p.parentId = p.motherId;
+                    else if (p.parentId && isSpouseNode.has(p.parentId)) p.parentId = ""; 
+                });
+
+                // ANTI CYCLE
+                const primaryIds = new Set(primary.map(p => p.dbKey));
+                primary.forEach(p => {
+                    if (p.parentId && !primaryIds.has(p.parentId)) p.parentId = "";
                 });
 
                 primary.forEach(p => {
@@ -431,14 +475,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const DUMMY_ROOT = "DUMMY_INVISIBLE_ROOT";
                 
                 if (roots.length > 1) {
-                    primary.push({ dbKey: DUMMY_ROOT, name: "", gender: "L", parentId: "", isDummy: true });
+                    primary.push({ dbKey: DUMMY_ROOT, nama: "", gender: "L", parentId: "", isDummy: true });
                     roots.forEach(r => r.parentId = DUMMY_ROOT);
                 } else if (roots.length === 0 && primary.length > 0) {
                     primary[0].parentId = "";
                 }
 
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(primary);
-                d3.tree().nodeSize([280, 180])(root);
+                d3.tree().nodeSize([300, 180])(root);
                 const nodes = root.descendants();
                 
                 nodes.forEach(n => {
@@ -457,52 +501,45 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         pairsRendered.add(pairKey);
                         const person = byIdGlobal.get(id);
                         if(person) {
-                            let sx = n.x + 150, sy = n.y; 
+                            let sx = n.x + 160, sy = n.y + (idx * 60); 
                             if (person.manualX !== null && person.manualX !== undefined) sx = person.manualX;
                             if (person.manualY !== null && person.manualY !== undefined) sy = person.manualY;
-                            spousePositions.push({ data: { ...person, status: "Pasangan" }, source: n, x: sx, y: sy, isSpouse: true });
+                            spousePositions.push({ data: { ...person }, source: n, x: sx, y: sy, isSpouse: true });
                         }
                     });
                 });
 
-                // Tarik orang tua istri agar floating tepat di atasnya
-                const mainRootKey = roots.length > 0 ? roots[0].dbKey : null;
+                // =========================================================================
+                // LOGIKA GRAVITASI PARENT DARI PASANGAN (Biar ga terbang ke root)
+                // =========================================================================
                 if (root.children) {
                     root.children.forEach(subRoot => {
                         const subNodes = subRoot.descendants();
-                        const hasMainRoot = subNodes.some(n => n.data.dbKey === mainRootKey);
-                        if (!hasMainRoot) {
-                            let connectedSpouse = null;
-                            let connectingNode = null;
-                            for (let n of subNodes) {
-                                const sp = spousePositions.find(s => s.data.parentId === n.data.dbKey);
-                                if (sp) { connectedSpouse = sp; connectingNode = n; break; }
-                            }
-                            if (connectedSpouse && connectingNode) {
-                                const targetX = connectedSpouse.x;
-                                const targetY = connectedSpouse.y - 180;
-                                const dx = targetX - connectingNode.x;
-                                const dy = targetY - connectingNode.y;
-                                subNodes.forEach(n => {
-                                    if (n.data.manualX == null) n.x += dx;
-                                    if (n.data.manualY == null) n.y += dy;
-                                });
-                            }
+                        let connectedSpouse = null;
+                        let connectingNode = null;
+                        for (let n of subNodes) {
+                            const sp = spousePositions.find(s => s.data.parentId === n.data.dbKey || s.data.fatherId === n.data.dbKey || s.data.motherId === n.data.dbKey);
+                            if (sp) { connectedSpouse = sp; connectingNode = n; break; }
+                        }
+                        if (connectedSpouse && connectingNode) {
+                            const targetX = connectedSpouse.x;
+                            const targetY = connectedSpouse.y - 180;
+                            const dx = targetX - connectingNode.x;
+                            const dy = targetY - connectingNode.y;
+                            subNodes.forEach(n => {
+                                if (n.data.manualX == null) n.x += dx;
+                                if (n.data.manualY == null) n.y += dy;
+                            });
                         }
                     });
                 }
 
                 const drawNodes = [];
-                nodes.forEach(n => { 
-                    if(!n.data.isDummy) {
-                        n.data.status = statusFor(n.data.dbKey); 
-                        drawNodes.push(n); 
-                    }
-                });
+                nodes.forEach(n => { if(!n.data.isDummy) drawNodes.push(n); });
                 spousePositions.forEach(s => { drawNodes.push(s); });
 
-                // GAMBAR GARIS POHON & PASANGAN
-                g.selectAll(".link").data(root.links().filter(l => !l.source.data.isDummy)).join("path").attr("class", "link")
+                const validLinks = root.links().filter(l => !l.source.data.isDummy);
+                g.selectAll(".link").data(validLinks).join("path").attr("class", "link")
                     .attr("d", d => {
                         let startX = d.source.x, startY = d.source.y;
                         const spData = spousePositions.find(sp => sp.source.data.dbKey === d.source.data.dbKey);
@@ -523,12 +560,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link")
                     .attr("d", sp => `M${sp.source.x+17},${sp.source.y} L${sp.x-17},${sp.y}`);
 
-                // GAMBAR NODE (ORANG)
                 nodeSelection = g.selectAll(".node").data(drawNodes).join("g")
                     .attr("class", d => `node ${d.data.gender === "P" ? "perempuan" : "laki"} ${d.data.dbKey === selectedNodeId ? "selected" : ""}`)
                     .attr("transform", d => `translate(${d.x},${d.y})`);
 
-                // DRAG LOGIC (Hanya saat mode geser)
                 const dragBehavior = d3.drag()
                     .filter(() => isDragMode)
                     .on("start", function(event, d) {
@@ -548,14 +583,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     });
 
                 // =========================================================================
-                // UI GENI-STYLE: BADGE ACTION (Muncul saat Node diklik, jika Mode Geser Off)
+                // UI GENI-STYLE: BADGE ACTION (Muncul saat Node diklik)
                 // =========================================================================
                 nodeSelection.on("click", (event, d) => {
                     if (isDragMode) return;
-                    event.stopPropagation(); // Biar svg gak nangkep klik
+                    event.stopPropagation();
                     
                     if (selectedNodeId === d.data.dbKey) {
-                        selectedNodeId = null; // Toggle off
+                        selectedNodeId = null; 
                     } else {
                         selectedNodeId = d.data.dbKey;
                     }
@@ -563,48 +598,53 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 }).call(dragBehavior);
 
                 nodeSelection.append("circle").attr("r", 20);
-                nodeSelection.append("text").attr("dy", -32).attr("text-anchor", "middle").text(d => d.data.name.length > 25 ? d.data.name.slice(0, 23) + "…" : d.data.name);
-                nodeSelection.append("text").attr("class", "status").attr("dy", 35).attr("text-anchor", "middle").text(d => d.data.status);
+                nodeSelection.append("text").attr("dy", -32).attr("text-anchor", "middle").text(d => d.data.nama.length > 25 ? d.data.nama.slice(0, 23) + "…" : d.data.nama);
+                nodeSelection.append("text").attr("class", "status").attr("dy", 35).attr("text-anchor", "middle").text(d => d.data.dusun ? `Dusun ${d.data.dusun}` : '');
 
-                // Render Action Badges khusus di Node yang lagi dipilih
+                // RENDER BADGE BUTTONS UNTUK SELECTED NODE
                 nodeSelection.each(function(d) {
                     if (d.data.dbKey === selectedNodeId) {
                         const nodeGroup = d3.select(this);
-                        const hasParent = d.data.parentId && d.data.parentId !== DUMMY_ROOT;
+                        
+                        const noFather = !d.data.fatherId || d.data.fatherId === "";
+                        const noMother = !d.data.motherId || d.data.motherId === "";
 
-                        // TOMBOL ATAS: TAMBAH AYAH & IBU (Kalau belum punya)
-                        if (!hasParent) {
-                            const btnAyah = nodeGroup.append("g").attr("class", "action-badge blue").attr("transform", "translate(-65, -80)")
-                                .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT', d.data.dbKey, d.data.name, 'L'); });
-                            btnAyah.append("rect").attr("width", 60).attr("height", 20);
-                            btnAyah.append("text").attr("x", 30).attr("y", 13).text("+ Ayah");
-                            nodeGroup.append("path").attr("d", "M-35,-60 V-20").attr("class", "link"); 
-
-                            const btnIbu = nodeGroup.append("g").attr("class", "action-badge pink").attr("transform", "translate(5, -80)")
-                                .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT', d.data.dbKey, d.data.name, 'P'); });
-                            btnIbu.append("rect").attr("width", 60).attr("height", 20);
-                            btnIbu.append("text").attr("x", 30).attr("y", 13).text("+ Ibu");
-                            nodeGroup.append("path").attr("d", "M35,-60 V-20").attr("class", "link"); 
+                        // 1. TOMBOL ATAS: TAMBAH AYAH & IBU (Kalau belum punya)
+                        if (noFather || noMother) {
+                            if (noFather) {
+                                const btnAyah = nodeGroup.append("g").attr("class", "action-badge blue").attr("transform", "translate(-70, -80)")
+                                    .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT_FATHER', d.data.dbKey, d.data.nama, 'L'); });
+                                btnAyah.append("rect").attr("width", 65).attr("height", 22);
+                                btnAyah.append("text").attr("x", 32.5).attr("y", 15).text("+ Ayah");
+                                nodeGroup.append("path").attr("d", "M-35,-58 V-20").attr("class", "link"); 
+                            }
+                            if (noMother) {
+                                const btnIbu = nodeGroup.append("g").attr("class", "action-badge pink").attr("transform", "translate(5, -80)")
+                                    .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT_MOTHER', d.data.dbKey, d.data.nama, 'P'); });
+                                btnIbu.append("rect").attr("width", 65).attr("height", 22);
+                                btnIbu.append("text").attr("x", 32.5).attr("y", 15).text("+ Ibu");
+                                nodeGroup.append("path").attr("d", "M35,-58 V-20").attr("class", "link"); 
+                            }
                         }
 
-                        // TOMBOL KANAN: TAMBAH PASANGAN
+                        // 2. TOMBOL KANAN: TAMBAH PASANGAN
                         const btnSpouse = nodeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(40, -10)")
-                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SPOUSE', d.data.dbKey, d.data.name, d.data.gender === 'L' ? 'P' : 'L'); });
-                        btnSpouse.append("rect").attr("width", 75).attr("height", 20);
-                        btnSpouse.append("text").attr("x", 37).attr("y", 13).text("+ Pasangan");
+                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SPOUSE', d.data.dbKey, d.data.nama, d.data.gender === 'L' ? 'P' : 'L'); });
+                        btnSpouse.append("rect").attr("width", 75).attr("height", 22);
+                        btnSpouse.append("text").attr("x", 37).attr("y", 15).text("+ Pasangan");
 
-                        // TOMBOL BAWAH: TAMBAH ANAK
+                        // 3. TOMBOL BAWAH: TAMBAH ANAK
                         const btnAnak = nodeGroup.append("g").attr("class", "action-badge green").attr("transform", "translate(-35, 50)")
-                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_CHILD', d.data.dbKey, d.data.name, null); });
-                        btnAnak.append("rect").attr("width", 70).attr("height", 20);
-                        btnAnak.append("text").attr("x", 35).attr("y", 13).text("+ Anak");
+                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_CHILD', d.data.dbKey, d.data.nama, null); });
+                        btnAnak.append("rect").attr("width", 70).attr("height", 22);
+                        btnAnak.append("text").attr("x", 35).attr("y", 15).text("+ Anak");
                         nodeGroup.append("path").attr("d", "M0,20 V50").attr("class", "link");
 
-                        // TOMBOL KIRI: EDIT/KELOLA
+                        // 4. TOMBOL KIRI: EDIT/KELOLA
                         const btnEdit = nodeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(-95, -10)")
-                            .on("click", (e) => { e.stopPropagation(); window.bukaModalEditGeni(d.data.dbKey, d.data.name, d.data.gender, d.data.parentId, d.data.spouseId); });
-                        btnEdit.append("rect").attr("width", 50).attr("height", 20);
-                        btnEdit.append("text").attr("x", 25).attr("y", 13).text("📝 Edit");
+                            .on("click", (e) => { e.stopPropagation(); window.bukaModalEditGeni(d.data.dbKey, d.data.nama, d.data.gender, d.data.dusun, d.data.rt, d.data.rw, d.data.parentId, d.data.spouseIds); });
+                        btnEdit.append("rect").attr("width", 50).attr("height", 22);
+                        btnEdit.append("text").attr("x", 25).attr("y", 15).text("📝 Edit");
                     }
                 });
 
@@ -617,7 +657,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     if(isNaN(cx)) cx = 0; if(isNaN(cy)) cy = 0;
                     svg.transition().duration(500).call(zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - cx, height / 2 - cy + 20));
                 }
-
                 treeReady = true;
             } catch (err) {
                 console.error("Gagal merender pohon:", err);
@@ -627,136 +666,157 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         // =========================================================================
         // SCRIPT FIREBASE & ACTIONS
         // =========================================================================
-        async function saveNew(e) {
+        $("form-tambah").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const button = window.$("form-tambah").querySelector('button[type="submit"]');
+            const button = $("form-tambah").querySelector('button[type="submit"]');
             button.disabled = true;
             try {
-                const name = window.$("input-nama").value.trim();
-                const gender = window.$("select-gender").value;
-                if (!name) throw new Error("Nama wajib diisi.");
-                
-                const ctx = window.$("tambah-context").value;
-                const targetKey = window.$("tambah-target").value;
-                
-                let parentId = "";
-                let spouseId = "";
+                const nama = $("input-nama").value.trim();
+                const gender = $("select-gender").value;
+                const dusun = $("input-dusun-tambah").value.trim();
+                const rt = $("input-rt-tambah").value.trim();
+                const rw = $("input-rw-tambah").value.trim();
 
-                if (ctx === 'ADD_CHILD') { parentId = targetKey; } 
-                else if (ctx === 'ADD_SPOUSE') { spouseId = targetKey; } 
+                if (!nama) throw new Error("Nama wajib diisi.");
+                
+                const ctx = $("tambah-context").value;
+                const targetKey = $("tambah-target").value;
                 
                 const newRef = push(wargaRef);
                 let initCoord = randomCoords();
                 if (targetKey && dataMap[targetKey]) { initCoord.lat = dataMap[targetKey].lat + 0.001; initCoord.lng = dataMap[targetKey].lng; }
                 
-                await set(newRef, { name, gender, parentId, spouseId, ...initCoord });
+                let newRecord = { nama, gender, dusun, rt, rw, fatherId: "", motherId: "", spouseIds: [], ...initCoord };
+                await set(newRef, newRecord);
                 
-                if (ctx === 'ADD_PARENT' && targetKey) {
-                    const targetNode = dataMap[targetKey];
-                    let mX = targetNode?.manualX !== undefined && targetNode?.manualX !== null ? targetNode.manualX : 0;
-                    let mY = targetNode?.manualY !== undefined && targetNode?.manualY !== null ? targetNode.manualY - 180 : -180;
-                    if (gender === 'L') mX -= 70; else mX += 70;
-
-                    await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: newRef.key });
-                    await update(ref(db, `${DB_PATH}/${newRef.key}`), { manualX: mX, manualY: mY });
-                }
-                if (ctx === 'ADD_SPOUSE' && targetKey) {
-                    await update(ref(db, `${DB_PATH}/${targetKey}`), { spouseId: newRef.key });
+                if (ctx === 'ADD_PARENT_FATHER') {
+                    await update(ref(db, `${DB_PATH}/${targetKey}`), { fatherId: newRef.key });
+                } else if (ctx === 'ADD_PARENT_MOTHER') {
+                    await update(ref(db, `${DB_PATH}/${targetKey}`), { motherId: newRef.key });
+                } else if (ctx === 'ADD_SPOUSE') {
+                    const targetPerson = dataMap[targetKey];
+                    let spouses = targetPerson?.spouseIds || [];
+                    if (!spouses.includes(newRef.key)) spouses.push(newRef.key);
+                    
+                    let targetSpouses = [targetKey];
+                    await update(ref(db, `${DB_PATH}/${targetKey}`), { spouseIds: spouses });
+                    await update(ref(db, `${DB_PATH}/${newRef.key}`), { spouseIds: targetSpouses });
+                } else if (ctx === 'ADD_CHILD') {
+                    if(dataMap[targetKey].gender === 'L') {
+                        await update(ref(db, `${DB_PATH}/${newRef.key}`), { fatherId: targetKey });
+                    } else {
+                        await update(ref(db, `${DB_PATH}/${newRef.key}`), { motherId: targetKey });
+                    }
                 }
                 
                 window.hideModal('modal-tambah');
-                selectedNodeId = newRef.key; // Fokus ke node baru
+                selectedNodeId = newRef.key;
+                renderTree();
             } catch (err) { window.notify("Gagal menyimpan: " + err.message); } 
             finally { button.disabled = false; }
-        }
+        });
 
-        async function saveEdit(e) {
+        $("form-edit").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const button = window.$("form-edit").querySelector('button[type="submit"]');
+            const button = $("form-edit").querySelector('button[type="submit"]');
             button.disabled = true;
             try {
-                const key = window.$("edit-dbkey").value;
-                const name = window.$("edit-nama").value.trim();
-                const gender = window.$("edit-gender").value;
-                const parentId = window.$("edit-parent").value;
-                const spouseId = window.$("edit-spouse").value;
+                const key = $("edit-dbkey").value;
+                const nama = $("edit-nama").value.trim();
+                const gender = $("edit-gender").value;
+                const parentId = $("edit-parent").value; // Legacy parent selection
                 
-                if (!key || !name) throw new Error("Nama wajib diisi.");
+                const dusun = $("edit-dusun").value.trim();
+                const rt = $("edit-rt").value.trim();
+                const rw = $("edit-rw").value.trim();
+                
+                const checkboxes = document.querySelectorAll('input[name="spouseCheckbox"]:checked');
+                const selectedSpouseIds = Array.from(checkboxes).map(cb => cb.value);
+                
+                if (!key || !nama) throw new Error("Nama wajib diisi.");
 
                 if (parentId) {
                     let curr = dataGlobal.find(p => p.dbKey === parentId);
                     let cycle = false;
                     while (curr) {
                         if (curr.dbKey === key) { cycle = true; break; }
-                        curr = dataGlobal.find(p => p.dbKey === curr.parentId);
+                        curr = dataGlobal.find(p => p.dbKey === curr.parentId || p.dbKey === curr.fatherId || p.dbKey === curr.motherId);
                     }
-                    if (cycle) throw new Error("Gagal! Orang ini tidak bisa diset sebagai anak dari keturunannya sendiri.");
+                    if (cycle) throw new Error("Gagal! Silsilah melingkar.");
                 }
 
                 const old = dataMap[key];
-                const updates = { name, gender, parentId, spouseId };
+                // Support legacy parent switch
+                let fId = old.fatherId || "";
+                let mId = old.motherId || "";
+                
+                if (parentId) {
+                    if (dataMap[parentId].gender === 'L') fId = parentId;
+                    else mId = parentId;
+                }
 
-                if (old.parentId !== parentId || old.spouseId !== spouseId) {
+                const updates = { nama, gender, dusun, rt, rw, fatherId: fId, motherId: mId, spouseIds: selectedSpouseIds };
+
+                if (old.parentId !== parentId || JSON.stringify(old.spouseIds) !== JSON.stringify(selectedSpouseIds)) {
                     updates.manualX = null;
                     updates.manualY = null;
                 }
 
                 await update(ref(db, `${DB_PATH}/${key}`), updates);
 
-                if (old?.spouseId && old.spouseId !== spouseId && dataMap[old.spouseId]) {
-                    await update(ref(db, `${DB_PATH}/${old.spouseId}`), { spouseId: "" });
+                const oldSpouses = old.spouseIds || [];
+                for (let oldSId of oldSpouses) {
+                    if (!selectedSpouseIds.includes(oldSId) && dataMap[oldSId]) {
+                        let spList = dataMap[oldSId].spouseIds || [];
+                        spList = spList.filter(id => id !== key);
+                        await update(ref(db, `${DB_PATH}/${oldSId}`), { spouseIds: spList });
+                    }
                 }
-                if (spouseId && dataMap[spouseId]) {
-                    await update(ref(db, `${DB_PATH}/${spouseId}`), { spouseId: key });
+                for (let newSId of selectedSpouseIds) {
+                    if (dataMap[newSId]) {
+                        let spList = dataMap[newSId].spouseIds || [];
+                        if (!spList.includes(key)) {
+                            spList.push(key);
+                            await update(ref(db, `${DB_PATH}/${newSId}`), { spouseIds: spList });
+                        }
+                    }
                 }
 
                 window.hideModal('modal-edit');
             } catch (err) { window.notify("Gagal memperbarui: " + err.message); } 
             finally { button.disabled = false; }
-        }
+        });
 
-        async function deletePerson() {
-            const key = window.$("edit-dbkey").value;
+        $("btn-hapus-data").addEventListener("click", async () => {
+            const key = $("edit-dbkey").value;
             if (!key) return;
-            if (!confirm("Hapus individu ini? Anak-anak akan diputuskan dari orang tua ini.")) return;
+            if (!confirm("Hapus individu ini? Relasi anak dan pasangan akan diputuskan.")) return;
             try {
                 const updates = {};
-                dataGlobal.filter(p => p.parentId === key).forEach(p => { 
-                    updates[`${DB_PATH}/${p.dbKey}/parentId`] = ""; 
-                    updates[`${DB_PATH}/${p.dbKey}/manualX`] = null; 
-                    updates[`${DB_PATH}/${p.dbKey}/manualY`] = null;
+                dataGlobal.forEach(p => { 
+                    if(p.fatherId === key) updates[`${DB_PATH}/${p.dbKey}/fatherId`] = "";
+                    if(p.motherId === key) updates[`${DB_PATH}/${p.dbKey}/motherId`] = "";
+                    if(p.parentId === key) updates[`${DB_PATH}/${p.dbKey}/parentId`] = "";
                 });
-                const person = dataMap[key];
-                if (person?.spouseId && dataMap[person.spouseId]) updates[`${DB_PATH}/${person.spouseId}/spouseId`] = "";
-                
+                dataGlobal.forEach(p => {
+                    if (p.spouseIds && p.spouseIds.includes(key)) {
+                        let newList = p.spouseIds.filter(id => id !== key);
+                        updates[`${DB_PATH}/${p.dbKey}/spouseIds`] = newList;
+                    }
+                });
+
                 if (Object.keys(updates).length) await update(ref(db), updates);
                 await remove(ref(db, `${DB_PATH}/${key}`));
                 window.hideModal('modal-edit');
                 selectedNodeId = null;
             } catch (err) { window.notify("Gagal menghapus: " + err.message); }
-        }
-
-        async function resetLayout() {
-            if(!confirm("Kembalikan seluruh pohon ke susunan otomatis? Semua posisi hasil geseran akan dirapikan kembali.")) return;
-            try {
-                const updates = {};
-                dataGlobal.forEach(p => {
-                    if (p.manualX !== null || p.manualY !== null) {
-                        updates[`${DB_PATH}/${p.dbKey}/manualX`] = null;
-                        updates[`${DB_PATH}/${p.dbKey}/manualY`] = null;
-                    }
-                });
-                if (Object.keys(updates).length > 0) {
-                    await update(ref(db), updates);
-                }
-            } catch (err) { window.notify("Gagal reset layout."); }
-        }
+        });
 
         function wireEvents() {
-            window.$("btn-toggle-drag").addEventListener("click", () => {
+            $("btn-toggle-drag").addEventListener("click", () => {
                 isDragMode = !isDragMode;
-                const btn = window.$("btn-toggle-drag");
-                const hint = window.$("tree-instruction");
+                const btn = $("btn-toggle-drag");
+                const hint = $("tree-instruction");
                 if (isDragMode) {
                     selectedNodeId = null; 
                     btn.className = "w-full bg-amber-500 text-white p-4 rounded-xl shadow-md flex items-center justify-center gap-3 transition-colors active:scale-95";
@@ -772,19 +832,28 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 if (treeReady) renderTree();
             });
 
-            window.$("btn-reset-layout").addEventListener("click", resetLayout);
-            window.$("btn-tambah-data-main").addEventListener("click", () => window.openTambahModal('MAIN', '', '', null));
-            
-            window.$("form-tambah").addEventListener("submit", saveNew);
-            window.$("form-edit").addEventListener("submit", saveEdit);
-            window.$("btn-hapus-data").addEventListener("click", deletePerson);
+            $("btn-reset-layout").addEventListener("click", async () => {
+                if(!confirm("Kembalikan seluruh pohon ke susunan otomatis?")) return;
+                try {
+                    const updates = {};
+                    dataGlobal.forEach(p => {
+                        if (p.manualX !== null || p.manualY !== null) {
+                            updates[`${DB_PATH}/${p.dbKey}/manualX`] = null;
+                            updates[`${DB_PATH}/${p.dbKey}/manualY`] = null;
+                        }
+                    });
+                    if (Object.keys(updates).length > 0) await update(ref(db), updates);
+                } catch (err) { window.notify("Gagal reset layout."); }
+            });
 
-            window.$("input-pencarian").addEventListener("input", () => {
-                const q = window.$("input-pencarian").value.trim().toLocaleLowerCase("id");
+            $("btn-tambah-data-main").addEventListener("click", () => window.openTambahModal('MAIN', '', '', null));
+            
+            $("input-pencarian").addEventListener("input", () => {
+                const q = $("input-pencarian").value.trim().toLocaleLowerCase("id");
                 if (!nodeSelection) return;
                 nodeSelection.select("circle")
-                    .attr("stroke", d => q && d.data.name.toLocaleLowerCase("id").includes(q) ? "#f59e0b" : (d.data.dbKey === selectedNodeId ? "#f59e0b" : "#fff"))
-                    .attr("stroke-width", d => q && d.data.name.toLocaleLowerCase("id").includes(q) ? 5 : (d.data.dbKey === selectedNodeId ? 4 : 2));
+                    .attr("stroke", d => q && d.data.nama.toLocaleLowerCase("id").includes(q) ? "#f59e0b" : (d.data.dbKey === selectedNodeId ? "#f59e0b" : "#fff"))
+                    .attr("stroke-width", d => q && d.data.nama.toLocaleLowerCase("id").includes(q) ? 5 : (d.data.dbKey === selectedNodeId ? 4 : 2));
             });
 
             window.addEventListener("resize", () => { if (treeReady) renderTree(); if (map) setTimeout(() => map.invalidateSize(), 100); });
@@ -799,12 +868,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     try {
                         const raw = snapshot.val();
                         if (!raw) {
-                            await push(wargaRef, { name: "Pangeran Kertadiningrat", gender: "L", parentId: "", spouseId: "", lat: -6.832, lng: 108.214 });
+                            dataGlobal = [];
+                            dataMap = {};
+                            $("stats-warga").textContent = "0 Warga";
+                            renderTree();
+                            drawMap();
                             return;
                         }
                         dataMap = normalizeData(raw);
-                        dataGlobal = Object.values(dataMap).map(p => ({ ...p, status: statusFor(p.dbKey) }));
-                        window.$("stats-warga").textContent = `${dataGlobal.length} Warga`;
+                        dataGlobal = Object.values(dataMap);
+                        $("stats-warga").textContent = `${dataGlobal.length} Warga Terdaftar`;
                         
                         renderTree();
                         drawMap();
