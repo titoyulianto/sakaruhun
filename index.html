@@ -12,6 +12,9 @@
     <!-- Leaflet CSS (Peta) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
+    <!-- D3.js (Visualisasi Silsilah) -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { 
@@ -22,8 +25,13 @@
         .bg-pattern {
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
-        /* Penyesuaian z-index Leaflet agar tidak bentrok dengan tombol melayang */
         .leaflet-container { z-index: 10 !important; }
+        
+        /* CSS Khusus untuk D3.js Nodes & Links */
+        .node circle { fill: #10b981; stroke: #fff; stroke-width: 2px; }
+        .node text { font-size: 10px; font-weight: 800; fill: #1e293b; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .node text.status { font-size: 8px; font-weight: 600; fill: #059669; }
+        .link { fill: none; stroke: #cbd5e1; stroke-width: 2px; }
     </style>
 </head>
 <body class="text-slate-800 pb-20">
@@ -42,7 +50,7 @@
                 <i class="fas fa-search absolute left-4 top-4 text-slate-400"></i>
             </div>
             <div class="mt-3 text-[10px] text-emerald-200">
-                <i class="fas fa-users mr-1"></i> Terhubung: <strong id="stats-warga">3 Warga</strong>
+                <i class="fas fa-users mr-1"></i> Terhubung: <strong id="stats-warga">6 Warga</strong>
             </div>
         </div>
     </header>
@@ -52,18 +60,18 @@
         
         <!-- MENU GRID -->
         <div class="grid grid-cols-2 gap-4">
-            <button class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-3 hover:bg-emerald-50 transition-colors">
+            <button class="bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-200 flex flex-col items-center justify-center gap-3 ring-2 ring-emerald-400 ring-offset-1">
                 <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                    <i class="fas fa-network-wired text-xl"></i>
+                    <i class="fas fa-network-wired text-xl animate-pulse"></i>
                 </div>
                 <div class="text-center">
                     <span class="block text-xs font-bold text-slate-700">Pohon Karuhun</span>
                     <span class="block text-[9px] text-slate-500 mt-0.5">Lihat grafis silsilah</span>
                 </div>
             </button>
-            <button class="bg-amber-50 p-4 rounded-2xl shadow-sm border border-amber-200 flex flex-col items-center justify-center gap-3 ring-2 ring-amber-400 ring-offset-1">
+            <button class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-3 hover:bg-amber-50 transition-colors">
                 <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-                    <i class="fas fa-map-location-dot text-xl animate-bounce"></i>
+                    <i class="fas fa-map-location-dot text-xl"></i>
                 </div>
                 <div class="text-center">
                     <span class="block text-xs font-bold text-slate-700">Peta Lembur</span>
@@ -72,18 +80,31 @@
             </button>
         </div>
 
-        <!-- KANVAS PETA (Menggantikan Area Kode Sebelumnya) -->
+        <!-- KANVAS SILSILAH D3.JS -->
+        <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
+            <div class="flex justify-between items-center mb-3 px-1">
+                <h2 class="text-sm font-bold text-slate-800"><i class="fas fa-sitemap text-emerald-600 mr-1.5"></i> Kaki-Kaki Silsilah</h2>
+                <span class="text-[9px] text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full font-semibold border border-emerald-200">Interaktif</span>
+            </div>
+            
+            <!-- Wadah D3.js -->
+            <div id="tree-container" class="w-full h-[350px] rounded-2xl border border-slate-200 shadow-inner bg-slate-50 overflow-hidden cursor-move relative">
+                <div class="absolute top-2 left-2 flex gap-2 z-10">
+                    <button class="bg-white border border-slate-300 w-6 h-6 rounded flex items-center justify-center text-xs text-slate-600 shadow-sm" id="zoom-in"><i class="fas fa-plus"></i></button>
+                    <button class="bg-white border border-slate-300 w-6 h-6 rounded flex items-center justify-center text-xs text-slate-600 shadow-sm" id="zoom-out"><i class="fas fa-minus"></i></button>
+                </div>
+            </div>
+            <p class="text-[10px] text-center text-slate-400 mt-3 font-medium"><i class="fas fa-hand-pointer mr-1"></i> Geser layar & gunakan dua jari untuk zoom.</p>
+        </section>
+
+        <!-- KANVAS PETA LEAFLET -->
         <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
             <div class="flex justify-between items-center mb-3 px-1">
                 <h2 class="text-sm font-bold text-slate-800"><i class="fas fa-map-pin text-amber-600 mr-1.5"></i> Radar Peta Desa</h2>
-                <span class="text-[9px] text-amber-700 bg-amber-100 px-2 py-1 rounded-full font-semibold border border-amber-200">Mode Pratinjau</span>
             </div>
-            
-            <!-- Wadah Peta Leaflet -->
-            <div id="map" class="w-full h-[300px] rounded-2xl border border-slate-200 shadow-inner bg-slate-50"></div>
-            
-            <p class="text-[10px] text-center text-slate-400 mt-3 font-medium">Klik ikon pin di peta untuk melihat detail keluarga.</p>
+            <div id="map" class="w-full h-[250px] rounded-2xl border border-slate-200 shadow-inner bg-slate-50"></div>
         </section>
+        
     </main>
 
     <!-- FAB LOGIN -->
@@ -94,48 +115,119 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
-    <!-- Script Eksekusi Peta -->
+    <!-- Script Eksekusi Peta & Silsilah -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // 1. Inisialisasi Peta (Koordinat di-set default ke titik acak di Jawa Barat)
-            // Format: [Latitude, Longitude], Zoom Level
+            // ==========================================
+            // 1. EKSEKUSI PETA (LEAFLET.JS)
+            // ==========================================
             const map = L.map('map').setView([-6.8320, 108.2140], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-            // 2. Load Desain Peta dari OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(map);
-
-            // 3. Data Dummy Warga (Nanti ini diganti tarikan data dari Firebase/Database)
             const dataWarga = [
-                { id: "W01", nama: "Aki Wahab", status: "Sesepuh Desa (Generasi 1)", lat: -6.8320, lng: 108.2140, warna: "red" },
-                { id: "W02", nama: "Keluarga Mang Ujang", status: "Anak Aki Wahab (Generasi 2)", lat: -6.8345, lng: 108.2162, warna: "blue" },
-                { id: "W03", nama: "Keluarga Bi Iroh", status: "Anak Aki Wahab (Generasi 2)", lat: -6.8305, lng: 108.2115, warna: "blue" }
+                { id: "W01", nama: "Aki Wahab", status: "Karuhun", lat: -6.8320, lng: 108.2140 },
+                { id: "W02", nama: "Keluarga Mang Ujang", status: "Anak (Gen-2)", lat: -6.8345, lng: 108.2162 },
+                { id: "W03", nama: "Keluarga Bi Iroh", status: "Anak (Gen-2)", lat: -6.8305, lng: 108.2115 }
             ];
 
-            // 4. Render Pin ke Peta
             dataWarga.forEach(warga => {
-                const marker = L.marker([warga.lat, warga.lng]).addTo(map);
-                
-                // Desain Balon Pop-up saat pin diklik
-                const popupKonten = `
-                    <div class="text-center font-sans p-1">
-                        <div class="w-10 h-10 bg-slate-100 rounded-full mx-auto mb-2 flex items-center justify-center border border-slate-200">
-                            <i class="fas fa-home text-slate-500"></i>
-                        </div>
-                        <h3 class="font-bold text-slate-800 text-xs mb-0.5">${warga.nama}</h3>
-                        <p class="text-[9px] text-emerald-600 mb-2">${warga.status}</p>
-                        <button class="bg-slate-900 text-white text-[9px] px-3 py-1.5 rounded-lg w-full hover:bg-emerald-600 transition-colors">Lihat Silsilah</button>
-                    </div>
-                `;
-                marker.bindPopup(popupKonten);
+                L.marker([warga.lat, warga.lng]).addTo(map).bindPopup(`<b>${warga.nama}</b><br><span style="font-size:10px">${warga.status}</span>`);
             });
-            
-            // Fix bug tiles peta ga render full di mobile
             setTimeout(() => { map.invalidateSize(); }, 500);
+
+            // ==========================================
+            // 2. EKSEKUSI POHON SILSILAH (D3.JS)
+            // ==========================================
+            // Data Dummy Silsilah Keluarga (JSON Hierarki)
+            const treeData = {
+                name: "Aki Wahab",
+                status: "Karuhun (Gen-1)",
+                children: [
+                    {
+                        name: "Mang Ujang",
+                        status: "Anak (Gen-2)",
+                        children: [
+                            { name: "Asep", status: "Incu (Gen-3)" },
+                            { name: "Euis", status: "Incu (Gen-3)" }
+                        ]
+                    },
+                    {
+                        name: "Bi Iroh",
+                        status: "Anak (Gen-2)",
+                        children: [
+                            { name: "Jajang", status: "Incu (Gen-3)" }
+                        ]
+                    }
+                ]
+            };
+
+            // Setup Kanvas D3
+            const container = document.getElementById('tree-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            const svg = d3.select("#tree-container").append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            // Bikin Group utama yang bisa di-zoom & pan
+            const g = svg.append("g");
+
+            // Setup fitur Zoom & Pan
+            const zoom = d3.zoom()
+                .scaleExtent([0.5, 3]) // Limit zoom in/out
+                .on("zoom", (event) => { g.attr("transform", event.transform); });
+            svg.call(zoom);
+
+            // Setup Layout Tree (Horizontal)
+            const treeLayout = d3.tree().size([height - 60, width - 120]);
+            
+            // Konversi JSON ke bentuk Hierarki Node D3
+            const root = d3.hierarchy(treeData);
+            treeLayout(root);
+
+            // Render Garis Hubung (Edges)
+            g.selectAll(".link")
+                .data(root.links())
+                .enter().append("path")
+                .attr("class", "link")
+                .attr("d", d3.linkHorizontal()
+                    .x(d => d.y + 40) // Geser sedikit biar ga nabrak teks
+                    .y(d => d.x)
+                );
+
+            // Render Titik (Nodes)
+            const node = g.selectAll(".node")
+                .data(root.descendants())
+                .enter().append("g")
+                .attr("class", "node")
+                .attr("transform", d => `translate(${d.y + 40},${d.x})`);
+
+            // Lingkaran Node
+            node.append("circle").attr("r", 8);
+
+            // Teks Nama Warga
+            node.append("text")
+                .attr("dy", -12) // Posisi teks di atas titik
+                .attr("x", 0)
+                .style("text-anchor", "middle")
+                .text(d => d.data.name);
+
+            // Teks Status (Karuhun/Anak/Incu)
+            node.append("text")
+                .attr("class", "status")
+                .attr("dy", 18) // Posisi teks di bawah titik
+                .attr("x", 0)
+                .style("text-anchor", "middle")
+                .text(d => d.data.status);
+
+            // Pusatkan kamera awal agak ke tengah
+            svg.call(zoom.transform, d3.zoomIdentity.translate(20, 20));
+
+            // Fungsionalitas Tombol Zoom UI
+            d3.select("#zoom-in").on("click", () => svg.transition().call(zoom.scaleBy, 1.3));
+            d3.select("#zoom-out").on("click", () => svg.transition().call(zoom.scaleBy, 0.7));
         });
     </script>
-
 </body>
 </html>
