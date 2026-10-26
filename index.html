@@ -600,6 +600,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const height = container.clientHeight;
                 let tx = focusNode.manualX || 0;
                 let ty = focusNode.manualY || 0;
+                
                 window.svg.transition().duration(800).call(window.zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - tx, height / 2 - ty + 50));
             }
             renderTree();
@@ -635,7 +636,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
             const svg = window.svg;
             const gSVG = window.gSVG;
-            gSVG.selectAll("*").remove(); // Bersihkan isi grup
+            gSVG.selectAll("*").remove(); 
             
             if (dataGlobal.length === 0) {
                 window.$("empty-state-msg")?.classList.remove("hidden");
@@ -659,6 +660,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     const sList = p.spouseIds || [];
                     sList.forEach(sId => {
                         if (!byIdGlobal.has(sId)) return;
+                        
                         const pairKey = [p.dbKey, sId].sort().join("::");
                         if (!renderedPairs.has(pairKey)) {
                             renderedPairs.add(pairKey);
@@ -666,11 +668,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                             let main = p.dbKey;
                             let spouse = sId;
                             
-                            // Pasangan yang punya ortu diutamakan sbg main line
-                            if (p2.fatherId || p2.motherId || p2.parentId) {
+                            if (p2 && (p2.fatherId || p2.motherId || p2.parentId)) {
                                 main = sId;
                                 spouse = p.dbKey;
                             }
+                            
                             isSpouseNode.add(spouse);
                             primaryOf[spouse] = main;
                             
@@ -787,6 +789,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     event.stopPropagation();
                     
                     const isCurrentlySelected = (selectedNodeId === d.data.dbKey);
+                    
                     d3.selectAll(".geni-badges").style("display", "none");
                     d3.selectAll(".node").classed("selected", false);
                     
@@ -800,67 +803,87 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 }).call(dragBehavior);
 
                 nodeSelection.append("circle").attr("r", 20);
-                nodeSelection.append("text").attr("dy", -32).attr("text-anchor", "middle").text(d => d.data.displayNama.length > 25 ? d.data.displayNama.slice(0, 23) + "…" : d.data.displayNama);
+                nodeSelection.append("text").attr("dy", -32).attr("text-anchor", "middle").text(d => {
+                    let dName = d.data.displayNama || d.data.nama;
+                    return dName.length > 25 ? dName.slice(0, 23) + "…" : dName;
+                });
                 
-                let detailText = `Dusun ${d.data.dusun}`;
-                if(d.data.rt) detailText += ` RT ${d.data.rt}`;
-                nodeSelection.append("text").attr("class", "status").attr("dy", 35).attr("text-anchor", "middle").text(d => detailText);
+                nodeSelection.append("text").attr("class", "status").attr("dy", 35).attr("text-anchor", "middle").text(d => {
+                    let detailText = `Dusun ${d.data.dusun}`;
+                    if(d.data.rt) detailText += ` RT ${d.data.rt}`;
+                    return detailText;
+                });
 
-                // UI GENI-STYLE: BADGE ACTION (DIGAMBAR SEMUA TAPI DISEMBUNYIKAN)
+                // =========================================================================
+                // BUG FIX: PENGGUNAAN SAFE VARIABLE UNTUK EVENT ACTION BADGES
+                // =========================================================================
                 nodeSelection.each(function(d) {
                     const nodeGroup = d3.select(this);
                     const badgeGroup = nodeGroup.append("g").attr("class", "geni-badges")
                                                 .style("display", d.data.dbKey === selectedNodeId ? "block" : "none");
                     
+                    // Simpan variabel statis biar ga error ReferenceError 'd'
+                    const dbKey = d.data.dbKey;
+                    const nama = d.data.nama;
+                    const gender = d.data.gender;
+                    const statusHidup = d.data.statusHidup;
+                    const dusun = d.data.dusun;
+                    const rt = d.data.rt;
+                    const rw = d.data.rw;
+                    
                     const noFather = !d.data.fatherId || d.data.fatherId === "";
                     const noMother = !d.data.motherId || d.data.motherId === "";
                     const hasParent = !noFather || !noMother;
 
+                    // 1. TOMBOL ATAS: TAMBAH AYAH & IBU 
                     if (noFather) {
                         const btnAyah = badgeGroup.append("g").attr("class", "action-badge blue").attr("transform", "translate(-70, -80)")
-                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT_FATHER', d.data.dbKey, d.data.nama, 'L'); });
+                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT_FATHER', dbKey, nama, 'L'); });
                         btnAyah.append("rect").attr("width", 65).attr("height", 22);
                         btnAyah.append("text").attr("x", 32.5).attr("y", 15).text("+ Ayah");
                         badgeGroup.append("path").attr("d", "M-35,-58 V-20").attr("class", "link"); 
                     }
                     if (noMother) {
                         const btnIbu = badgeGroup.append("g").attr("class", "action-badge pink").attr("transform", "translate(5, -80)")
-                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT_MOTHER', d.data.dbKey, d.data.nama, 'P'); });
+                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT_MOTHER', dbKey, nama, 'P'); });
                         btnIbu.append("rect").attr("width", 65).attr("height", 22);
                         btnIbu.append("text").attr("x", 32.5).attr("y", 15).text("+ Ibu");
                         badgeGroup.append("path").attr("d", "M35,-58 V-20").attr("class", "link"); 
                     }
 
+                    // 2. TOMBOL KANAN: TAMBAH PASANGAN
                     const btnSpouse = badgeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(40, -10)")
-                        .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SPOUSE', d.data.dbKey, d.data.nama, d.data.gender === 'L' ? 'P' : 'L'); });
+                        .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SPOUSE', dbKey, nama, gender === 'L' ? 'P' : 'L'); });
                     btnSpouse.append("rect").attr("width", 75).attr("height", 22);
                     btnSpouse.append("text").attr("x", 37).attr("y", 15).text("+ Pasangan");
 
+                    // 3. TOMBOL BAWAH: TAMBAH ANAK
                     const btnAnak = badgeGroup.append("g").attr("class", "action-badge green").attr("transform", "translate(-35, 50)")
-                        .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_CHILD', d.data.dbKey, d.data.nama, null); });
+                        .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_CHILD', dbKey, nama, null); });
                     btnAnak.append("rect").attr("width", 70).attr("height", 22);
                     btnAnak.append("text").attr("x", 35).attr("y", 15).text("+ Anak");
                     badgeGroup.append("path").attr("d", "M0,20 V50").attr("class", "link");
 
+                    // 4. TOMBOL KIRI KELUARGA: TAMBAH KAKAK/ADIK (Hanya Muncul Jika Sudah Ada Orang Tua)
                     if (hasParent) {
                         const btnKakak = badgeGroup.append("g").attr("class", "action-badge yellow").attr("transform", "translate(-100, -25)")
-                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SIBLING_KAKAK', d.data.dbKey, d.data.nama, null); });
+                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SIBLING_KAKAK', dbKey, nama, null); });
                         btnKakak.append("rect").attr("width", 65).attr("height", 20);
                         btnKakak.append("text").attr("x", 32.5).attr("y", 14).text("+ Kakak");
 
                         const btnAdik = badgeGroup.append("g").attr("class", "action-badge yellow").attr("transform", "translate(-100, 0)")
-                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SIBLING_ADIK', d.data.dbKey, d.data.nama, null); });
+                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SIBLING_ADIK', dbKey, nama, null); });
                         btnAdik.append("rect").attr("width", 65).attr("height", 20);
                         btnAdik.append("text").attr("x", 32.5).attr("y", 14).text("+ Adik");
                     }
 
+                    // 5. TOMBOL KIRI BAWAH: EDIT/KELOLA
                     const btnEdit = badgeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(-90, 30)")
-                        .on("click", (e) => { e.stopPropagation(); window.bukaModalEditGeni(d.data.dbKey, d.data.nama, d.data.gender, d.data.statusHidup, d.data.dusun, d.data.rt, d.data.rw); });
+                        .on("click", (e) => { e.stopPropagation(); window.bukaModalEditGeni(dbKey, nama, gender, statusHidup, dusun, rt, rw); });
                     btnEdit.append("rect").attr("width", 50).attr("height", 22);
                     btnEdit.append("text").attr("x", 25).attr("y", 15).text("📝 Edit");
                 });
 
-                // AUTO CENTER VIEW (Hanya 1x saat load)
                 if(drawNodes.length > 0 && !hasCenteredInitially) {
                     let focusNode = drawNodes.find(d => d.data.wa === currentUser?.wa || d.data.dbKey === currentUser?.dbKey);
                     if(focusNode) {
