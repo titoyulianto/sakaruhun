@@ -44,6 +44,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 .action-badge.yellow text { fill: #b45309; font-weight: bold; font-size: 10px; text-anchor: middle; pointer-events: none;}
 .action-badge:hover rect { filter: brightness(0.95); stroke-width: 2px; }
 
+/* Selection Outline */
 .node.selected circle { stroke: #f59e0b; stroke-width: 4px; filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6)); }
 
 /* Custom Scrollbar for Directory */
@@ -84,11 +85,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 <h2 class="text-sm font-bold mb-4 text-slate-800 uppercase tracking-wider"><i class="fas fa-sliders-h text-emerald-600 mr-2"></i>Menu Pintar</h2>
                 
                 <div class="flex flex-col gap-3">
-                    <button onclick="window.showModal('modal-direktori')" class="w-full bg-emerald-50 text-emerald-700 border border-emerald-200 p-4 rounded-xl shadow-sm flex items-center gap-3 hover:bg-emerald-100 transition-colors">
+                    <button onclick="window.showModal('modal-direktori'); window.renderDirektori();" class="w-full bg-blue-50 text-blue-700 border border-blue-200 p-4 rounded-xl shadow-sm flex items-center gap-3 hover:bg-blue-100 transition-colors active:scale-95">
                         <i class="fas fa-address-book text-xl w-6 text-center"></i>
                         <div class="text-left leading-tight">
                             <strong class="block text-sm">Direktori Warga</strong>
-                            <span class="block text-[10px] text-emerald-600">Lihat & Filter Daftar Lengkap</span>
+                            <span class="block text-[10px] text-blue-500">Lihat Tabel Data Lengkap</span>
                         </div>
                     </button>
 
@@ -110,7 +111,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         </div>
                     </button>
 
-                    <button id="btn-reset-layout" type="button" class="w-full bg-blue-50 text-blue-600 border border-blue-200 p-3 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors mt-2">
+                    <button id="btn-reset-layout" type="button" class="w-full bg-slate-100 text-slate-600 border border-slate-200 p-3 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors mt-2">
                         <i class="fas fa-magic"></i> <strong class="text-xs">Rapihkan Otomatis</strong>
                     </button>
                     
@@ -162,6 +163,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl p-3.5 font-bold text-sm shadow-md transition-colors">
                     Masuk <i class="fas fa-arrow-right ml-2"></i>
                 </button>
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink mx-4 text-slate-400 text-[10px] uppercase font-bold">Atau Khusus Developer</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+                <button type="button" id="btn-login-dev" class="w-full bg-slate-900 hover:bg-black text-white rounded-xl p-3 font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-2">
+                    <i class="fas fa-code text-emerald-400"></i> Login Master Developer
+                </button>
             </form>
 
             <form id="form-auth-biodata" class="space-y-3 hidden">
@@ -188,7 +197,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         </select>
                     </div>
                     <div>
-                        <!-- BUG FIX: ELEMENT INI SUDAH DITAMBAHKAN KEMBALI AGAR TIDAK ERROR NULL -->
                         <label class="block text-xs font-bold text-slate-700">Tahun Lahir</label>
                         <input type="text" id="bio-tahun" placeholder="1985" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
@@ -223,7 +231,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
     <!-- MODAL DIREKTORI WARGA (TABEL) -->
     <div id="modal-direktori" class="modal">
         <div class="modal-card relative border-t-4 border-blue-500 !max-w-5xl">
-            <button onclick="hideModal('modal-direktori')" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
+            <button onclick="window.hideModal('modal-direktori')" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
             <h3 class="font-bold text-xl mb-4 text-slate-800"><i class="fas fa-address-book text-blue-500 mr-2"></i>Direktori Warga Desa</h3>
 
             <div class="flex flex-col md:flex-row gap-3 mb-4">
@@ -262,7 +270,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
     <!-- MODAL FORM TAMBAH -->
     <div id="modal-tambah" class="modal">
         <div class="modal-card relative border-t-4 border-emerald-500">
-            <button onclick="hideModal('modal-tambah')" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
+            <button onclick="window.hideModal('modal-tambah')" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
             <h3 id="modal-tambah-title" class="font-bold text-lg mb-4 text-slate-800">Tambah Individu</h3>
 
             <form id="form-tambah" class="space-y-4">
@@ -322,7 +330,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
     <!-- MODAL EDIT -->
     <div id="modal-edit" class="modal">
         <div class="modal-card relative border-t-4 border-amber-500">
-            <button onclick="hideModal('modal-edit')" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
+            <button onclick="window.hideModal('modal-edit')" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
             <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-cog text-amber-500 mr-2"></i>Kelola Profil</h3>
 
             <form id="form-edit" class="space-y-4">
@@ -390,13 +398,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         // ==========================================
-        // WINDOW EXPORTS AGAR BISA DI PANGGIL OLEH HTML / D3
+        // WINDOW EXPORTS & SAFE HELPER (Anti Error)
         // ==========================================
         window.$ = id => document.getElementById(id);
-        const $ = window.$;
         
-        window.showModal = function(id) { window.$(id).classList.add("open"); };
-        window.hideModal = function(id) { window.$(id).classList.remove("open"); };
+        window.showModal = function(id) { window.$(id)?.classList.add("open"); };
+        window.hideModal = function(id) { window.$(id)?.classList.remove("open"); };
         window.notify = function(msg) { alert(msg); };
         window.escapeHtml = function(v) { return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); };
 
@@ -406,44 +413,49 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         };
 
         window.openTambahModal = function(context, targetKey, targetName, targetGender) {
-            window.$("form-tambah").reset();
-            window.$("tambah-context").value = context;
-            window.$("tambah-target").value = targetKey || "";
-            window.$("input-dusun-tambah").value = "Manis"; 
-            window.$("select-status").value = "Hidup";
+            window.$("form-tambah")?.reset();
+            if(window.$("tambah-context")) window.$("tambah-context").value = context;
+            if(window.$("tambah-target")) window.$("tambah-target").value = targetKey || "";
+            if(window.$("input-dusun-tambah")) window.$("input-dusun-tambah").value = "Manis"; 
+            if(window.$("select-status")) window.$("select-status").value = "Hidup";
             
             const title = window.$("modal-tambah-title");
-
-            if (context === 'ADD_CHILD') {
-                title.innerHTML = `<i class="fas fa-child text-emerald-600 mr-2"></i>Tambah Anak dari ${escapeHtml(targetName)}`;
-            } else if (context === 'ADD_SPOUSE') {
-                title.innerHTML = `<i class="fas fa-heart text-pink-500 mr-2"></i>Tambah Pasangan untuk ${escapeHtml(targetName)}`;
-                window.$("select-gender").value = targetGender === 'L' ? 'P' : 'L';
-            } else if (context === 'ADD_PARENT_FATHER') {
-                title.innerHTML = `<i class="fas fa-male text-blue-600 mr-2"></i>Tambah Ayah kandung ${escapeHtml(targetName)}`;
-                window.$("select-gender").value = "L";
-            } else if (context === 'ADD_PARENT_MOTHER') {
-                title.innerHTML = `<i class="fas fa-female text-pink-600 mr-2"></i>Tambah Ibu kandung ${escapeHtml(targetName)}`;
-                window.$("select-gender").value = "P";
-            } else if (context === 'ADD_SIBLING_KAKAK') {
-                title.innerHTML = `<i class="fas fa-user-plus text-amber-500 mr-2"></i>Tambah Kakak dari ${escapeHtml(targetName)}`;
-            } else if (context === 'ADD_SIBLING_ADIK') {
-                title.innerHTML = `<i class="fas fa-user-plus text-amber-500 mr-2"></i>Tambah Adik dari ${escapeHtml(targetName)}`;
-            } else {
-                title.innerHTML = `<i class="fas fa-user-secret text-purple-600 mr-2"></i>Bikin Garis Keturunan Baru`;
+            if(title) {
+                if (context === 'ADD_CHILD') title.innerHTML = `<i class="fas fa-child text-emerald-600 mr-2"></i>Tambah Anak dari ${escapeHtml(targetName)}`;
+                else if (context === 'ADD_SPOUSE') {
+                    title.innerHTML = `<i class="fas fa-heart text-pink-500 mr-2"></i>Tambah Pasangan untuk ${escapeHtml(targetName)}`;
+                    if(window.$("select-gender")) window.$("select-gender").value = targetGender === 'L' ? 'P' : 'L';
+                } 
+                else if (context === 'ADD_PARENT_FATHER') {
+                    title.innerHTML = `<i class="fas fa-male text-blue-600 mr-2"></i>Tambah Ayah kandung ${escapeHtml(targetName)}`;
+                    if(window.$("select-gender")) window.$("select-gender").value = "L";
+                } 
+                else if (context === 'ADD_PARENT_MOTHER') {
+                    title.innerHTML = `<i class="fas fa-female text-pink-600 mr-2"></i>Tambah Ibu kandung ${escapeHtml(targetName)}`;
+                    if(window.$("select-gender")) window.$("select-gender").value = "P";
+                } 
+                else if (context === 'ADD_SIBLING_KAKAK') {
+                    title.innerHTML = `<i class="fas fa-user-plus text-amber-500 mr-2"></i>Tambah Kakak dari ${escapeHtml(targetName)}`;
+                } 
+                else if (context === 'ADD_SIBLING_ADIK') {
+                    title.innerHTML = `<i class="fas fa-user-plus text-amber-500 mr-2"></i>Tambah Adik dari ${escapeHtml(targetName)}`;
+                } 
+                else {
+                    title.innerHTML = `<i class="fas fa-user-secret text-purple-600 mr-2"></i>Bikin Garis Keturunan Baru`;
+                }
             }
             window.showModal('modal-tambah');
-            setTimeout(() => window.$("input-nama").focus(), 100);
+            setTimeout(() => window.$("input-nama")?.focus(), 100);
         };
 
         window.bukaModalEditGeni = function(key, nama, gender, statusHidup, dusun, rt, rw) {
-            window.$("edit-dbkey").value = key;
-            window.$("edit-nama").value = nama;
-            window.$("edit-gender").value = gender;
-            window.$("edit-status").value = statusHidup || "Hidup";
-            window.$("edit-dusun").value = dusun || "Manis";
-            window.$("edit-rt").value = rt || "";
-            window.$("edit-rw").value = rw || "";
+            if(window.$("edit-dbkey")) window.$("edit-dbkey").value = key;
+            if(window.$("edit-nama")) window.$("edit-nama").value = nama;
+            if(window.$("edit-gender")) window.$("edit-gender").value = gender;
+            if(window.$("edit-status")) window.$("edit-status").value = statusHidup || "Hidup";
+            if(window.$("edit-dusun")) window.$("edit-dusun").value = dusun || "Manis";
+            if(window.$("edit-rt")) window.$("edit-rt").value = rt || "";
+            if(window.$("edit-rw")) window.$("edit-rw").value = rw || "";
             window.showModal('modal-edit');
         };
 
@@ -479,80 +491,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
         function checkAuth() {
             if (!currentUser || !currentUser.wa) {
-                window.$("modal-auth").classList.add("open");
+                window.$("modal-auth")?.classList.add("open");
             } else {
-                window.$("modal-auth").classList.remove("open");
+                window.$("modal-auth")?.classList.remove("open");
                 window.initFirebaseAndApp();
             }
         }
-
-        window.$("btn-login-dev").addEventListener("click", () => {
-            currentUser = { dbKey: "MASTER_DEV", nama: "Developer Sakaruhun", wa: "0000", isDev: true, dusun: "Manis", rt: "00", rw: "00" };
-            localStorage.setItem("sakaruhun_user", JSON.stringify(currentUser));
-            if(currentUser.isDev) window.$("btn-reset-all-data-main").classList.remove("hidden");
-            checkAuth();
-        });
-
-        window.$("form-auth-wa").addEventListener("submit", (e) => {
-            e.preventDefault();
-            const wa = window.$("auth-wa").value.trim();
-            if(!wa) return;
-            const refWa = ref(db, `${DB_PATH}`);
-            onValue(refWa, (snapshot) => {
-                const all = snapshot.val() || {};
-                let found = null;
-                // Pastikan yang di-trim sama biar nemu
-                Object.keys(all).forEach(k => { 
-                    if(all[k].wa && String(all[k].wa).trim() === wa) found = { dbKey: k, ...all[k] }; 
-                });
-
-                if(found) {
-                    currentUser = found;
-                    localStorage.setItem("sakaruhun_user", JSON.stringify(currentUser));
-                    if(currentUser.isDev) window.$("btn-reset-all-data-main").classList.remove("hidden");
-                    checkAuth();
-                } else {
-                    window.$("form-auth-wa").classList.add("hidden");
-                    window.$("form-auth-biodata").classList.remove("hidden");
-                }
-            }, { onlyOnce: true });
-        });
-
-        window.$("form-auth-biodata").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const wa = window.$("auth-wa").value.trim();
-            const nama = window.$("bio-nama").value.trim();
-            const gender = window.$("bio-gender").value;
-            const statusHidup = window.$("bio-status").value;
-            const tahun = window.$("bio-tahun").value.trim();
-            const dusun = window.$("bio-dusun").value;
-            const rt = window.$("bio-rt").value.trim();
-            const rw = window.$("bio-rw").value.trim();
-
-            const newRef = push(ref(db, DB_PATH));
-            const userData = { wa, nama, gender, statusHidup, tahun, dusun, rt, rw, fatherId: "", motherId: "", spouseIds: [], manualX: 0, manualY: 0, ...window.randomCoords() };
-            await set(newRef, userData);
-
-            currentUser = { dbKey: newRef.key, ...userData };
-            localStorage.setItem("sakaruhun_user", JSON.stringify(currentUser));
-            checkAuth();
-        });
-
-        window.$("btn-reset-all-data-main").addEventListener("click", async () => {
-            if(prompt("PERINGATAN! Ketik 'HAPUS' untuk mengosongkan seluruh database.") === 'HAPUS') {
-                try {
-                    await set(ref(db, DB_PATH), null);
-                    window.notify("Database berhasil dikosongkan.");
-                    hasCenteredInitially = false;
-                } catch(e) { window.notify("Gagal mengosongkan data."); }
-            }
-        });
-
-        window.$("btn-logout").addEventListener("click", () => {
-            localStorage.removeItem("sakaruhun_user");
-            currentUser = null;
-            location.reload();
-        });
 
         function normalizeData(raw) {
             const result = {};
@@ -618,10 +562,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         // ==========================================
         window.renderDirektori = function() {
             const tbody = window.$("tbody-direktori");
-            const fdusun = window.$("filter-dusun").value.toLowerCase();
-            const frt = window.$("filter-rt").value.trim().toLowerCase();
-            const frw = window.$("filter-rw").value.trim().toLowerCase();
-            const fnama = window.$("filter-nama").value.trim().toLowerCase();
+            if(!tbody) return;
+            const fdusun = window.$("filter-dusun")?.value.toLowerCase() || "";
+            const frt = window.$("filter-rt")?.value.trim().toLowerCase() || "";
+            const frw = window.$("filter-rw")?.value.trim().toLowerCase() || "";
+            const fnama = window.$("filter-nama")?.value.trim().toLowerCase() || "";
 
             let html = "";
             dataGlobal.forEach(p => {
@@ -649,23 +594,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             selectedNodeId = dbKey;
             
             let focusNode = dataGlobal.find(d => d.dbKey === dbKey);
-            if (focusNode && window.zoomBehavior && window.gSVG) {
+            if (focusNode && window.zoomBehavior && window.svg) {
                 const container = window.$("tree-container");
                 const width = container.clientWidth;
                 const height = container.clientHeight;
                 let tx = focusNode.manualX || 0;
                 let ty = focusNode.manualY || 0;
-                
                 window.svg.transition().duration(800).call(window.zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - tx, height / 2 - ty + 50));
             }
             renderTree();
         };
-
-        // Filter listen
-        ["filter-nama", "filter-dusun", "filter-rt", "filter-rw"].forEach(id => {
-            window.$(id).addEventListener("input", window.renderDirektori);
-            window.$(id).addEventListener("change", window.renderDirektori);
-        });
 
         // ==========================================
         // D3.JS ENGINE: TREE HIERARKI + NON-JUMPING UI
@@ -673,6 +611,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         function renderTree() {
             if (!window.d3) return;
             const container = window.$("tree-container");
+            if(!container) return;
+            
             const width = Math.max(container.clientWidth, 600);
             const height = Math.max(container.clientHeight, 500);
 
@@ -698,12 +638,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             gSVG.selectAll("*").remove(); // Bersihkan isi grup
             
             if (dataGlobal.length === 0) {
-                window.$("empty-state-msg").classList.remove("hidden");
-                window.$("empty-state-msg").classList.add("flex");
+                window.$("empty-state-msg")?.classList.remove("hidden");
+                window.$("empty-state-msg")?.classList.add("flex");
                 return;
             } else {
-                window.$("empty-state-msg").classList.add("hidden");
-                window.$("empty-state-msg").classList.remove("flex");
+                window.$("empty-state-msg")?.classList.add("hidden");
+                window.$("empty-state-msg")?.classList.remove("flex");
             }
 
             try {
@@ -719,7 +659,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     const sList = p.spouseIds || [];
                     sList.forEach(sId => {
                         if (!byIdGlobal.has(sId)) return;
-                        
                         const pairKey = [p.dbKey, sId].sort().join("::");
                         if (!renderedPairs.has(pairKey)) {
                             renderedPairs.add(pairKey);
@@ -732,7 +671,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                                 main = sId;
                                 spouse = p.dbKey;
                             }
-                            
                             isSpouseNode.add(spouse);
                             primaryOf[spouse] = main;
                             
@@ -842,7 +780,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     .on("end", async function(event, d) {
                         d3.select(this).style("pointer-events", "all");
                         await update(ref(db, `${DB_PATH}/${d.data.dbKey}`), { manualX: d.x, manualY: d.y });
-                        // Render tree will be called by onValue in Firebase
                     });
 
                 nodeSelection.on("click", function(event, d) {
@@ -869,9 +806,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 if(d.data.rt) detailText += ` RT ${d.data.rt}`;
                 nodeSelection.append("text").attr("class", "status").attr("dy", 35).attr("text-anchor", "middle").text(d => detailText);
 
-                // =========================================================================
                 // UI GENI-STYLE: BADGE ACTION (DIGAMBAR SEMUA TAPI DISEMBUNYIKAN)
-                // =========================================================================
                 nodeSelection.each(function(d) {
                     const nodeGroup = d3.select(this);
                     const badgeGroup = nodeGroup.append("g").attr("class", "geni-badges")
@@ -925,7 +860,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     btnEdit.append("text").attr("x", 25).attr("y", 15).text("📝 Edit");
                 });
 
-                // AUTO CENTER VIEW (Hanya 1x saat load/refresh data baru)
+                // AUTO CENTER VIEW (Hanya 1x saat load)
                 if(drawNodes.length > 0 && !hasCenteredInitially) {
                     let focusNode = drawNodes.find(d => d.data.wa === currentUser?.wa || d.data.dbKey === currentUser?.dbKey);
                     if(focusNode) {
@@ -947,24 +882,29 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         }
 
         // =========================================================================
-        // SCRIPT FIREBASE & ACTIONS
+        // SAFE EVENT BINDINGS
         // =========================================================================
-        window.$("form-tambah").addEventListener("submit", async (e) => {
+        window.attachSafeListener = function(id, event, callback) {
+            const el = window.$(id);
+            if (el) el.addEventListener(event, callback);
+        };
+
+        window.attachSafeListener("form-tambah", "submit", async (e) => {
             e.preventDefault();
-            const button = window.$("form-tambah").querySelector('button[type="submit"]');
-            button.disabled = true;
+            const button = window.$("form-tambah")?.querySelector('button[type="submit"]');
+            if(button) button.disabled = true;
             try {
-                const name = window.$("input-nama").value.trim();
-                const gender = window.$("select-gender").value;
-                const statusHidup = window.$("select-status").value;
-                const dusun = window.$("input-dusun-tambah").value;
-                const rt = window.$("input-rt-tambah").value.trim();
-                const rw = window.$("input-rw-tambah").value.trim();
+                const name = window.$("input-nama")?.value.trim();
+                const gender = window.$("select-gender")?.value;
+                const statusHidup = window.$("select-status")?.value;
+                const dusun = window.$("input-dusun-tambah")?.value;
+                const rt = window.$("input-rt-tambah")?.value.trim();
+                const rw = window.$("input-rw-tambah")?.value.trim();
 
                 if (!name) throw new Error("Nama wajib diisi.");
                 
-                const ctx = window.$("tambah-context").value;
-                const targetKey = window.$("tambah-target").value;
+                const ctx = window.$("tambah-context")?.value;
+                const targetKey = window.$("tambah-target")?.value;
                 const targetNode = dataMap[targetKey];
                 
                 const newRef = push(wargaRef);
@@ -1017,34 +957,34 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 window.hideModal('modal-tambah');
                 selectedNodeId = newRef.key;
             } catch (err) { window.notify("Gagal menyimpan: " + err.message); } 
-            finally { button.disabled = false; }
+            finally { if(button) button.disabled = false; }
         });
 
-        window.$("form-edit").addEventListener("submit", async (e) => {
+        window.attachSafeListener("form-edit", "submit", async (e) => {
             e.preventDefault();
-            const button = window.$("form-edit").querySelector('button[type="submit"]');
-            button.disabled = true;
+            const button = window.$("form-edit")?.querySelector('button[type="submit"]');
+            if(button) button.disabled = true;
             try {
-                const key = window.$("edit-dbkey").value;
-                const name = window.$("edit-nama").value.trim();
-                const gender = window.$("edit-gender").value;
-                const statusHidup = window.$("edit-status").value;
-                const dusun = window.$("edit-dusun").value;
-                const rt = window.$("edit-rt").value.trim();
-                const rw = window.$("edit-rw").value.trim();
+                const key = window.$("edit-dbkey")?.value;
+                const nama = window.$("edit-nama")?.value.trim();
+                const gender = window.$("edit-gender")?.value;
+                const statusHidup = window.$("edit-status")?.value;
+                const dusun = window.$("edit-dusun")?.value;
+                const rt = window.$("edit-rt")?.value.trim();
+                const rw = window.$("edit-rw")?.value.trim();
                 
-                if (!key || !name) throw new Error("Nama wajib diisi.");
-                const updates = { nama: name, gender, statusHidup, dusun, rt, rw };
+                if (!key || !nama) throw new Error("Nama wajib diisi.");
+                const updates = { nama: nama, gender, statusHidup, dusun, rt, rw };
                 await update(ref(db, `${DB_PATH}/${key}`), updates);
                 window.hideModal('modal-edit');
             } catch (err) { window.notify("Gagal memperbarui: " + err.message); } 
-            finally { button.disabled = false; }
+            finally { if(button) button.disabled = false; }
         });
 
-        function wireEvents() {
-            window.$("btn-toggle-drag").addEventListener("click", () => {
-                isDragMode = !isDragMode;
-                const btn = window.$("btn-toggle-drag");
+        window.attachSafeListener("btn-toggle-drag", "click", () => {
+            isDragMode = !isDragMode;
+            const btn = window.$("btn-toggle-drag");
+            if(btn) {
                 if (isDragMode) {
                     selectedNodeId = null; 
                     d3.selectAll(".geni-badges").style("display", "none");
@@ -1055,35 +995,40 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     btn.className = "w-full bg-slate-100 text-slate-600 border border-slate-200 p-4 rounded-xl shadow-sm flex items-center gap-3 hover:bg-slate-200 transition-colors";
                     btn.innerHTML = '<i class="fas fa-lock text-xl w-6 text-center"></i><div class="text-left leading-tight"><strong class="block text-sm">Silsilah Terkunci</strong><span class="block text-[10px] text-slate-500">Klik untuk geser posisi</span></div>';
                 }
-            });
+            }
+        });
 
-            window.$("btn-reset-layout").addEventListener("click", async () => {
-                if(!confirm("Kembalikan seluruh pohon ke susunan otomatis?")) return;
-                try {
-                    const updates = {};
-                    dataGlobal.forEach(p => {
-                        if (p.manualX !== null || p.manualY !== null) {
-                            updates[`${DB_PATH}/${p.dbKey}/manualX`] = null;
-                            updates[`${DB_PATH}/${p.dbKey}/manualY`] = null;
-                        }
-                    });
-                    if (Object.keys(updates).length > 0) await update(ref(db), updates);
-                    hasCenteredInitially = false; 
-                } catch (err) { window.notify("Gagal reset layout."); }
-            });
+        window.attachSafeListener("btn-reset-layout", "click", async () => {
+            if(!confirm("Kembalikan seluruh pohon ke susunan otomatis?")) return;
+            try {
+                const updates = {};
+                dataGlobal.forEach(p => {
+                    if (p.manualX !== null || p.manualY !== null) {
+                        updates[`${DB_PATH}/${p.dbKey}/manualX`] = null;
+                        updates[`${DB_PATH}/${p.dbKey}/manualY`] = null;
+                    }
+                });
+                if (Object.keys(updates).length > 0) await update(ref(db), updates);
+                hasCenteredInitially = false; 
+            } catch (err) { window.notify("Gagal reset layout."); }
+        });
 
-            window.$("btn-tambah-data-main").addEventListener("click", () => window.openTambahModal('MAIN', '', '', null));
-            
-            window.$("input-pencarian").addEventListener("input", () => {
-                const q = window.$("input-pencarian").value.trim().toLocaleLowerCase("id");
-                if (!nodeSelection) return;
-                nodeSelection.select("circle")
-                    .attr("stroke", d => q && d.nama.toLocaleLowerCase("id").includes(q) ? "#f59e0b" : (d.dbKey === selectedNodeId ? "#f59e0b" : "#fff"))
-                    .attr("stroke-width", d => q && d.nama.toLocaleLowerCase("id").includes(q) ? 5 : (d.dbKey === selectedNodeId ? 4 : 3));
-            });
+        window.attachSafeListener("btn-tambah-data-main", "click", () => window.openTambahModal('MAIN', '', '', null));
+        
+        window.attachSafeListener("input-pencarian", "input", () => {
+            const q = window.$("input-pencarian")?.value.trim().toLocaleLowerCase("id");
+            if (!nodeSelection) return;
+            nodeSelection.select("circle")
+                .attr("stroke", d => q && d.nama.toLocaleLowerCase("id").includes(q) ? "#f59e0b" : (d.dbKey === selectedNodeId ? "#f59e0b" : "#fff"))
+                .attr("stroke-width", d => q && d.nama.toLocaleLowerCase("id").includes(q) ? 5 : (d.dbKey === selectedNodeId ? 4 : 3));
+        });
 
-            window.addEventListener("resize", () => { if (map) setTimeout(() => map.invalidateSize(), 100); });
-        }
+        ["filter-nama", "filter-dusun", "filter-rt", "filter-rw"].forEach(id => {
+            window.attachSafeListener(id, "input", window.renderDirektori);
+            window.attachSafeListener(id, "change", window.renderDirektori);
+        });
+
+        window.addEventListener("resize", () => { if (map) setTimeout(() => map.invalidateSize(), 100); });
 
         window.initFirebaseAndApp = function() {
             wargaRef = ref(db, DB_PATH);
@@ -1092,12 +1037,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     const raw = snapshot.val();
                     if (!raw) {
                         dataGlobal = []; dataMap = {};
-                        window.$("stats-warga").textContent = "0 Warga";
+                        if(window.$("stats-warga")) window.$("stats-warga").textContent = "0 Warga";
                         renderTree(); drawMap(); window.renderDirektori(); return;
                     }
                     dataMap = normalizeData(raw);
                     dataGlobal = Object.values(dataMap);
-                    window.$("stats-warga").textContent = `${dataGlobal.length} Warga Terdaftar`;
+                    if(window.$("stats-warga")) window.$("stats-warga").textContent = `${dataGlobal.length} Warga Terdaftar`;
                     renderTree(); drawMap(); window.renderDirektori();
                 } catch (err) { window.notify("Data terbaca tetapi gagal ditampilkan: " + err.message); }
             });
@@ -1106,7 +1051,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         const app = initializeApp(firebaseConfig);
         db = getDatabase(app);
         initMap();
-        wireEvents();
+        checkAuth();
     </script>
 </body>
 </html>
