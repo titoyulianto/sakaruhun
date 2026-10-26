@@ -261,13 +261,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             setTimeout(() => $("input-nama").focus(), 100);
         }
 
-        // AUTO-KOREKSI NAN (ANTI-BLANK)
         function normalizeData(raw) {
             const result = {};
             Object.entries(raw || {}).forEach(([key, v]) => {
                 if (!v || typeof v !== "object") return;
                 
-                // Pastikan koordinat angka valid, kalau error kasih null
                 let mx = (v.manualX != null && v.manualX !== "" && !isNaN(v.manualX)) ? Number(v.manualX) : null;
                 let my = (v.manualY != null && v.manualY !== "" && !isNaN(v.manualY)) ? Number(v.manualY) : null;
 
@@ -284,7 +282,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 };
             });
             
-            // Bersihkan koneksi yatim piatu
             Object.values(result).forEach(p => {
                 if (p.parentId && !result[p.parentId]) { p.parentId = ""; }
                 if (p.spouseId && !result[p.spouseId]) { p.spouseId = ""; }
@@ -339,7 +336,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 let safeDataGlobal = dataGlobal.map(d => ({...d}));
                 const byIdGlobal = new Map(safeDataGlobal.map(p => [p.dbKey, p]));
                 
-                // MENCARI PASANGAN (SPOUSES) DENGAN CERDAS
                 const spouseOf = new Map();
                 const isSpouseNode = new Set();
                 const renderedPairs = new Set();
@@ -357,20 +353,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                             const p1 = byIdGlobal.get(p.dbKey);
                             const p2 = byIdGlobal.get(p.spouseId);
                             if (p1 && p2) {
-                                // Yang gak punya bapak, dianggep pendatang (Spouse)
                                 if (p1.parentId && !p2.parentId) isSpouseNode.add(p2.dbKey);
                                 else if (p2.parentId && !p1.parentId) isSpouseNode.add(p1.dbKey);
-                                else isSpouseNode.add(p2.dbKey); // Default
+                                else isSpouseNode.add(p2.dbKey); 
                             }
                         }
                     }
                 });
 
-                // ORANG UTAMA (Vertical Hierarchy)
                 let primary = safeDataGlobal.filter(p => !isSpouseNode.has(p.dbKey));
                 let primaryIds = new Set(primary.map(p => p.dbKey));
 
-                // Benerin anak yang nyangkut di Spouse
                 primary.forEach(p => {
                     if (p.parentId && !primaryIds.has(p.parentId)) {
                         let alts = spouseOf.get(p.parentId) || [];
@@ -379,7 +372,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     }
                 });
 
-                // ANTI-CYCLE / RANTAI SETAN
                 primary.forEach(p => {
                     let curr = p.parentId;
                     let visited = new Set([p.dbKey]);
@@ -393,7 +385,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     if (cycle) p.parentId = "";
                 });
 
-                // AUTO MERGE MULTIPLE ROOTS
                 let roots = primary.filter(p => !p.parentId || p.parentId === "");
                 if (roots.length === 0 && primary.length > 0) { primary[0].parentId = ""; roots = [primary[0]]; }
                 if (roots.length > 1) {
@@ -403,12 +394,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     }
                 }
 
-                // D3 HIERARCHY
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(primary);
-                d3.tree().nodeSize([280, 180])(root); // Lebih lega jaraknya
+                d3.tree().nodeSize([280, 180])(root);
                 const nodes = root.descendants();
                 
-                // APLIKASI POSISI GESER MANUAL
                 nodes.forEach(n => {
                     if (n.data.manualX !== null) n.x = n.data.manualX;
                     if (n.data.manualY !== null) n.y = n.data.manualY;
@@ -425,7 +414,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         
                         const person = byIdGlobal.get(id);
                         if(person) {
-                            let sx = n.x + 150, sy = n.y; // Spasi istri 150px
+                            let sx = n.x + 150, sy = n.y; 
                             if (person.manualX !== null) sx = person.manualX;
                             if (person.manualY !== null) sy = person.manualY;
                             spousePositions.push({ data: { ...person, status: "Pasangan" }, source: n, x: sx, y: sy, isSpouse: true });
@@ -448,12 +437,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     g.selectAll(".add-child-btn").attr("transform", sp => `translate(${(sp.source.x + sp.x) / 2}, ${(sp.source.y + sp.y) / 2})`);
                 }
 
-                // RENDER GARIS
                 const links = root.links();
                 g.selectAll(".link").data(links).join("path").attr("class", "link");
                 g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link");
 
-                // TOMBOL PLUS ANAK DI PASANGAN
                 const addChildBtn = g.selectAll(".add-child-btn").data(spousePositions).join("g")
                     .attr("class", "add-child-btn")
                     .style("cursor", "pointer")
@@ -470,12 +457,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     .on("mouseout", function() { d3.select(this).style("transform", "scale(1)"); });
                 addChildBtn.append("text").attr("dy", 4.5).attr("x", 0).attr("text-anchor", "middle").style("fill", "#ffffff").style("font-size", "14px").style("font-weight", "bold").style("pointer-events", "none").text("+");
 
-                // RENDER INDIVIDU (NODE)
                 nodeSelection = g.selectAll(".node").data(drawNodes).join("g")
                     .attr("class", d => "node " + (d.data.gender === "P" ? "perempuan" : "laki"))
                     .attr("transform", d => `translate(${d.x},${d.y})`);
 
-                // AREA DROP ZONES EKSKLUSIF (HANYA MUNCUL DEKAT)
                 const dropZones = nodeSelection.append("g")
                     .attr("class", "drop-zones-group")
                     .style("opacity", 0)
@@ -487,7 +472,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 dropZones.append("rect").attr("class", "drop-zone zone-child").attr("x", -45).attr("y", 35).attr("width", 90).attr("height", 32).attr("rx", 6);
                 dropZones.append("text").attr("class", "drop-text").attr("x", 0).attr("y", 55).text("⬇️ Jd Anak");
 
-                // DRAG & DROP FUSION LOGIC
                 const dragBehavior = d3.drag()
                     .filter(() => isDragMode)
                     .on("start", function(event, d) {
@@ -501,7 +485,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         updateLinks();
 
                         let closestNode = null;
-                        let minDist = 130; // Radius deteksi
+                        let minDist = 130; 
 
                         nodeSelection.each(function(targetData) {
                             if (targetData.data.dbKey === d.data.dbKey) return;
@@ -537,7 +521,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                             const targetKey = dropTarget.node.data.dbKey;
                             const draggedKey = d.data.dbKey;
                             
-                            // Validasi Rantai
                             let curr = dropTarget.node;
                             let cycle = false;
                             while(curr) {
@@ -555,7 +538,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                                 
                                 if (confirm(msg)) {
                                     try {
-                                        // PENTING: CLEAR MANUAL POSITION SAAT RELASI BARU TERBENTUK (AGAR AUTO RAPIH)
                                         if (dropTarget.type === 'parent') {
                                             await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: draggedKey, manualX: null, manualY: null });
                                             await update(ref(db, `${DB_PATH}/${draggedKey}`), { manualX: null, manualY: null });
@@ -566,7 +548,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                                 } else { renderTree(); }
                             }
                         } else {
-                            // Simpan Posisi Custom
                             await update(ref(db, `${DB_PATH}/${d.data.dbKey}`), { manualX: d.x, manualY: d.y });
                         }
                         draggedNode = null;
@@ -585,7 +566,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
                 updateLinks(); 
 
-                // AUTO-FIT LAYAR CERDAS (ANTI-NAN)
                 let validNodes = drawNodes.filter(d => !isNaN(d.x) && !isNaN(d.y));
                 if(validNodes.length > 0) {
                     const extent = d3.extent(validNodes, d => d.x);
@@ -685,7 +665,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             } catch (err) { notify("Gagal menghapus: " + err.message); }
         }
 
-        // TUGAS TOMBOL RESET POSISI
         async function resetLayout() {
             if(!confirm("Kembalikan seluruh pohon ke susunan otomatis? Semua posisi hasil geseran akan dirapikan kembali.")) return;
             try {
@@ -698,7 +677,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 });
                 if (Object.keys(updates).length > 0) {
                     await update(ref(db), updates);
-                    notify("Posisi berhasil dirapikan!");
                 }
             } catch (err) { notify("Gagal reset layout."); }
         }
@@ -710,7 +688,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const hint = $("tree-instruction");
                 if (isDragMode) {
                     btn.className = "w-full bg-amber-500 text-white p-4 rounded-xl shadow-md flex items-center justify-center gap-3 transition-colors active:scale-95";
-                    btn.innerHTML = '<i class="fas fa-arrows-alt text-xl"></i><div class="text-left leading-tight"><strong class="block text-sm">Mode Geser Aktif</strong><span class="block text-[10px] text-amber-200">Tarik ke frame untuk pindah ortu/anak</span></div>';
+                    btn.innerHTML = '<i class="fas fa-arrows-alt text-xl"></i><div class="text-left leading-tight"><strong class="block text-sm">Mode Geser Aktif</strong><span class="block text-[10px] text-amber-200">Tarik ke profil lain untuk pindah relasi</span></div>';
                     hint.innerHTML = '<i class="fas fa-info-circle"></i> Mode Geser Aktif: Tarik profil & dekatkan ke profil lain untuk memindahkan Posisi Relasinya.';
                     hint.className = "text-[12px] text-center text-amber-600 mt-3 font-bold";
                 } else {
@@ -724,7 +702,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
             $("btn-reset-layout").addEventListener("click", resetLayout);
             $("btn-tambah-data-main").addEventListener("click", () => openTambahModal('MAIN', '', '', null));
-            $("btn-lihat-pohon").addEventListener("click", () => { $("tree-container").scrollIntoView({ behavior: "smooth", block: "center" }); if (treeReady) renderTree(); });
+            
+            // TOMBOL YANG BIKIN ERROR (KARENA SUDAH DIHAPUS DI HTML) GUA CABUT DARI SINI:
+            // $("btn-lihat-pohon").addEventListener("click", () => { ... }); <-- INI PENYAKITNYA!
+
             $("btn-close-modal-tambah").addEventListener("click", () => hideModal(modalTambah));
             $("btn-close-modal-edit").addEventListener("click", () => hideModal(modalEdit));
             modalTambah.addEventListener("click", e => { if (e.target === modalTambah) hideModal(modalTambah); });
