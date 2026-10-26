@@ -58,7 +58,7 @@
     <main class="max-w-md mx-auto px-5 -mt-6 relative z-20 space-y-5">
         
         <div class="grid grid-cols-2 gap-4">
-            <button class="bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-200 flex flex-col items-center justify-center gap-3 ring-2 ring-emerald-400 ring-offset-1 cursor-pointer">
+            <button id="btn-lihat-pohon" type="button" class="bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-200 flex flex-col items-center justify-center gap-3 ring-2 ring-emerald-400 ring-offset-1 cursor-pointer">
                 <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
                     <i class="fas fa-network-wired text-xl animate-pulse"></i>
                 </div>
@@ -208,423 +208,230 @@
 
     <!-- SCRIPT UTAMA & FIREBASE -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+      import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA0JmHvkhB5oXPvnDMvcHJyooqSsLIccGQ",
-            authDomain: "sakaruhun-desa.firebaseapp.com",
-            databaseURL: "https://sakaruhun-desa-default-rtdb.asia-southeast1.firebasedatabase.app/",
-            projectId: "sakaruhun-desa",
-            storageBucket: "sakaruhun-desa.firebasestorage.app",
-            messagingSenderId: "69221074382",
-            appId: "1:69221074382:web:b15104ddc2618c1c70979f"
-        };
+      const firebaseConfig = {
+        apiKey: "AIzaSyA0JmHvkhB5oXPvnDMvcHJyooqSsLIccGQ",
+        authDomain: "sakaruhun-desa.firebaseapp.com",
+        databaseURL: "https://sakaruhun-desa-default-rtdb.asia-southeast1.firebasedatabase.app/",
+        projectId: "sakaruhun-desa",
+        storageBucket: "sakaruhun-desa.firebasestorage.app",
+        messagingSenderId: "69221074382",
+        appId: "1:69221074382:web:b15104ddc2618c1c70979f"
+      };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const wargaRef = ref(db, 'silsilah_desa_v3');
+      const $ = id => document.getElementById(id);
+      const modalTambah = $('modal-tambah'), modalEdit = $('modal-edit');
+      const formTambah = $('form-tambah'), formEdit = $('form-edit');
+      const selectParent = $('select-parent'), inputParentManual = $('input-parent-manual');
+      const selectSpouse = $('select-spouse'), inputSpouseManual = $('input-spouse-manual');
+      const editParent = $('edit-parent'), editParentManual = $('edit-parent-manual');
+      const editSpouse = $('edit-spouse'), editSpouseManual = $('edit-spouse-manual');
+      const container = $('tree-container');
+      let db, wargaRef, dataGlobal = [], dataMap = {}, nodeSelection = null, zoomBehavior = null;
+      let map = null, layerGroup = null, treeReady = false;
 
-        // Peta Leaflet
-        const map = L.map('map').setView([-6.8320, 108.2140], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-        let layerGroup = L.layerGroup().addTo(map);
-        setTimeout(() => { map.invalidateSize(); }, 1000);
-
-        // Kanvas D3.js
-        const container = document.getElementById('tree-container');
-        const svg = d3.select("#tree-container").append("svg").attr("width", container.clientWidth).attr("height", container.clientHeight);
-        const g = svg.append("g");
-        const zoom = d3.zoom().scaleExtent([0.5, 3]).on("zoom", (event) => { g.attr("transform", event.transform); });
-        svg.call(zoom);
-
-        // Kalkulator Otomatis Pancakaki
-        function hitungPancakakiOtomatis(nodeKey, allDataMap) {
-            let node = allDataMap[nodeKey];
-            if (!node || !node.parentId || node.parentId === "" || node.parentId === "akar_utama") return "Karuhun Utama";
-            let generationCount = 1;
-            let currentParentId = node.parentId;
-            while (currentParentId && allDataMap[currentParentId]) {
-                generationCount++;
-                currentParentId = allDataMap[currentParentId].parentId;
-            }
-            const kamusPancakaki = { 1: "Karuhun Utama", 2: "Bapak / Indung (Gen-2)", 3: "Aki / Nini (Gen-3)", 4: "Buyut (Cicit)", 5: "Bao", 6: "Janggawaréng", 7: "Udeg-udeg", 8: "Gantung-siwur" };
-            return kamusPancakaki[generationCount] || `Keturunan Gen-${generationCount}`;
+      function showModal(el) { el.classList.remove('hidden'); el.classList.add('flex'); }
+      function hideModal(el) { el.classList.add('hidden'); el.classList.remove('flex'); }
+      function notify(message) { alert(message); }
+      function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+      function setBusy(form, busy) { const b=form.querySelector('button[type="submit"]'); if (b) { b.disabled=busy; b.classList.toggle('opacity-60',busy); b.textContent=busy?'Menyimpan...':(form.id==='form-tambah'?'Simpan Individu':'Update Data'); } }
+      function randomCoords() { return {lat:-6.8320+(Math.random()-.5)*.005,lng:108.2140+(Math.random()-.5)*.005}; }
+      function syncManual(select, input) { const active=select.value==='manual'; input.classList.toggle('hidden',!active); input.required=active; if (!active) input.value=''; }
+      function fillSelect(select, kind, selected='') {
+        const first = kind==='parent' ? '<option value="akar_utama">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option><option value="unknown">❓ Belum Diketahui</option><option value="manual">✍️ Ketik Manual (Nama Baru)</option>' : '<option value="">-- Belum Menikah / Lajang --</option><option value="unknown">❓ Belum Diketahui</option><option value="manual">✍️ Ketik Manual (Nama Baru)</option>';
+        const people=dataGlobal.filter(w=>w.dbKey!==$('edit-dbkey').value || select.id==='select-parent').map(w=>`<option value="${escapeHtml(w.dbKey)}">${escapeHtml(w.name)} (${w.gender==='L'?'Laki-laki':'Perempuan'})</option>`).join('');
+        select.innerHTML=first+people;
+        if (selected && [...select.options].some(o=>o.value===selected)) select.value=selected;
+        else if (kind==='parent') select.value='akar_utama'; else select.value='';
+      }
+      function statusFor(key) {
+        if (key==='akar_utama') return 'Karuhun Utama';
+        let n=dataMap[key], depth=1, seen=new Set([key]);
+        while(n && n.parentId && n.parentId!=='akar_utama' && dataMap[n.parentId] && !seen.has(n.parentId)) { seen.add(n.parentId); depth++; n=dataMap[n.parentId]; }
+        const names={1:'Keturunan Gen-1',2:'Keturunan Gen-2',3:'Keturunan Gen-3',4:'Buyut',5:'Bao',6:'Janggawaréng',7:'Udeg-udeg',8:'Gantung-siwur'};
+        return names[depth] || `Keturunan Gen-${depth}`;
+      }
+      function normalizeData(raw) {
+        const mapObj={};
+        Object.entries(raw||{}).forEach(([key,value])=>{ if(value && typeof value==='object') mapObj[key]={dbKey:key,name:String(value.name||'Tanpa Nama'),gender:value.gender==='P'?'P':'L',parentId:value.parentId||'',spouseId:value.spouseId||'',lat:Number(value.lat),lng:Number(value.lng)}; });
+        if (!mapObj.akar_utama) mapObj.akar_utama={dbKey:'akar_utama',name:'Pangeran Kertadiningrat',gender:'L',parentId:'',spouseId:'',lat:-6.8320,lng:108.2140};
+        // Putuskan relasi induk yang tidak valid/berputar agar satu data buruk tidak mematikan seluruh pohon.
+        Object.values(mapObj).forEach(person=>{
+          if(person.dbKey==='akar_utama') { person.parentId=''; return; }
+          if(!person.parentId || person.parentId==='unknown' || person.parentId==='akar_utama' || !mapObj[person.parentId] || person.parentId===person.dbKey) person.parentId='akar_utama';
+        });
+        Object.values(mapObj).forEach(person=>{
+          if(person.dbKey==='akar_utama') return;
+          const seen=new Set([person.dbKey]); let p=person.parentId;
+          while(p && p!=='akar_utama' && mapObj[p]) { if(seen.has(p)) { person.parentId='akar_utama'; break; } seen.add(p); p=mapObj[p].parentId; }
+        });
+        return mapObj;
+      }
+      function initMap() {
+        if (!window.L || map) return;
+        map=L.map('map').setView([-6.8320,108.2140],15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+        layerGroup=L.layerGroup().addTo(map);
+        setTimeout(()=>map.invalidateSize(),500);
+      }
+      function drawMap() {
+        if(!map || !layerGroup) return;
+        layerGroup.clearLayers();
+        dataGlobal.forEach(w=>{
+          if(Number.isFinite(w.lat)&&Number.isFinite(w.lng)&&Math.abs(w.lat)<=90&&Math.abs(w.lng)<=180) {
+            L.marker([w.lat,w.lng]).addTo(layerGroup).bindPopup(`<b>${escapeHtml(w.name)}</b><br>${escapeHtml(w.gender==='L'?'Laki-laki':'Perempuan')}<br><small>${escapeHtml(w.status)}</small>`);
+          }
+        });
+      }
+      function openEdit(person) {
+        $('edit-dbkey').value=person.dbKey; $('edit-nama').value=person.name; $('edit-gender').value=person.gender;
+        fillSelect(editParent,'parent',person.parentId||'akar_utama');
+        fillSelect(editSpouse,'spouse',person.spouseId||'');
+        syncManual(editParent,editParentManual); syncManual(editSpouse,editSpouseManual);
+        showModal(modalEdit);
+      }
+      function renderTree() {
+        if(!window.d3 || !container) return;
+        const width=Math.max(container.clientWidth,320), height=Math.max(container.clientHeight,300);
+        const svg=d3.select(container).selectAll('svg').data([null]).join('svg').attr('width','100%').attr('height','100%').attr('viewBox',`0 0 ${width} ${height}`).style('display','block');
+        svg.selectAll('*').remove(); const g=svg.append('g');
+        zoomBehavior=d3.zoom().scaleExtent([.25,2.5]).on('zoom',e=>g.attr('transform',e.transform)); svg.call(zoomBehavior).on('dblclick.zoom',null);
+        try {
+          const records=dataGlobal.map(p=>({...p,parentId:p.dbKey==='akar_utama'?null:(dataMap[p.parentId]?p.parentId:'akar_utama')}));
+          const root=d3.stratify().id(d=>d.dbKey).parentId(d=>d.parentId)(records);
+          const layout=d3.tree().nodeSize([190,125]); layout(root);
+          const nodes=root.descendants(), links=root.links();
+          g.selectAll('.link').data(links).join('path').attr('class','link').attr('d',d=>`M${d.source.x},${d.source.y} V${(d.source.y+d.target.y)/2} H${d.target.x} V${d.target.y}`);
+          const spouses=[]; nodes.forEach(n=>{const s=n.data.spouseId&&nodes.find(x=>x.data.dbKey===n.data.spouseId); if(s&&n.data.dbKey<s.data.dbKey)spouses.push({source:n,target:s});});
+          g.selectAll('.spouse-link').data(spouses).join('path').attr('class','spouse-link').attr('d',d=>`M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`);
+          nodeSelection=g.selectAll('.node').data(nodes).join('g').attr('class',d=>`node ${d.data.gender==='L'?'laki':'perempuan'}`).attr('transform',d=>`translate(${d.x},${d.y})`).on('click',(event,d)=>{event.stopPropagation();openEdit(d.data);});
+          nodeSelection.append('circle').attr('r',16);
+          nodeSelection.append('text').attr('dy',-25).attr('text-anchor','middle').text(d=>d.data.name.length>26?d.data.name.slice(0,24)+'…':d.data.name);
+          nodeSelection.append('text').attr('class','status').attr('dy',29).attr('text-anchor','middle').text(d=>d.data.status);
+          const xExtent=d3.extent(nodes,d=>d.x), yExtent=d3.extent(nodes,d=>d.y); const cx=(xExtent[0]+xExtent[1])/2, cy=(yExtent[0]+yExtent[1])/2;
+          svg.call(zoomBehavior.transform,d3.zoomIdentity.translate(width/2-cx,55-cy)); treeReady=true;
+        } catch(err) {
+          console.error('Gagal merender pohon silsilah:',err);
+          container.insertAdjacentHTML('beforeend','<div class="absolute inset-x-2 bottom-2 bg-amber-50 text-amber-800 text-xs p-2 rounded-lg">Sebagian relasi data bermasalah. Periksa konsol browser untuk detail.</div>');
         }
-
-        // Modal Handlers
-        const modalTambah = document.getElementById('modal-tambah');
-        const formTambah = document.getElementById('form-tambah');
-        const selectParent = document.getElementById('select-parent');
-        const inputParentManual = document.getElementById('input-parent-manual');
-        const selectSpouse = document.getElementById('select-spouse');
-        const inputSpouseManual = document.getElementById('input-spouse-manual');
-        
-        document.getElementById('btn-tambah-data').addEventListener('click', () => { 
-            modalTambah.classList.remove('hidden'); 
-            modalTambah.classList.add('flex'); 
+      }
+      function refreshSearch() {
+        const q=$('input-pencarian').value.trim().toLocaleLowerCase('id');
+        if(!nodeSelection) return;
+        nodeSelection.select('circle').attr('stroke',d=>q&&d.data.name.toLocaleLowerCase('id').includes(q)?'#f59e0b':'#fff').attr('stroke-width',d=>q&&d.data.name.toLocaleLowerCase('id').includes(q)?5:2);
+        if(q) {
+          const match=dataGlobal.find(p=>p.name.toLocaleLowerCase('id').includes(q));
+          if(match) {
+            const node=nodeSelection.filter(d=>d.data.dbKey===match.dbKey).datum();
+            if(node) { const w=container.clientWidth,h=container.clientHeight; d3.select(container).select('svg').transition().duration(350).call(zoomBehavior.transform,d3.zoomIdentity.translate(w/2-node.x, h/2-node.y).scale(1)); }
+          }
+        }
+      }
+      async function resolvePerson(value, manualInput, gender, parentDefault='akar_utama') {
+        if(value==='manual') {
+          const name=manualInput.value.trim(); if(!name) throw new Error('Nama manual wajib diisi.');
+          const newRef=push(wargaRef); await set(newRef,{parentId:parentDefault,name,gender:gender==='L'?'P':'L',spouseId:'',...randomCoords()}); return newRef.key;
+        }
+        if(value==='unknown') return '';
+        return value||'';
+      }
+      async function saveNew(e) {
+        e.preventDefault(); setBusy(formTambah,true);
+        try {
+          const name=$('input-nama').value.trim(), gender=$('select-gender').value;
+          if(!name) throw new Error('Nama lengkap wajib diisi.');
+          let parentId=selectParent.value;
+          if(parentId==='manual') parentId=await resolvePerson(parentId,inputParentManual,gender);
+          if(parentId==='unknown'||!parentId) parentId='';
+          let spouseId=selectSpouse.value;
+          if(spouseId==='manual') spouseId=await resolvePerson(spouseId,inputSpouseManual,gender);
+          if(spouseId==='unknown') spouseId='';
+          const newRef=push(wargaRef); await set(newRef,{parentId:parentId||'akar_utama',name,gender,spouseId:spouseId||'',...randomCoords()});
+          if(spouseId && dataMap[spouseId]) await update(ref(db,`silsilah_desa_v3/${spouseId}`),{spouseId:newRef.key});
+          hideModal(modalTambah); formTambah.reset(); syncManual(selectParent,inputParentManual); syncManual(selectSpouse,inputSpouseManual);
+        } catch(err) { console.error(err); notify('Gagal menyimpan data: '+(err.message||err)); }
+        finally { setBusy(formTambah,false); }
+      }
+      async function saveEdit(e) {
+        e.preventDefault(); setBusy(formEdit,true);
+        try {
+          const key=$('edit-dbkey').value, name=$('edit-nama').value.trim(), gender=$('edit-gender').value;
+          if(!key||!name) throw new Error('Data individu atau nama belum lengkap.');
+          let parentId=editParent.value;
+          if(parentId==='manual') parentId=await resolvePerson(parentId,editParentManual,gender);
+          if(parentId==='unknown'||!parentId) parentId='akar_utama';
+          if(parentId===key) throw new Error('Seseorang tidak dapat menjadi orang tua dirinya sendiri.');
+          let spouseId=editSpouse.value;
+          if(spouseId==='manual') spouseId=await resolvePerson(spouseId,editSpouseManual,gender);
+          if(spouseId==='unknown') spouseId='';
+          if(spouseId===key) throw new Error('Seseorang tidak dapat menjadi pasangan dirinya sendiri.');
+          const old=dataMap[key];
+          await update(ref(db,`silsilah_desa_v3/${key}`),{name,gender,parentId,spouseId:spouseId||''});
+          if(old?.spouseId && old.spouseId!==spouseId && dataMap[old.spouseId]) await update(ref(db,`silsilah_desa_v3/${old.spouseId}`),{spouseId:''});
+          if(spouseId && dataMap[spouseId]) await update(ref(db,`silsilah_desa_v3/${spouseId}`),{spouseId:key});
+          hideModal(modalEdit); syncManual(editParent,editParentManual); syncManual(editSpouse,editSpouseManual);
+        } catch(err) { console.error(err); notify('Gagal memperbarui data: '+(err.message||err)); }
+        finally { setBusy(formEdit,false); }
+      }
+      async function deletePerson() {
+        const key=$('edit-dbkey').value;
+        if(!key) return;
+        if(key==='akar_utama') { notify('Karuhun Utama tidak dapat dihapus.'); return; }
+        if(!confirm('Hapus individu ini? Anak-anaknya akan dipindahkan ke Karuhun Utama agar tidak hilang dari pohon.')) return;
+        try {
+          const updates={};
+          dataGlobal.filter(p=>p.parentId===key).forEach(p=>updates[`silsilah_desa_v3/${p.dbKey}/parentId`]='akar_utama');
+          const person=dataMap[key];
+          if(person?.spouseId && dataMap[person.spouseId]) updates[`silsilah_desa_v3/${person.spouseId}/spouseId`]='';
+          if(Object.keys(updates).length) await update(ref(db),updates);
+          await remove(ref(db,`silsilah_desa_v3/${key}`)); hideModal(modalEdit);
+        } catch(err) { console.error(err); notify('Gagal menghapus data: '+(err.message||err)); }
+      }
+      function wireEvents() {
+        $('btn-tambah-data').addEventListener('click',()=>{formTambah.reset();fillSelect(selectParent,'parent','akar_utama');fillSelect(selectSpouse,'spouse','');syncManual(selectParent,inputParentManual);syncManual(selectSpouse,inputSpouseManual);showModal(modalTambah);});
+        $('btn-lihat-pohon').addEventListener('click',()=>{container.scrollIntoView({behavior:'smooth',block:'center'});if(treeReady)renderTree();});
+        $('btn-close-modal').addEventListener('click',()=>hideModal(modalTambah));
+        $('btn-close-edit').addEventListener('click',()=>hideModal(modalEdit));
+        modalTambah.addEventListener('click',e=>{if(e.target===modalTambah)hideModal(modalTambah);});
+        modalEdit.addEventListener('click',e=>{if(e.target===modalEdit)hideModal(modalEdit);});
+        selectParent.addEventListener('change',()=>syncManual(selectParent,inputParentManual));
+        selectSpouse.addEventListener('change',()=>syncManual(selectSpouse,inputSpouseManual));
+        editParent.addEventListener('change',()=>syncManual(editParent,editParentManual));
+        editSpouse.addEventListener('change',()=>syncManual(editSpouse,editSpouseManual));
+        formTambah.addEventListener('submit',saveNew); formEdit.addEventListener('submit',saveEdit);
+        $('btn-hapus-data').addEventListener('click',deletePerson);
+        $('btn-tambah-cabang').addEventListener('click',()=>{
+          const parentKey=$('edit-dbkey').value; hideModal(modalEdit); formTambah.reset(); fillSelect(selectParent,'parent',parentKey); fillSelect(selectSpouse,'spouse','');
+          syncManual(selectParent,inputParentManual); syncManual(selectSpouse,inputSpouseManual); showModal(modalTambah); $('input-nama').focus();
         });
-        document.getElementById('btn-close-modal').addEventListener('click', () => { 
-            modalTambah.classList.add('hidden'); 
-            modalTambah.classList.remove('flex'); 
-        });
-
-        const modalEdit = document.getElementById('modal-edit');
-        const formEdit = document.getElementById('form-edit');
-        const editGender = document.getElementById('edit-gender');
-        const editParent = document.getElementById('edit-parent');
-        const editParentManual = document.getElementById('edit-parent-manual');
-        const editSpouse = document.getElementById('edit-spouse');
-        const editSpouseManual = document.getElementById('edit-spouse-manual');
-        document.getElementById('btn-close-edit').addEventListener('click', () => { 
-            modalEdit.classList.add('hidden'); 
-            modalEdit.classList.remove('flex'); 
-        });
-
-        selectParent.addEventListener('change', (e) => {
-            if (e.target.value === 'manual') {
-                inputParentManual.classList.remove('hidden');
-                inputParentManual.setAttribute('required', 'true');
-            } else {
-                inputParentManual.classList.add('hidden');
-                inputParentManual.removeAttribute('required');
-            }
-        });
-
-        selectSpouse.addEventListener('change', (e) => {
-            if (e.target.value === 'manual') {
-                inputSpouseManual.classList.remove('hidden');
-                inputSpouseManual.setAttribute('required', 'true');
-            } else {
-                inputSpouseManual.classList.add('hidden');
-                inputSpouseManual.removeAttribute('required');
-            }
-        });
-
-        editParent.addEventListener('change', (e) => {
-            if (e.target.value === 'manual') {
-                editParentManual.classList.remove('hidden');
-                editParentManual.setAttribute('required', 'true');
-            } else {
-                editParentManual.classList.add('hidden');
-                editParentManual.removeAttribute('required');
-            }
-        });
-
-        editSpouse.addEventListener('change', (e) => {
-            if (e.target.value === 'manual') {
-                editSpouseManual.classList.remove('hidden');
-                editSpouseManual.setAttribute('required', 'true');
-            } else {
-                editSpouseManual.classList.add('hidden');
-                editSpouseManual.removeAttribute('required');
-            }
-        });
-
-        document.getElementById('btn-hapus-data').addEventListener('click', () => {
-            const dbKey = document.getElementById('edit-dbkey').value;
-            if (dbKey === 'akar_utama') { alert("Karuhun Utama tidak dapat dihapus!"); return; }
-            if (confirm("Yakin ingin menghapus data ini? Keturunannya otomatis terhubung ke karuhun utama.")) {
-                remove(ref(db, 'silsilah_desa_v3/' + dbKey)).then(() => { 
-                    modalEdit.classList.add('hidden'); 
-                    modalEdit.classList.remove('flex'); 
-                });
-            }
-        });
-
-        document.getElementById('btn-tambah-cabang').addEventListener('click', () => {
-            const dbKey = document.getElementById('edit-dbkey').value;
-            modalEdit.classList.add('hidden'); 
-            modalEdit.classList.remove('flex');
-            modalTambah.classList.remove('hidden'); 
-            modalTambah.classList.add('flex');
-            selectParent.value = dbKey;
-            document.getElementById('input-nama').focus();
-        });
-
-        // Realtime Data Sync
-        let dataGlobal = [];
-        onValue(wargaRef, (snapshot) => {
-            if (!snapshot.exists()) {
-                set(ref(db, 'silsilah_desa_v3/akar_utama'), { parentId: "", name: "Pangeran Kertadiningrat", gender: "L", spouseId: "", lat: -6.8320, lng: 108.2140 });
-                return;
-            }
-
-            const rawData = snapshot.val();
-            let dataMap = {};
-            Object.keys(rawData).forEach(key => { dataMap[key] = { dbKey: key, ...rawData[key] }; });
-
-            dataGlobal = Object.keys(dataMap).map(key => {
-                let item = dataMap[key];
-                let statusOtomatis = (key === "akar_utama") ? "Karuhun Utama" : hitungPancakakiOtomatis(key, dataMap);
-                return { ...item, status: statusOtomatis };
-            });
-
-            document.getElementById('stats-warga').innerText = `${dataGlobal.length} Warga`;
-
-            let optionsHTML = '';
-            dataGlobal.forEach(w => {
-                optionsHTML += `<option value="${w.dbKey}">${w.name} (${w.gender === 'L' ? 'Laki-laki' : 'Perempuan'})</option>`;
-            });
-
-            const parentOptionsHTML = `
-                <option value="akar_utama">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option>
-                <option value="unknown">❓ Belum Diketahui</option>
-                <option value="manual">✍️ Ketik Manual (Nama Baru)</option>
-            ` + optionsHTML;
-
-            selectParent.innerHTML = '<option value="">-- Pilih Orang Tua --</option>' + parentOptionsHTML;
-            editParent.innerHTML = parentOptionsHTML;
-
-            const spouseOptionsHTML = `
-                <option value="">-- Belum Menikah / Lajang --</option>
-                <option value="unknown">❓ Belum Diketahui</option>
-                <option value="manual">✍️ Ketik Manual (Nama Baru)</option>
-            ` + optionsHTML;
-
-            selectSpouse.innerHTML = spouseOptionsHTML;
-            editSpouse.innerHTML = spouseOptionsHTML;
-
-            layerGroup.clearLayers();
-            dataGlobal.forEach(w => {
-                if (w.lat && w.lng) {
-                    L.marker([w.lat, w.lng]).addTo(layerGroup).bindPopup(`<b>${w.name}</b> (${w.gender})<br><span style="font-size:10px">${w.status}</span>`);
-                }
-            });
-
-            // 🌳 RENDER D3.JS VERTIKAL
-            g.selectAll("*").remove(); 
+        $('input-pencarian').addEventListener('input',refreshSearch);
+        window.addEventListener('resize',()=>{if(treeReady)renderTree();if(map)setTimeout(()=>map.invalidateSize(),100);});
+        document.addEventListener('keydown',e=>{if(e.key==='Escape'){hideModal(modalTambah);hideModal(modalEdit);}});
+      }
+      function startFirebase() {
+        try {
+          const app=initializeApp(firebaseConfig); db=getDatabase(app); wargaRef=ref(db,'silsilah_desa_v3');
+          onValue(wargaRef,async snapshot=>{
             try {
-                const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(dataGlobal);
-                
-                const treeLayout = d3.tree().nodeSize([240, 160]); 
-                treeLayout(root);
-
-                let nodeMap = {};
-                root.descendants().forEach(d => { nodeMap[d.data.dbKey] = d; });
-
-                root.descendants().forEach(d => {
-                    if (d.data.spouseId && nodeMap[d.data.spouseId]) {
-                        let spouseNode = nodeMap[d.data.spouseId];
-                        spouseNode.y = d.y; 
-                        if (d.data.dbKey < spouseNode.data.dbKey) {
-                            spouseNode.x = d.x + 130; 
-                        }
-                    }
-                });
-                
-                g.selectAll(".link").data(root.links()).enter().append("path").attr("class", "link")
-                    .attr("d", d => {
-                        let sourceNode = d.source;
-                        let targetNode = d.target;
-                        
-                        let startX = sourceNode.x;
-                        let startY = sourceNode.y;
-                        
-                        if (sourceNode.data.spouseId && nodeMap[sourceNode.data.spouseId]) {
-                            let spouseNode = nodeMap[sourceNode.data.spouseId];
-                            startX = (sourceNode.x + spouseNode.x) / 2;
-                        }
-                        
-                        return `M ${startX} ${startY}
-                                V ${(startY + targetNode.y) / 2}
-                                H ${targetNode.x}
-                                V ${targetNode.y}`;
-                    });
-
-                let spouseLinks = [];
-                root.descendants().forEach(d => {
-                    if (d.data.spouseId && nodeMap[d.data.spouseId]) {
-                        let targetNode = nodeMap[d.data.spouseId];
-                        if (d.data.dbKey < targetNode.data.dbKey) {
-                            spouseLinks.push({ source: d, target: targetNode });
-                        }
-                    }
-                });
-
-                g.selectAll(".spouse-link")
-                    .data(spouseLinks)
-                    .enter().append("path")
-                    .attr("class", "spouse-link")
-                    .attr("d", d => {
-                        let x1 = d.source.x, y1 = d.source.y;
-                        let x2 = d.target.x, y2 = d.target.y;
-                        return `M ${x1} ${y1} L ${x2} ${y2}`;
-                    });
-
-                const node = g.selectAll(".node").data(root.descendants()).enter().append("g")
-                    .attr("class", d => `node ${d.data.gender === 'L' ? 'laki' : 'perempuan'}`)
-                    .attr("transform", d => `translate(${d.x},${d.y})`)
-                    .on("click", (event, d) => {
-                        event.stopPropagation();
-                        document.getElementById('edit-dbkey').value = d.data.dbKey;
-                        document.getElementById('edit-nama').value = d.data.name;
-                        editGender.value = d.data.gender || 'L';
-                        editParent.value = d.data.parentId || 'akar_utama';
-                        editParentManual.classList.add('hidden');
-
-                        if (d.data.spouseId && dataMap[d.data.spouseId]) {
-                            editSpouse.value = d.data.spouseId;
-                            editSpouseManual.classList.add('hidden');
-                        } else {
-                            editSpouse.value = "";
-                            editSpouseManual.classList.add('hidden');
-                        }
-
-                        modalEdit.classList.remove('hidden');
-                        modalEdit.classList.add('flex');
-                    });
-
-                node.append("circle").attr("r", 16);
-                
-                node.append("text")
-                    .attr("dy", -28)
-                    .attr("x", 0)
-                    .style("text-anchor", "middle")
-                    .each(function(d) {
-                        let teksLengkap = d.data.name;
-                        let el = d3.select(this);
-                        
-                        if (teksLengkap.length > 16) {
-                            let tengah = Math.floor(teksLengkap.length / 2);
-                            let spasiIdx = teksLengkap.indexOf(' ', tengah);
-                            if (spasiIdx === -1) spasiIdx = tengah;
-                            
-                            let baris1 = teksLengkap.substring(0, spasiIdx);
-                            let baris2 = teksLengkap.substring(spasiIdx + 1);
-                            
-                            el.text("");
-                            el.append("tspan").attr("x", 0).attr("dy", "-1.2em").text(baris1);
-                            el.append("tspan").attr("x", 0).attr("dy", "1.1em").text(baris2);
-                        } else {
-                            el.text(teksLengkap);
-                        }
-                    });
-                
-                node.append("text")
-                    .attr("class", "status")
-                    .attr("dy", 26)
-                    .attr("x", 0)
-                    .style("text-anchor", "middle")
-                    .text(d => d.data.status);
-                
-                svg.call(zoom.transform, d3.zoomIdentity.translate(container.clientWidth / 2, 60));
-            } catch (error) {
-                console.log("Struktur silsilah sedang menyesuaikan...", error);
-            }
-        });
-
-        // Form Submit Tambah
-        formTambah.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const nama = document.getElementById('input-nama').value;
-            const gender = document.getElementById('select-gender').value;
-            
-            let parentId = selectParent.value;
-            if (parentId === 'unknown') parentId = 'akar_utama';
-            else if (parentId === 'manual') {
-                const manualParentName = inputParentManual.value;
-                if (manualParentName) {
-                    const newParentRef = push(wargaRef, {
-                        parentId: 'akar_utama',
-                        name: manualParentName,
-                        gender: gender === 'L' ? 'P' : 'L',
-                        spouseId: '',
-                        lat: -6.8320 + (Math.random() - 0.5) * 0.005,
-                        lng: 108.2140 + (Math.random() - 0.5) * 0.005
-                    });
-                    parentId = newParentRef.key;
-                }
-            }
-
-            let spouseId = selectSpouse.value;
-            if (spouseId === 'unknown') spouseId = '';
-            else if (spouseId === 'manual') {
-                const manualSpouseName = inputSpouseManual.value;
-                if (manualSpouseName) {
-                    const newSpouseRef = push(wargaRef, {
-                        parentId: 'akar_utama',
-                        name: manualSpouseName,
-                        gender: gender === 'L' ? 'P' : 'L',
-                        spouseId: '',
-                        lat: -6.8320 + (Math.random() - 0.5) * 0.005,
-                        lng: 108.2140 + (Math.random() - 0.5) * 0.005
-                    });
-                    spouseId = newSpouseRef.key;
-                }
-            }
-
-            const newWargaRef = push(wargaRef, {
-                parentId: parentId || 'akar_utama', 
-                name: nama, 
-                gender: gender,
-                spouseId: spouseId || '',
-                lat: -6.8320 + (Math.random() - 0.5) * 0.005, 
-                lng: 108.2140 + (Math.random() - 0.5) * 0.005
-            });
-
-            if (spouseId && spouseId !== 'unknown') {
-                update(ref(db, 'silsilah_desa_v3/' + spouseId), { spouseId: newWargaRef.key });
-            }
-
-            modalTambah.classList.add('hidden'); 
-            modalTambah.classList.remove('flex');
-            formTambah.reset();
-            inputParentManual.classList.add('hidden');
-            inputSpouseManual.classList.add('hidden');
-        });
-
-        // Form Submit Edit
-        formEdit.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const dbKey = document.getElementById('edit-dbkey').value;
-            const namaBaru = document.getElementById('edit-nama').value;
-            const genderBaru = editGender.value;
-            
-            let parentBaru = editParent.value;
-            if (parentBaru === 'manual') {
-                const manualParentName = editParentManual.value;
-                if (manualParentName) {
-                    const newParentRef = push(wargaRef, {
-                        parentId: 'akar_utama',
-                        name: manualParentName,
-                        gender: genderBaru === 'L' ? 'P' : 'L',
-                        spouseId: '',
-                        lat: -6.8320 + (Math.random() - 0.5) * 0.005,
-                        lng: 108.2140 + (Math.random() - 0.5) * 0.005
-                    });
-                    parentBaru = newParentRef.key;
-                }
-            }
-
-            let spouseBaru = editSpouse.value;
-            if (spouseBaru === 'manual') {
-                const manualSpouseName = editSpouseManual.value;
-                if (manualSpouseName) {
-                    const newSpouseRef = push(wargaRef, {
-                        parentId: 'akar_utama',
-                        name: manualSpouseName,
-                        gender: genderBaru === 'L' ? 'P' : 'L',
-                        spouseId: dbKey,
-                        lat: -6.8320 + (Math.random() - 0.5) * 0.005,
-                        lng: 108.2140 + (Math.random() - 0.5) * 0.005
-                    });
-                    spouseBaru = newSpouseRef.key;
-                }
-            }
-
-            update(ref(db, 'silsilah_desa_v3/' + dbKey), { 
-                name: namaBaru, 
-                gender: genderBaru,
-                parentId: parentBaru === 'unknown' ? 'akar_utama' : parentBaru,
-                spouseId: spouseBaru === 'unknown' ? '' : spouseBaru 
-            }).then(() => {
-                modalEdit.classList.add('hidden'); 
-                modalEdit.classList.remove('flex');
-                editParentManual.classList.add('hidden');
-                editSpouseManual.classList.add('hidden');
-            });
-        });
+              if(!snapshot.exists()) {
+                await set(ref(db,'silsilah_desa_v3/akar_utama'),{parentId:'',name:'Pangeran Kertadiningrat',gender:'L',spouseId:'',lat:-6.8320,lng:108.2140});
+                return;
+              }
+              dataMap=normalizeData(snapshot.val());
+              dataGlobal=Object.values(dataMap).map(p=>({...p,status:statusFor(p.dbKey)}));
+              $('stats-warga').textContent=`${dataGlobal.length} Warga`;
+              fillSelect(selectParent,'parent',selectParent.value); fillSelect(selectSpouse,'spouse',selectSpouse.value);
+              if(!$('edit-dbkey').value) { fillSelect(editParent,'parent'); fillSelect(editSpouse,'spouse'); }
+              renderTree(); drawMap(); refreshSearch();
+            } catch(err) { console.error('Gagal memproses data Firebase:',err); notify('Data terbaca, tetapi gagal ditampilkan: '+(err.message||err)); }
+          },err=>{console.error('Firebase read error:',err);notify('Tidak bisa membaca database Firebase. Periksa koneksi dan Firebase Database Rules: '+err.message);});
+        } catch(err) { console.error(err); notify('Firebase gagal diinisialisasi: '+err.message); }
+      }
+      wireEvents();
+      try { initMap(); } catch(err) { console.error('Peta gagal dimuat:',err); }
+      startFirebase();
     </script>
 </body>
 </html>
