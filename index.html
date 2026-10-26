@@ -50,7 +50,7 @@
                 <i class="fas fa-search absolute left-4 top-4 text-slate-400"></i>
             </div>
             <div class="mt-3 text-[10px] text-emerald-200">
-                <i class="fas fa-users mr-1"></i> Terhubung: <strong id="stats-warga">6 Warga</strong>
+                <i class="fas fa-users mr-1"></i> Terhubung: <strong id="stats-warga">0 Warga</strong>
             </div>
         </div>
     </header>
@@ -69,13 +69,13 @@
                     <span class="block text-[9px] text-slate-500 mt-0.5">Lihat grafis silsilah</span>
                 </div>
             </button>
-            <button class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-3 hover:bg-amber-50 transition-colors">
-                <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-                    <i class="fas fa-map-location-dot text-xl"></i>
+            <button id="btn-tambah-data" class="bg-purple-600 p-4 rounded-2xl shadow-md border border-purple-500 flex flex-col items-center justify-center gap-3 hover:bg-purple-700 transition-colors active:scale-95 cursor-pointer text-white">
+                <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white">
+                    <i class="fas fa-user-plus text-xl"></i>
                 </div>
                 <div class="text-center">
-                    <span class="block text-xs font-bold text-slate-700">Peta Lembur</span>
-                    <span class="block text-[9px] text-slate-500 mt-0.5">Sebaran rumah warga</span>
+                    <span class="block text-xs font-bold">Tambah Data</span>
+                    <span class="block text-[9px] text-purple-200 mt-0.5">Isi silsilah keluarga</span>
                 </div>
             </button>
         </div>
@@ -84,17 +84,10 @@
         <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
             <div class="flex justify-between items-center mb-3 px-1">
                 <h2 class="text-sm font-bold text-slate-800"><i class="fas fa-sitemap text-emerald-600 mr-1.5"></i> Kaki-Kaki Silsilah</h2>
-                <span class="text-[9px] text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full font-semibold border border-emerald-200">Interaktif</span>
+                <span class="text-[9px] text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full font-semibold border border-emerald-200">Live</span>
             </div>
-            
-            <!-- Wadah D3.js -->
-            <div id="tree-container" class="w-full h-[350px] rounded-2xl border border-slate-200 shadow-inner bg-slate-50 overflow-hidden cursor-move relative">
-                <div class="absolute top-2 left-2 flex gap-2 z-10">
-                    <button class="bg-white border border-slate-300 w-6 h-6 rounded flex items-center justify-center text-xs text-slate-600 shadow-sm" id="zoom-in"><i class="fas fa-plus"></i></button>
-                    <button class="bg-white border border-slate-300 w-6 h-6 rounded flex items-center justify-center text-xs text-slate-600 shadow-sm" id="zoom-out"><i class="fas fa-minus"></i></button>
-                </div>
-            </div>
-            <p class="text-[10px] text-center text-slate-400 mt-3 font-medium"><i class="fas fa-hand-pointer mr-1"></i> Geser layar & gunakan dua jari untuk zoom.</p>
+            <div id="tree-container" class="w-full h-[350px] rounded-2xl border border-slate-200 shadow-inner bg-slate-50 overflow-hidden cursor-move relative"></div>
+            <p class="text-[10px] text-center text-slate-400 mt-3 font-medium"><i class="fas fa-hand-pointer mr-1"></i> Geser & zoom (cubit layar) untuk navigasi.</p>
         </section>
 
         <!-- KANVAS PETA LEAFLET -->
@@ -104,129 +97,199 @@
             </div>
             <div id="map" class="w-full h-[250px] rounded-2xl border border-slate-200 shadow-inner bg-slate-50"></div>
         </section>
-        
     </main>
 
-    <!-- FAB LOGIN -->
-    <button class="fixed bottom-6 right-6 w-12 h-12 bg-emerald-600 text-white rounded-full shadow-[0_8px_20px_rgba(5,150,105,0.4)] flex justify-center items-center text-lg hover:bg-emerald-700 transition-all z-50">
-        <i class="fas fa-user"></i>
-    </button>
+    <!-- ========================================== -->
+    <!-- MODAL FORM INPUT DATA WARGA                -->
+    <!-- ========================================== -->
+    <div id="modal-tambah" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex-col justify-center items-center p-4">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative">
+            <button id="btn-close-modal" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fas fa-user-plus text-emerald-600 mr-2"></i>Tambah Keluarga</h3>
+            
+            <form id="form-tambah" class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-slate-600">Nama Lengkap</label>
+                    <input type="text" id="input-nama" required placeholder="Contoh: Mang Ujang" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-600">Status Kekerabatan</label>
+                    <input type="text" id="input-status" required placeholder="Contoh: Anak, Cucu, Buyut" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-600">Siapa Orang Tuanya? (Induk)</label>
+                    <select id="select-parent" required class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <option value="">-- Pilih Orang Tua / Leluhur --</option>
+                        <!-- Opsi akan dirender otomatis dari Firebase -->
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm hover:bg-emerald-700 transition-colors shadow-md mt-2">
+                    Simpan ke Silsilah Desa
+                </button>
+            </form>
+        </div>
+    </div>
 
     <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    
-    <!-- Script Eksekusi Peta & Silsilah -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // ==========================================
-            // 1. EKSEKUSI PETA (LEAFLET.JS)
-            // ==========================================
-            const map = L.map('map').setView([-6.8320, 108.2140], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <!-- D3 JS -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 
-            const dataWarga = [
-                { id: "W01", nama: "Aki Wahab", status: "Karuhun", lat: -6.8320, lng: 108.2140 },
-                { id: "W02", nama: "Keluarga Mang Ujang", status: "Anak (Gen-2)", lat: -6.8345, lng: 108.2162 },
-                { id: "W03", nama: "Keluarga Bi Iroh", status: "Anak (Gen-2)", lat: -6.8305, lng: 108.2115 }
-            ];
+    <!-- SCRIPT UTAMA & FIREBASE (Versi Full) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-            dataWarga.forEach(warga => {
-                L.marker([warga.lat, warga.lng]).addTo(map).bindPopup(`<b>${warga.nama}</b><br><span style="font-size:10px">${warga.status}</span>`);
-            });
-            setTimeout(() => { map.invalidateSize(); }, 500);
+        // Konfigurasi Asli Lu
+        const firebaseConfig = {
+            apiKey: "AIzaSyA0JmHvkhB5oXPvnDMvcHJyooqSsLIccGQ",
+            authDomain: "sakaruhun-desa.firebaseapp.com",
+            projectId: "sakaruhun-desa",
+            storageBucket: "sakaruhun-desa.firebasestorage.app",
+            messagingSenderId: "69221074382",
+            appId: "1:69221074382:web:b15104ddc2618c1c70979f"
+        };
 
-            // ==========================================
-            // 2. EKSEKUSI POHON SILSILAH (D3.JS)
-            // ==========================================
-            // Data Dummy Silsilah Keluarga (JSON Hierarki)
-            const treeData = {
-                name: "Aki Wahab",
-                status: "Karuhun (Gen-1)",
-                children: [
-                    {
-                        name: "Mang Ujang",
-                        status: "Anak (Gen-2)",
-                        children: [
-                            { name: "Asep", status: "Incu (Gen-3)" },
-                            { name: "Euis", status: "Incu (Gen-3)" }
-                        ]
-                    },
-                    {
-                        name: "Bi Iroh",
-                        status: "Anak (Gen-2)",
-                        children: [
-                            { name: "Jajang", status: "Incu (Gen-3)" }
-                        ]
-                    }
-                ]
-            };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-            // Setup Kanvas D3
-            const container = document.getElementById('tree-container');
-            const width = container.clientWidth;
-            const height = container.clientHeight;
+        // KITA PAKAI FOLDER DATABASE BARU BIAR STRUKTURNYA LEBIH GAMPANG DI-EDIT WARGA
+        const wargaRef = ref(db, 'silsilah_desa_v2');
 
-            const svg = d3.select("#tree-container").append("svg")
-                .attr("width", width)
-                .attr("height", height);
+        // Setup Peta Leaflet
+        const map = L.map('map').setView([-6.8320, 108.2140], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        let layerGroup = L.layerGroup().addTo(map);
+        setTimeout(() => { map.invalidateSize(); }, 1000);
 
-            // Bikin Group utama yang bisa di-zoom & pan
-            const g = svg.append("g");
+        // Setup D3.js (Kanvas)
+        const container = document.getElementById('tree-container');
+        const svg = d3.select("#tree-container").append("svg").attr("width", container.clientWidth).attr("height", container.clientHeight);
+        const g = svg.append("g");
+        const zoom = d3.zoom().scaleExtent([0.5, 3]).on("zoom", (event) => { g.attr("transform", event.transform); });
+        svg.call(zoom);
 
-            // Setup fitur Zoom & Pan
-            const zoom = d3.zoom()
-                .scaleExtent([0.5, 3]) // Limit zoom in/out
-                .on("zoom", (event) => { g.attr("transform", event.transform); });
-            svg.call(zoom);
+        // Elemen Modal & Form
+        const modal = document.getElementById('modal-tambah');
+        const btnTambah = document.getElementById('btn-tambah-data');
+        const btnClose = document.getElementById('btn-close-modal');
+        const formTambah = document.getElementById('form-tambah');
+        const selectParent = document.getElementById('select-parent');
+        const statsWarga = document.getElementById('stats-warga');
 
-            // Setup Layout Tree (Horizontal)
-            const treeLayout = d3.tree().size([height - 60, width - 120]);
+        // Buka/Tutup Modal
+        btnTambah.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        });
+        btnClose.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
+
+        // ----------------------------------------------------
+        // LOGIKA PENARIKAN DATA (REALTIME DARI FIREBASE)
+        // ----------------------------------------------------
+        let dataGlobal = [];
+        onValue(wargaRef, (snapshot) => {
+            if (!snapshot.exists()) {
+                // JIKA DATABASE KOSONG, BIKIN LELUHUR PERTAMA OTOMATIS (Akar Utama)
+                set(ref(db, 'silsilah_desa_v2/akar_utama'), {
+                    parentId: "", // Akar utama tidak punya orang tua
+                    name: "Aki Wahab",
+                    status: "Karuhun (Gen-1)",
+                    lat: -6.8320,
+                    lng: 108.2140
+                });
+                return;
+            }
+
+            const data = snapshot.val();
             
-            // Konversi JSON ke bentuk Hierarki Node D3
-            const root = d3.hierarchy(treeData);
-            treeLayout(root);
+            // Ubah objek dari Firebase jadi bentuk Array biar gampang diproses
+            dataGlobal = Object.keys(data).map(key => ({
+                dbKey: key,
+                ...data[key]
+            }));
 
-            // Render Garis Hubung (Edges)
-            g.selectAll(".link")
-                .data(root.links())
-                .enter().append("path")
-                .attr("class", "link")
-                .attr("d", d3.linkHorizontal()
-                    .x(d => d.y + 40) // Geser sedikit biar ga nabrak teks
-                    .y(d => d.x)
-                );
+            // 1. Update Jumlah Warga di Header
+            statsWarga.innerText = `${dataGlobal.length} Warga`;
 
-            // Render Titik (Nodes)
-            const node = g.selectAll(".node")
-                .data(root.descendants())
-                .enter().append("g")
-                .attr("class", "node")
-                .attr("transform", d => `translate(${d.y + 40},${d.x})`);
+            // 2. Masukkan daftar nama ke dalam Dropdown Modal
+            selectParent.innerHTML = '<option value="">-- Pilih Orang Tua / Leluhur --</option>';
+            dataGlobal.forEach(w => {
+                const opt = document.createElement('option');
+                opt.value = w.dbKey;
+                opt.text = w.name;
+                selectParent.appendChild(opt);
+            });
 
-            // Lingkaran Node
-            node.append("circle").attr("r", 8);
+            // 3. Update Pin di Peta
+            layerGroup.clearLayers();
+            dataGlobal.forEach(w => {
+                if (w.lat && w.lng) {
+                    L.marker([w.lat, w.lng]).addTo(layerGroup).bindPopup(`<b>${w.name}</b><br><span style="font-size:10px">${w.status}</span>`);
+                }
+            });
 
-            // Teks Nama Warga
-            node.append("text")
-                .attr("dy", -12) // Posisi teks di atas titik
-                .attr("x", 0)
-                .style("text-anchor", "middle")
-                .text(d => d.data.name);
+            // 4. Update Pohon Silsilah (D3.js)
+            g.selectAll("*").remove(); // Bersihkan pohon lama
+            try {
+                // d3.stratify mengubah data datar jadi bercabang (Hierarki)
+                const root = d3.stratify()
+                    .id(d => d.dbKey)
+                    .parentId(d => d.parentId)
+                    (dataGlobal);
 
-            // Teks Status (Karuhun/Anak/Incu)
-            node.append("text")
-                .attr("class", "status")
-                .attr("dy", 18) // Posisi teks di bawah titik
-                .attr("x", 0)
-                .style("text-anchor", "middle")
-                .text(d => d.data.status);
+                const treeLayout = d3.tree().size([container.clientHeight - 60, container.clientWidth - 120]);
+                treeLayout(root);
 
-            // Pusatkan kamera awal agak ke tengah
-            svg.call(zoom.transform, d3.zoomIdentity.translate(20, 20));
+                g.selectAll(".link").data(root.links()).enter().append("path").attr("class", "link")
+                    .attr("d", d3.linkHorizontal().x(d => d.y + 40).y(d => d.x));
 
-            // Fungsionalitas Tombol Zoom UI
-            d3.select("#zoom-in").on("click", () => svg.transition().call(zoom.scaleBy, 1.3));
-            d3.select("#zoom-out").on("click", () => svg.transition().call(zoom.scaleBy, 0.7));
+                const node = g.selectAll(".node").data(root.descendants()).enter().append("g").attr("class", "node")
+                    .attr("transform", d => `translate(${d.y + 40},${d.x})`);
+
+                node.append("circle").attr("r", 8);
+                node.append("text").attr("dy", -12).attr("x", 0).style("text-anchor", "middle").text(d => d.data.name);
+                node.append("text").attr("class", "status").attr("dy", 18).attr("x", 0).style("text-anchor", "middle").text(d => d.data.status);
+                
+                svg.call(zoom.transform, d3.zoomIdentity.translate(20, 20));
+            } catch (error) {
+                console.log("Struktur silsilah belum sempurna", error);
+            }
+        });
+
+        // ----------------------------------------------------
+        // LOGIKA SAAT WARGA KLIK TOMBOL SIMPAN
+        // ----------------------------------------------------
+        formTambah.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const nama = document.getElementById('input-nama').value;
+            const status = document.getElementById('input-status').value;
+            const parentId = document.getElementById('select-parent').value;
+
+            // Bikin posisi rumah acak sedikit di sekitar pusat desa, biar pin peta ga numpuk di satu titik
+            const randomLat = -6.8320 + (Math.random() - 0.5) * 0.005;
+            const randomLng = 108.2140 + (Math.random() - 0.5) * 0.005;
+
+            // Kirim data baru ke Firebase Cloud
+            push(wargaRef, {
+                parentId: parentId,
+                name: nama,
+                status: status,
+                lat: randomLat,
+                lng: randomLng
+            }).then(() => {
+                // Tutup modal dan bersihkan form kalau sukses
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                formTambah.reset();
+                alert("Berhasil! Data " + nama + " resmi masuk ke silsilah Desa!");
+            }).catch((error) => {
+                alert("Gagal menyimpan data: " + error.message);
+            });
         });
     </script>
 </body>
