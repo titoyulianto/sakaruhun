@@ -15,24 +15,21 @@
 body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: hidden;}
 .bg-pattern{background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.12'%3E%3Cpath d='M30 0v60M0 30h60'/%3E%3C/g%3E%3C/svg%3E")}
 #tree-container{width:100%; height:80vh; min-height:600px; overflow:hidden; position:relative; touch-action:none; background:#ffffff;}
-
 .node{cursor:pointer; pointer-events:all;}
 .node circle{stroke:#fff;stroke-width:3; pointer-events:all; transition:all 0.2s;}
 .node.laki circle{fill:#3b82f6}
 .node.perempuan circle{fill:#ec4899}
 .node text{font-size:12px;font-weight:800;fill:#1e293b;pointer-events:none; user-select:none;}
 .node text.status{font-size:10px;font-weight:600;fill:#059669}
-
-.link{fill:none;stroke:#94a3b8;stroke-width:2;}
-.spouse-link{fill:none;stroke:#cbd5e1;stroke-width:2;stroke-dasharray:5 5;}
-
+.link{fill:none;stroke:#cbd5e1;stroke-width:2;pointer-events:none}
+.spouse-link{fill:none;stroke:#ec4899;stroke-width:2;stroke-dasharray:4 4;pointer-events:none}
 #map{height:300px; z-index: 10; width:100%;}
 .leaflet-container { z-index: 10 !important; }
 .modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter: blur(4px);}
 .modal.open{display:flex !important}
 .modal-card{background:white;border-radius:24px;padding:24px;width:100%;max-width:450px;max-height:90vh;overflow-y:auto;box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);}
 
-/* Geni-Style Action Badges (D3 Embedded) */
+/* Geni-Style Action Badges */
 .action-badge { cursor: pointer; transition: all 0.2s; pointer-events: all; }
 .action-badge rect { stroke-width: 1.5px; rx: 6px; ry: 6px; }
 .action-badge.blue rect { fill: #eff6ff; stroke: #93c5fd; }
@@ -43,6 +40,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 .action-badge.green text { fill: #047857; font-weight: bold; font-size: 10px; text-anchor: middle; pointer-events: none;}
 .action-badge.gray rect { fill: #f8fafc; stroke: #cbd5e1; }
 .action-badge.gray text { fill: #475569; font-weight: bold; font-size: 10px; text-anchor: middle; pointer-events: none;}
+.action-badge.yellow rect { fill: #fffbeb; stroke: #fcd34d; }
+.action-badge.yellow text { fill: #b45309; font-weight: bold; font-size: 10px; text-anchor: middle; pointer-events: none;}
 .action-badge:hover rect { filter: brightness(0.95); stroke-width: 2px; }
 
 /* Selection Outline */
@@ -63,12 +62,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     <p class="text-emerald-100 text-xs tracking-widest uppercase font-semibold">Sadulur Sadesa</p>
                 </div>
             </div>
+            
             <div class="flex-1 max-w-md relative">
                 <input id="input-pencarian" type="search" placeholder="Cari nama keluarga..." class="w-full bg-white py-3 pl-12 pr-5 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
                 <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
             </div>
-            <div class="text-sm text-emerald-100 bg-black/20 px-4 py-2 rounded-xl border border-white/10 shadow-inner">
-                <i class="fas fa-users mr-2"></i><strong id="stats-warga">Memuat...</strong>
+            
+            <div class="text-sm text-emerald-100 bg-black/20 px-4 py-2 rounded-xl border border-white/10 shadow-inner flex gap-3 items-center">
+                <div><i class="fas fa-users mr-2"></i><strong id="stats-warga">Memuat...</strong></div>
+                <button id="btn-logout" class="bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition" title="Keluar"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </div>
     </header>
@@ -96,8 +98,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                             <span class="block text-[10px] text-slate-500">Klik untuk menyalakan</span>
                         </div>
                     </button>
+
+                    <button id="btn-reset-layout" type="button" class="w-full bg-blue-50 text-blue-600 border border-blue-200 p-3 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors mt-2">
+                        <i class="fas fa-magic"></i> <strong class="text-xs">Rapihkan Otomatis</strong>
+                    </button>
                     
-                    <button id="btn-reset-all-data-main" type="button" class="w-full bg-red-50 text-red-600 border border-red-200 p-3 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:bg-red-100 transition-colors mt-2">
+                    <button id="btn-reset-all-data-main" type="button" class="w-full bg-red-50 text-red-600 border border-red-200 p-3 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:bg-red-100 transition-colors mt-2 hidden">
                         <i class="fas fa-trash-alt"></i> <strong class="text-xs">Reset Semua Data</strong>
                     </button>
                 </div>
@@ -145,6 +151,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl p-3.5 font-bold text-sm shadow-md transition-colors">
                     Masuk <i class="fas fa-arrow-right ml-2"></i>
                 </button>
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink mx-4 text-slate-400 text-[10px] uppercase font-bold">Atau Khusus Developer</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+                <button type="button" id="btn-login-dev" class="w-full bg-slate-900 hover:bg-black text-white rounded-xl p-3 font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-2">
+                    <i class="fas fa-code text-emerald-400"></i> Login Master Developer
+                </button>
             </form>
 
             <form id="form-auth-biodata" class="space-y-3 hidden">
@@ -161,6 +175,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         <select id="bio-gender" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                             <option value="L">Laki-laki</option>
                             <option value="P">Perempuan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700">Status</label>
+                        <select id="bio-status" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Hidup">Masih Hidup</option>
+                            <option value="Meninggal">Sudah Meninggal</option>
                         </select>
                     </div>
                 </div>
@@ -203,15 +224,24 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
                 <div>
                     <label class="block text-xs font-bold text-slate-600">Nama Lengkap</label>
-                    <input id="input-nama" required placeholder="Ketik nama lengkap..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input id="input-nama" required placeholder="Ketik nama..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Jenis Kelamin</label>
-                    <select id="select-gender" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="L">Laki-laki</option>
-                        <option value="P">Perempuan</option>
-                    </select>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600">Jenis Kelamin</label>
+                        <select id="select-gender" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600">Status Kehidupan</label>
+                        <select id="select-status" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Hidup">Masih Hidup</option>
+                            <option value="Meninggal">Sudah Meninggal</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-3 gap-2">
@@ -246,7 +276,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
     <div id="modal-edit" class="modal">
         <div class="modal-card relative border-t-4 border-amber-500">
             <button onclick="hideModal('modal-edit')" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
-            <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-cog text-amber-500 mr-2"></i>Kelola Data / Edit Profil</h3>
+            <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-cog text-amber-500 mr-2"></i>Kelola Profil</h3>
 
             <form id="form-edit" class="space-y-4">
                 <input type="hidden" id="edit-dbkey">
@@ -256,12 +286,21 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     <input id="edit-nama" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Jenis Kelamin</label>
-                    <select id="edit-gender" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                        <option value="L">Laki-laki</option>
-                        <option value="P">Perempuan</option>
-                    </select>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600">Jenis Kelamin</label>
+                        <select id="edit-gender" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600">Status Kehidupan</label>
+                        <select id="edit-status" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <option value="Hidup">Masih Hidup</option>
+                            <option value="Meninggal">Sudah Meninggal</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-3 gap-2">
@@ -285,7 +324,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     </div>
                 </div>
 
-                <div class="flex gap-2 pt-2">
+                <div class="flex gap-2 pt-2 border-t border-slate-200 mt-2">
                     <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl p-3 font-bold text-sm shadow-md transition-colors">
                         <i class="fas fa-save mr-1"></i> Update Data
                     </button>
@@ -323,7 +362,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             window.$("form-tambah").reset();
             window.$("tambah-context").value = context;
             window.$("tambah-target").value = targetKey || "";
-            window.$("input-dusun-tambah").value = "Manis"; // Default
+            window.$("input-dusun-tambah").value = "Manis"; 
+            window.$("select-status").value = "Hidup";
             
             const title = window.$("modal-tambah-title");
 
@@ -338,6 +378,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             } else if (context === 'ADD_PARENT_MOTHER') {
                 title.innerHTML = `<i class="fas fa-female text-pink-600 mr-2"></i>Tambah Ibu kandung ${escapeHtml(targetName)}`;
                 window.$("select-gender").value = "P";
+            } else if (context === 'ADD_SIBLING_KAKAK') {
+                title.innerHTML = `<i class="fas fa-user-plus text-amber-500 mr-2"></i>Tambah Kakak dari ${escapeHtml(targetName)}`;
+            } else if (context === 'ADD_SIBLING_ADIK') {
+                title.innerHTML = `<i class="fas fa-user-plus text-amber-500 mr-2"></i>Tambah Adik dari ${escapeHtml(targetName)}`;
             } else {
                 title.innerHTML = `<i class="fas fa-user-secret text-purple-600 mr-2"></i>Bikin Garis Keturunan Baru`;
             }
@@ -345,14 +389,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             setTimeout(() => window.$("input-nama").focus(), 100);
         };
 
-        window.bukaModalEditGeni = function(key, nama, gender, dusun, rt, rw) {
+        window.bukaModalEditGeni = function(key, nama, gender, statusHidup, dusun, rt, rw) {
             window.$("edit-dbkey").value = key;
             window.$("edit-nama").value = nama;
             window.$("edit-gender").value = gender;
+            window.$("edit-status").value = statusHidup || "Hidup";
             window.$("edit-dusun").value = dusun || "Manis";
             window.$("edit-rt").value = rt || "";
             window.$("edit-rw").value = rw || "";
-            
             window.showModal('modal-edit');
         };
 
@@ -377,8 +421,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         let nodeSelection = null;
         let zoomBehavior = null;
         
-        // State Penting
-        let hasCenteredInitially = false; // Mencegah kamera loncat saat klik
+        let hasCenteredInitially = false; 
         let isDragMode = false;
         let selectedNodeId = null;
 
@@ -393,6 +436,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             }
         }
 
+        window.$("btn-login-dev").addEventListener("click", () => {
+            currentUser = { dbKey: "MASTER_DEV", nama: "Developer Sakaruhun", wa: "DEVELOPER_MASTER_KEY", isDev: true, dusun: "Manis", rt: "00", rw: "00" };
+            localStorage.setItem("sakaruhun_user", JSON.stringify(currentUser));
+            if(currentUser.isDev) { window.$("btn-reset-all-data-main").classList.remove("hidden"); }
+            checkAuth();
+        });
+
         window.$("form-auth-wa").addEventListener("submit", (e) => {
             e.preventDefault();
             const wa = window.$("auth-wa").value.trim();
@@ -406,6 +456,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 if(found) {
                     currentUser = found;
                     localStorage.setItem("sakaruhun_user", JSON.stringify(currentUser));
+                    if(currentUser.isDev) window.$("btn-reset-all-data-main").classList.remove("hidden");
                     checkAuth();
                 } else {
                     window.$("form-auth-wa").classList.add("hidden");
@@ -419,14 +470,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             const wa = window.$("auth-wa").value.trim();
             const nama = window.$("bio-nama").value.trim();
             const gender = window.$("bio-gender").value;
+            const statusHidup = window.$("bio-status").value;
             const tahun = window.$("bio-tahun").value.trim();
             const dusun = window.$("bio-dusun").value;
             const rt = window.$("bio-rt").value.trim();
             const rw = window.$("bio-rw").value.trim();
 
             const newRef = push(ref(db, DB_PATH));
-            // User pertama kali daftar pasti posisi (0,0) di tengah layar
-            const userData = { wa, nama, gender, tahun, dusun, rt, rw, fatherId: "", motherId: "", spouseIds: [], manualX: 0, manualY: 0, ...window.randomCoords() };
+            const userData = { wa, nama, gender, statusHidup, tahun, dusun, rt, rw, fatherId: "", motherId: "", spouseIds: [], manualX: 0, manualY: 0, ...window.randomCoords() };
             await set(newRef, userData);
 
             currentUser = { dbKey: newRef.key, ...userData };
@@ -444,6 +495,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             }
         });
 
+        window.$("btn-logout").addEventListener("click", () => {
+            localStorage.removeItem("sakaruhun_user");
+            currentUser = null;
+            location.reload();
+        });
+
         function normalizeData(raw) {
             const result = {};
             Object.entries(raw || {}).forEach(([key, v]) => {
@@ -453,26 +510,32 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 if (Array.isArray(v.spouseIds)) { sIds = v.spouseIds; } 
                 else if (v.spouseId) { sIds = [v.spouseId]; }
 
+                let displayNama = String(v.nama || v.name || "Tanpa Nama").trim();
+                let isDead = (v.statusHidup === "Meninggal");
+                if (isDead) {
+                    displayNama += (v.gender === 'L') ? ' (Alm)' : ' (Almh)';
+                }
+
                 result[key] = {
                     dbKey: key,
-                    nama: String(v.nama || v.name || "Tanpa Nama"),
+                    nama: String(v.nama || v.name || "Tanpa Nama").trim(),
+                    displayNama: displayNama,
                     gender: v.gender === "P" ? "P" : "L",
+                    statusHidup: v.statusHidup || "Hidup",
                     fatherId: v.fatherId || "", 
                     motherId: v.motherId || "",
                     spouseIds: sIds,
                     dusun: v.dusun || 'Manis', rt: v.rt || '', rw: v.rw || '',
                     lat: Number(v.lat) || -6.832,
                     lng: Number(v.lng) || 108.214,
-                    manualX: (v.manualX != null && !isNaN(v.manualX)) ? Number(v.manualX) : 0,
-                    manualY: (v.manualY != null && !isNaN(v.manualY)) ? Number(v.manualY) : 0,
+                    manualX: (v.manualX != null && !isNaN(v.manualX)) ? Number(v.manualX) : null,
+                    manualY: (v.manualY != null && !isNaN(v.manualY)) ? Number(v.manualY) : null,
                     wa: v.wa || ""
                 };
             });
-            // Bersihkan relasi yatim piatu
             Object.values(result).forEach(p => {
                 if (p.fatherId && !result[p.fatherId]) { p.fatherId = ""; }
                 if (p.motherId && !result[p.motherId]) { p.motherId = ""; }
-                // Hapus spouse yang udah gak ada
                 p.spouseIds = p.spouseIds.filter(id => result[id]);
             });
             return result;
@@ -491,13 +554,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             layerGroup.clearLayers();
             dataGlobal.forEach(p => {
                 if (Number.isFinite(p.lat) && Number.isFinite(p.lng)) {
-                    L.marker([p.lat, p.lng]).addTo(layerGroup).bindPopup(`<b>${escapeHtml(p.nama)}</b><br><span style="font-size:10px">Dusun ${escapeHtml(p.dusun)}</span>`);
+                    L.marker([p.lat, p.lng]).addTo(layerGroup).bindPopup(`<b>${escapeHtml(p.displayNama)}</b><br><span style="font-size:10px">Dusun ${escapeHtml(p.dusun)}</span>`);
                 }
             });
         }
 
         // ==========================================
-        // ENGINE GAMBAR: FREE-FORM RELATIVE GRAPH (TANPA D3.TREE / HIERARKI KAKU)
+        // D3.JS ENGINE: TREE HIERARKI + NON-JUMPING UI
         // ==========================================
         function renderTree() {
             if (!window.d3) return;
@@ -519,10 +582,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 window.$("empty-state-msg").classList.remove("flex");
             }
             
+            // Klik background deselect 
             svg.on("click", () => {
                 if(selectedNodeId) {
                     selectedNodeId = null;
-                    renderTree();
+                    d3.selectAll(".geni-badges").style("display", "none");
+                    d3.selectAll(".node").classed("selected", false);
                 }
             });
 
@@ -531,70 +596,126 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             svg.call(zoomBehavior).on("dblclick.zoom", null);
 
             try {
-                // 1. Ekstrak Node Langsung dengan Koordinat Manual
-                const nodes = dataGlobal.map(d => ({
-                    ...d,
-                    x: d.manualX,
-                    y: d.manualY
-                }));
-                const nodeById = new Map(nodes.map(n => [n.dbKey, n]));
-
-                const links = [];
-                const spouseLinks = [];
-                const drawnSpouses = new Set();
-                const parentMidpoints = new Map();
-
-                // 2. Bangun Relasi Garis Berdasarkan Posisi Asli
-                nodes.forEach(child => {
-                    let dad = nodeById.get(child.fatherId);
-                    let mom = nodeById.get(child.motherId);
-                    
-                    if (dad && mom) {
-                        // Hubungkan Ayah & Ibu sebagai Pasangan Sejajar
-                        const pairKey = [dad.dbKey, mom.dbKey].sort().join("::");
-                        if(!drawnSpouses.has(pairKey)) {
-                            spouseLinks.push({source: dad, target: mom});
-                            drawnSpouses.add(pairKey);
-                        }
-                        // Tarik garis dari tengah antara ayah & ibu ke anak
-                        const midX = (dad.x + mom.x) / 2;
-                        const midY = (dad.y + mom.y) / 2;
-                        links.push({ isMid: true, startX: midX, startY: midY, target: child });
-                    } 
-                    else if (dad) { links.push({ source: dad, target: child }); } 
-                    else if (mom) { links.push({ source: mom, target: child }); }
-
-                    // Pasangan Lainnya
-                    if(child.spouseIds) {
-                        child.spouseIds.forEach(sId => {
-                            const spouse = nodeById.get(sId);
-                            if(spouse) {
-                                const pairKey = [child.dbKey, spouse.dbKey].sort().join("::");
-                                if(!drawnSpouses.has(pairKey)) {
-                                    spouseLinks.push({source: child, target: spouse});
-                                    drawnSpouses.add(pairKey);
-                                }
+                let primary = dataGlobal.map(d => ({...d}));
+                const byIdGlobal = new Map(primary.map(p => [p.dbKey, p]));
+                
+                const spouseOf = new Map();
+                const isSpouseNode = new Set();
+                const primaryOf = {}; 
+                const renderedPairs = new Set();
+                
+                primary.forEach(p => {
+                    const sList = p.spouseIds || [];
+                    sList.forEach(sId => {
+                        if (!byIdGlobal.has(sId)) return;
+                        
+                        const pairKey = [p.dbKey, sId].sort().join("::");
+                        if (!renderedPairs.has(pairKey)) {
+                            renderedPairs.add(pairKey);
+                            const p2 = byIdGlobal.get(sId);
+                            let main = p.dbKey;
+                            let spouse = sId;
+                            
+                            // Pasangan yang punya ortu diutamakan sbg main line
+                            if (p2.fatherId || p2.motherId || p2.parentId) {
+                                main = sId;
+                                spouse = p.dbKey;
                             }
-                        });
-                    }
-                });
-
-                // GAMBAR GARIS 
-                gSVG.selectAll(".spouse-link").data(spouseLinks).join("path").attr("class", "spouse-link")
-                    .attr("d", d => `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`);
-
-                gSVG.selectAll(".link").data(links).join("path").attr("class", "link")
-                    .attr("d", d => {
-                        if (d.isMid) {
-                            return `M${d.startX},${d.startY} V${(d.startY + d.target.y)/2} H${d.target.x} V${d.target.y}`;
-                        } else {
-                            return `M${d.source.x},${d.source.y} V${(d.source.y + d.target.y)/2} H${d.target.x} V${d.target.y}`;
+                            
+                            isSpouseNode.add(spouse);
+                            primaryOf[spouse] = main;
+                            
+                            if(!spouseOf.has(main)) spouseOf.set(main, []);
+                            if(!spouseOf.get(main).includes(spouse)) spouseOf.get(main).push(spouse);
                         }
                     });
+                });
+
+                primary.forEach(p => {
+                    let rawParent = p.fatherId || p.motherId;
+                    if (rawParent && isSpouseNode.has(rawParent)) { p.parentId = primaryOf[rawParent]; } 
+                    else { p.parentId = rawParent; }
+                });
+
+                let treeNodes = primary.filter(p => !isSpouseNode.has(p.dbKey));
+                const treeNodeIds = new Set(treeNodes.map(p => p.dbKey));
+                treeNodes.forEach(p => { if (p.parentId && !treeNodeIds.has(p.parentId)) p.parentId = ""; });
+
+                treeNodes.forEach(p => {
+                    let curr = p.parentId;
+                    let visited = new Set([p.dbKey]);
+                    let cycle = false;
+                    while(curr && curr !== "") {
+                        if (visited.has(curr)) { cycle = true; break; }
+                        visited.add(curr);
+                        let nextNode = treeNodes.find(n => n.dbKey === curr);
+                        curr = nextNode ? nextNode.parentId : "";
+                    }
+                    if (cycle) p.parentId = "";
+                });
+
+                let roots = treeNodes.filter(p => !p.parentId || p.parentId === "");
+                const DUMMY_ROOT = "DUMMY_INVISIBLE_ROOT";
+                if (roots.length > 1) {
+                    treeNodes.push({ dbKey: DUMMY_ROOT, nama: "", gender: "L", parentId: "", isDummy: true });
+                    roots.forEach(r => r.parentId = DUMMY_ROOT);
+                } else if (roots.length === 0 && treeNodes.length > 0) {
+                    treeNodes[0].parentId = "";
+                }
+
+                const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(treeNodes);
+                d3.tree().nodeSize([320, 180])(root);
+                const nodes = root.descendants();
                 
-                // GAMBAR LINGKARAN ORANG
-                nodeSelection = gSVG.selectAll(".node").data(nodes).join("g")
-                    .attr("class", d => `node ${d.gender === "P" ? "perempuan" : "laki"} ${d.dbKey === selectedNodeId ? "selected" : ""}`)
+                nodes.forEach(n => {
+                    if (n.data.manualX !== null && n.data.manualX !== undefined) n.x = n.data.manualX;
+                    if (n.data.manualY !== null && n.data.manualY !== undefined) n.y = n.data.manualY;
+                });
+
+                const spousePositions = [];
+                nodes.forEach(n => {
+                    if(n.data.isDummy) return;
+                    const spIds = spouseOf.get(n.data.dbKey) || [];
+                    spIds.forEach((id, idx) => {
+                        const person = byIdGlobal.get(id);
+                        if(person) {
+                            let sx = n.x + 180, sy = n.y + (idx * 60); 
+                            if (person.manualX !== null && person.manualX !== undefined) sx = person.manualX;
+                            if (person.manualY !== null && person.manualY !== undefined) sy = person.manualY;
+                            spousePositions.push({ data: person, source: n, x: sx, y: sy, isSpouse: true });
+                        }
+                    });
+                });
+
+                const drawNodes = [];
+                nodes.forEach(n => { if(!n.data.isDummy) drawNodes.push(n); });
+                spousePositions.forEach(s => { drawNodes.push(s); });
+
+                const validLinks = root.links().filter(l => !l.source.data.isDummy);
+                gSVG.selectAll(".link").data(validLinks).join("path").attr("class", "link")
+                    .attr("d", d => {
+                        let startX = d.source.x, startY = d.source.y;
+                        const spData = spousePositions.find(sp => sp.source.data.dbKey === d.source.data.dbKey);
+                        if (spData) { startX = (spData.source.x + spData.x) / 2; startY = (spData.source.y + spData.y) / 2; }
+                        return `M${startX},${startY} V${(startY + d.target.y) / 2} H${d.target.x} V${d.target.y}`;
+                    });
+                
+                const extraLinks = [];
+                spousePositions.forEach(sp => {
+                    let pId = sp.data.fatherId || sp.data.motherId;
+                    if (pId) {
+                        const pNode = drawNodes.find(n => n.data.dbKey === pId);
+                        if (pNode) extraLinks.push({ source: pNode, target: sp });
+                    }
+                });
+                gSVG.selectAll(".extra-link").data(extraLinks).join("path").attr("class", "link extra-link")
+                    .attr("d", l => `M${l.source.x},${l.source.y} V${(l.source.y + l.target.y) / 2} H${l.target.x} V${l.target.y}`);
+
+                gSVG.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link")
+                    .attr("d", sp => `M${sp.source.x+17},${sp.source.y} L${sp.x-17},${sp.y}`);
+
+                nodeSelection = gSVG.selectAll(".node").data(drawNodes).join("g")
+                    .attr("class", d => `node ${d.data.gender === "P" ? "perempuan" : "laki"} ${d.data.dbKey === selectedNodeId ? "selected" : ""}`)
                     .attr("transform", d => `translate(${d.x},${d.y})`);
 
                 const dragBehavior = d3.drag()
@@ -609,88 +730,108 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     })
                     .on("end", async function(event, d) {
                         d3.select(this).style("pointer-events", "all");
-                        await update(ref(db, `${DB_PATH}/${d.dbKey}`), { manualX: d.x, manualY: d.y });
+                        await update(ref(db, `${DB_PATH}/${d.data.dbKey}`), { manualX: d.x, manualY: d.y });
                         renderTree(); 
                     });
 
-                nodeSelection.on("click", (event, d) => {
+                nodeSelection.on("click", function(event, d) {
                     if (isDragMode) return;
-                    event.stopPropagation(); 
+                    event.stopPropagation();
                     
-                    if (selectedNodeId === d.dbKey) {
-                        selectedNodeId = null; 
+                    const isCurrentlySelected = (selectedNodeId === d.data.dbKey);
+                    
+                    // Sembunyikan semua badge dulu (TIDAK ME-RENDER ULANG D3)
+                    d3.selectAll(".geni-badges").style("display", "none");
+                    d3.selectAll(".node").classed("selected", false);
+                    
+                    if (!isCurrentlySelected) {
+                        selectedNodeId = d.data.dbKey;
+                        d3.select(this).classed("selected", true);
+                        d3.select(this).select(".geni-badges").style("display", "block");
                     } else {
-                        selectedNodeId = d.dbKey;
+                        selectedNodeId = null; 
                     }
-                    renderTree(); 
                 }).call(dragBehavior);
 
                 nodeSelection.append("circle").attr("r", 20);
-                nodeSelection.append("text").attr("dy", -32).attr("text-anchor", "middle").text(d => d.nama.length > 25 ? d.nama.slice(0, 23) + "…" : d.nama);
+                // Nama display (Otomatis ditambah Alm kalau meninggal)
+                nodeSelection.append("text").attr("dy", -32).attr("text-anchor", "middle").text(d => d.data.displayNama.length > 25 ? d.data.displayNama.slice(0, 23) + "…" : d.data.displayNama);
 
                 // =========================================================================
-                // UI GENI-STYLE: BADGE ACTION (Muncul saat Node diklik)
+                // UI GENI-STYLE: BADGE ACTION (DIGAMBAR SEMUA TAPI DISEMBUNYIKAN)
                 // =========================================================================
                 nodeSelection.each(function(d) {
-                    if (d.dbKey === selectedNodeId) {
-                        const nodeGroup = d3.select(this);
-                        
-                        const noFather = !d.fatherId || d.fatherId === "";
-                        const noMother = !d.motherId || d.motherId === "";
+                    const nodeGroup = d3.select(this);
+                    const badgeGroup = nodeGroup.append("g").attr("class", "geni-badges")
+                                                .style("display", d.data.dbKey === selectedNodeId ? "block" : "none");
+                    
+                    const noFather = !d.data.fatherId || d.data.fatherId === "";
+                    const noMother = !d.data.motherId || d.data.motherId === "";
+                    const hasParent = !noFather || !noMother;
 
-                        // 1. TOMBOL ATAS: TAMBAH AYAH & IBU 
-                        if (noFather) {
-                            const btnAyah = nodeGroup.append("g").attr("class", "action-badge blue").attr("transform", "translate(-70, -80)")
-                                .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT_FATHER', d.dbKey, d.nama, 'L'); });
-                            btnAyah.append("rect").attr("width", 65).attr("height", 22);
-                            btnAyah.append("text").attr("x", 32.5).attr("y", 15).text("+ Ayah");
-                            nodeGroup.append("path").attr("d", "M-35,-58 V-20").attr("class", "link"); 
-                        }
-                        if (noMother) {
-                            const btnIbu = nodeGroup.append("g").attr("class", "action-badge pink").attr("transform", "translate(5, -80)")
-                                .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT_MOTHER', d.dbKey, d.nama, 'P'); });
-                            btnIbu.append("rect").attr("width", 65).attr("height", 22);
-                            btnIbu.append("text").attr("x", 32.5).attr("y", 15).text("+ Ibu");
-                            nodeGroup.append("path").attr("d", "M35,-58 V-20").attr("class", "link"); 
-                        }
-
-                        // 2. TOMBOL KANAN: TAMBAH PASANGAN
-                        const btnSpouse = nodeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(40, -10)")
-                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SPOUSE', d.dbKey, d.nama, d.gender === 'L' ? 'P' : 'L'); });
-                        btnSpouse.append("rect").attr("width", 75).attr("height", 22);
-                        btnSpouse.append("text").attr("x", 37).attr("y", 15).text("+ Pasangan");
-
-                        // 3. TOMBOL BAWAH: TAMBAH ANAK
-                        const btnAnak = nodeGroup.append("g").attr("class", "action-badge green").attr("transform", "translate(-35, 50)")
-                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_CHILD', d.dbKey, d.nama, null); });
-                        btnAnak.append("rect").attr("width", 70).attr("height", 22);
-                        btnAnak.append("text").attr("x", 35).attr("y", 15).text("+ Anak");
-                        nodeGroup.append("path").attr("d", "M0,20 V50").attr("class", "link");
-
-                        // 4. TOMBOL KIRI: EDIT/KELOLA
-                        const btnEdit = nodeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(-75, -10)")
-                            .on("click", (e) => { e.stopPropagation(); window.bukaModalEditGeni(d.dbKey, d.nama, d.gender, d.dusun, d.rt, d.rw); });
-                        btnEdit.append("rect").attr("width", 50).attr("height", 22);
-                        btnEdit.append("text").attr("x", 25).attr("y", 15).text("📝 Edit");
+                    // 1. TOMBOL ATAS: TAMBAH AYAH & IBU 
+                    if (noFather) {
+                        const btnAyah = badgeGroup.append("g").attr("class", "action-badge blue").attr("transform", "translate(-70, -80)")
+                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT_FATHER', d.data.dbKey, d.data.nama, 'L'); });
+                        btnAyah.append("rect").attr("width", 65).attr("height", 22);
+                        btnAyah.append("text").attr("x", 32.5).attr("y", 15).text("+ Ayah");
+                        badgeGroup.append("path").attr("d", "M-35,-58 V-20").attr("class", "link"); 
                     }
+                    if (noMother) {
+                        const btnIbu = badgeGroup.append("g").attr("class", "action-badge pink").attr("transform", "translate(5, -80)")
+                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT_MOTHER', d.data.dbKey, d.data.nama, 'P'); });
+                        btnIbu.append("rect").attr("width", 65).attr("height", 22);
+                        btnIbu.append("text").attr("x", 32.5).attr("y", 15).text("+ Ibu");
+                        badgeGroup.append("path").attr("d", "M35,-58 V-20").attr("class", "link"); 
+                    }
+
+                    // 2. TOMBOL KANAN: TAMBAH PASANGAN
+                    const btnSpouse = badgeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(40, -10)")
+                        .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SPOUSE', d.data.dbKey, d.data.nama, d.data.gender === 'L' ? 'P' : 'L'); });
+                    btnSpouse.append("rect").attr("width", 75).attr("height", 22);
+                    btnSpouse.append("text").attr("x", 37).attr("y", 15).text("+ Pasangan");
+
+                    // 3. TOMBOL BAWAH: TAMBAH ANAK
+                    const btnAnak = badgeGroup.append("g").attr("class", "action-badge green").attr("transform", "translate(-35, 50)")
+                        .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_CHILD', d.data.dbKey, d.data.nama, null); });
+                    btnAnak.append("rect").attr("width", 70).attr("height", 22);
+                    btnAnak.append("text").attr("x", 35).attr("y", 15).text("+ Anak");
+                    badgeGroup.append("path").attr("d", "M0,20 V50").attr("class", "link");
+
+                    // 4. TOMBOL KIRI KELUARGA: TAMBAH KAKAK/ADIK (Hanya Muncul Jika Sudah Ada Orang Tua)
+                    if (hasParent) {
+                        const btnKakak = badgeGroup.append("g").attr("class", "action-badge yellow").attr("transform", "translate(-100, -25)")
+                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SIBLING_KAKAK', d.data.dbKey, d.data.nama, null); });
+                        btnKakak.append("rect").attr("width", 65).attr("height", 20);
+                        btnKakak.append("text").attr("x", 32.5).attr("y", 14).text("+ Kakak");
+
+                        const btnAdik = badgeGroup.append("g").attr("class", "action-badge yellow").attr("transform", "translate(-100, 0)")
+                            .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SIBLING_ADIK', d.data.dbKey, d.data.nama, null); });
+                        btnAdik.append("rect").attr("width", 65).attr("height", 20);
+                        btnAdik.append("text").attr("x", 32.5).attr("y", 14).text("+ Adik");
+                    }
+
+                    // 5. TOMBOL KIRI BAWAH: EDIT/KELOLA
+                    const btnEdit = badgeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(-90, 30)")
+                        .on("click", (e) => { e.stopPropagation(); window.bukaModalEditGeni(d.data.dbKey, d.data.nama, d.data.gender, d.data.statusHidup, d.data.dusun, d.data.rt, d.data.rw); });
+                    btnEdit.append("rect").attr("width", 50).attr("height", 22);
+                    btnEdit.append("text").attr("x", 25).attr("y", 15).text("📝 Edit");
                 });
 
-                // =================================================================================
-                // AUTO CENTER VIEW (Hanya 1x saat load, mencegah loncat saat klik)
-                // =================================================================================
-                if(nodes.length > 0 && !hasCenteredInitially) {
-                    let focusNode = nodes.find(d => d.wa === currentUser?.wa || d.dbKey === currentUser?.dbKey);
+                // AUTO CENTER VIEW (Hanya 1x saat load/refresh data baru)
+                if(drawNodes.length > 0 && !hasCenteredInitially) {
+                    let focusNode = drawNodes.find(d => d.data.wa === currentUser?.wa || d.data.dbKey === currentUser?.dbKey);
                     if(focusNode) {
                         svg.transition().duration(800).call(zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - focusNode.x, height / 2 - focusNode.y + 50));
                     } else {
-                        const extent = d3.extent(nodes, d => d.x);
-                        const extentY = d3.extent(nodes, d => d.y);
+                        const extent = d3.extent(drawNodes, d => d.x);
+                        const extentY = d3.extent(drawNodes, d => d.y);
                         let cx = (extent[0] + extent[1]) / 2;
                         let cy = (extentY[0] + extentY[1]) / 2;
                         if(isNaN(cx)) cx = 0; if(isNaN(cy)) cy = 0;
                         svg.transition().duration(500).call(zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - cx, height / 2 - cy + 20));
                     }
-                    hasCenteredInitially = true; // Kunci biar ga pindah-pindah
+                    hasCenteredInitially = true; 
                 }
 
             } catch (err) {
@@ -708,6 +849,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             try {
                 const name = window.$("input-nama").value.trim();
                 const gender = window.$("select-gender").value;
+                const statusHidup = window.$("select-status").value;
                 const dusun = window.$("input-dusun-tambah").value;
                 const rt = window.$("input-rt-tambah").value.trim();
                 const rw = window.$("input-rw-tambah").value.trim();
@@ -716,33 +858,42 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 
                 const ctx = window.$("tambah-context").value;
                 const targetKey = window.$("tambah-target").value;
+                const targetNode = dataMap[targetKey];
                 
                 const newRef = push(wargaRef);
                 let initCoord = window.randomCoords();
                 
-                // MENGATUR POSISI NATURAL ALA GENI SAAT INSERT DATA
-                if (targetKey && dataMap[targetKey]) { 
-                    const targetNode = dataMap[targetKey];
+                let fId = "";
+                let mId = "";
+                
+                // MENGATUR POSISI MANUAL & RELASI SAUDARA
+                if (targetNode) { 
                     if (ctx === 'ADD_PARENT_FATHER' || ctx === 'ADD_PARENT_MOTHER') {
-                        initCoord.manualY = targetNode.manualY - 150; // Taruh di atas
-                        if (gender === 'L') initCoord.manualX = targetNode.manualX - 80;
-                        else initCoord.manualX = targetNode.manualX + 80;
+                        initCoord.manualY = (targetNode.manualY || 0) - 180; 
+                        if (gender === 'L') initCoord.manualX = (targetNode.manualX || 0) - 80;
+                        else initCoord.manualX = (targetNode.manualX || 0) + 80;
                     } 
                     else if (ctx === 'ADD_SPOUSE') {
-                        initCoord.manualY = targetNode.manualY;      // Sejajar
-                        initCoord.manualX = targetNode.manualX + 160;
+                        initCoord.manualY = targetNode.manualY || 0;     
+                        initCoord.manualX = (targetNode.manualX || 0) + 160;
                     } 
                     else if (ctx === 'ADD_CHILD') {
-                        initCoord.manualY = targetNode.manualY + 150; // Taruh di bawah
-                        initCoord.manualX = targetNode.manualX;
+                        initCoord.manualY = (targetNode.manualY || 0) + 180; 
+                        initCoord.manualX = targetNode.manualX || 0;
+                        if(targetNode.gender === 'L') fId = targetKey; else mId = targetKey;
+                    }
+                    else if (ctx === 'ADD_SIBLING_KAKAK' || ctx === 'ADD_SIBLING_ADIK') {
+                        // Saudara punya orang tua yang sama
+                        fId = targetNode.fatherId || "";
+                        mId = targetNode.motherId || "";
+                        initCoord.manualY = targetNode.manualY || 0;
+                        initCoord.manualX = (targetNode.manualX || 0) + (ctx === 'ADD_SIBLING_KAKAK' ? -180 : 180);
                     }
                 } else {
-                    // Jika bikin garis asing baru
-                    initCoord.manualX = 0;
-                    initCoord.manualY = 0;
+                    initCoord.manualX = 0; initCoord.manualY = 0;
                 }
                 
-                let newRecord = { nama: name, gender, dusun, rt, rw, fatherId: "", motherId: "", spouseIds: [], ...initCoord };
+                let newRecord = { nama: name, gender, statusHidup, dusun, rt, rw, fatherId: fId, motherId: mId, spouseIds: [], ...initCoord };
                 await set(newRef, newRecord);
                 
                 // MENYAMBUNGKAN RELASI
@@ -751,19 +902,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 } else if (ctx === 'ADD_PARENT_MOTHER') {
                     await update(ref(db, `${DB_PATH}/${targetKey}`), { motherId: newRef.key });
                 } else if (ctx === 'ADD_SPOUSE') {
-                    const targetPerson = dataMap[targetKey];
-                    let spouses = targetPerson?.spouseIds || [];
+                    let spouses = targetNode?.spouseIds || [];
                     if (!spouses.includes(newRef.key)) spouses.push(newRef.key);
                     
                     let targetSpouses = [targetKey];
                     await update(ref(db, `${DB_PATH}/${targetKey}`), { spouseIds: spouses });
                     await update(ref(db, `${DB_PATH}/${newRef.key}`), { spouseIds: targetSpouses });
-                } else if (ctx === 'ADD_CHILD') {
-                    if(dataMap[targetKey].gender === 'L') {
-                        await update(ref(db, `${DB_PATH}/${newRef.key}`), { fatherId: targetKey });
-                    } else {
-                        await update(ref(db, `${DB_PATH}/${newRef.key}`), { motherId: targetKey });
-                    }
                 }
                 
                 window.hideModal('modal-tambah');
@@ -780,40 +924,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const key = window.$("edit-dbkey").value;
                 const name = window.$("edit-nama").value.trim();
                 const gender = window.$("edit-gender").value;
+                const statusHidup = window.$("edit-status").value;
                 const dusun = window.$("edit-dusun").value;
                 const rt = window.$("edit-rt").value.trim();
                 const rw = window.$("edit-rw").value.trim();
                 
                 if (!key || !name) throw new Error("Nama wajib diisi.");
-                const updates = { nama: name, gender, dusun, rt, rw };
+                const updates = { nama: name, gender, statusHidup, dusun, rt, rw };
                 await update(ref(db, `${DB_PATH}/${key}`), updates);
                 window.hideModal('modal-edit');
             } catch (err) { window.notify("Gagal memperbarui: " + err.message); } 
             finally { button.disabled = false; }
-        });
-
-        window.$("btn-hapus-data").addEventListener("click", async () => {
-            const key = window.$("edit-dbkey").value;
-            if (!key) return;
-            if (!confirm("Hapus individu ini? Relasi anak dan pasangan akan diputuskan.")) return;
-            try {
-                const updates = {};
-                dataGlobal.forEach(p => { 
-                    if(p.fatherId === key) updates[`${DB_PATH}/${p.dbKey}/fatherId`] = "";
-                    if(p.motherId === key) updates[`${DB_PATH}/${p.dbKey}/motherId`] = "";
-                });
-                dataGlobal.forEach(p => {
-                    if (p.spouseIds && p.spouseIds.includes(key)) {
-                        let newList = p.spouseIds.filter(id => id !== key);
-                        updates[`${DB_PATH}/${p.dbKey}/spouseIds`] = newList;
-                    }
-                });
-
-                if (Object.keys(updates).length) await update(ref(db), updates);
-                await remove(ref(db, `${DB_PATH}/${key}`));
-                window.hideModal('modal-edit');
-                selectedNodeId = null;
-            } catch (err) { window.notify("Gagal menghapus: " + err.message); }
         });
 
         function wireEvents() {
@@ -822,13 +943,29 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const btn = window.$("btn-toggle-drag");
                 if (isDragMode) {
                     selectedNodeId = null; 
+                    d3.selectAll(".geni-badges").style("display", "none");
+                    d3.selectAll(".node").classed("selected", false);
                     btn.className = "w-full bg-amber-500 text-white p-4 rounded-xl shadow-md flex items-center justify-center gap-3 transition-colors active:scale-95";
                     btn.innerHTML = '<i class="fas fa-arrows-alt text-xl"></i><div class="text-left leading-tight"><strong class="block text-sm">Mode Geser Aktif</strong><span class="block text-[10px] text-amber-200">Geser profil & posisinya akan dikunci.</span></div>';
                 } else {
                     btn.className = "w-full bg-slate-100 text-slate-600 border border-slate-200 p-4 rounded-xl shadow-sm flex items-center gap-3 hover:bg-slate-200 transition-colors";
                     btn.innerHTML = '<i class="fas fa-lock text-xl w-6 text-center"></i><div class="text-left leading-tight"><strong class="block text-sm">Silsilah Terkunci</strong><span class="block text-[10px] text-slate-500">Klik untuk geser posisi</span></div>';
                 }
-                renderTree();
+            });
+
+            window.$("btn-reset-layout").addEventListener("click", async () => {
+                if(!confirm("Kembalikan seluruh pohon ke susunan otomatis?")) return;
+                try {
+                    const updates = {};
+                    dataGlobal.forEach(p => {
+                        if (p.manualX !== null || p.manualY !== null) {
+                            updates[`${DB_PATH}/${p.dbKey}/manualX`] = null;
+                            updates[`${DB_PATH}/${p.dbKey}/manualY`] = null;
+                        }
+                    });
+                    if (Object.keys(updates).length > 0) await update(ref(db), updates);
+                    hasCenteredInitially = false; 
+                } catch (err) { window.notify("Gagal reset layout."); }
             });
 
             window.$("btn-tambah-data-main").addEventListener("click", () => window.openTambahModal('MAIN', '', '', null));
@@ -837,8 +974,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const q = window.$("input-pencarian").value.trim().toLocaleLowerCase("id");
                 if (!nodeSelection) return;
                 nodeSelection.select("circle")
-                    .attr("stroke", d => q && d.nama.toLocaleLowerCase("id").includes(q) ? "#f59e0b" : (d.dbKey === selectedNodeId ? "#f59e0b" : "#fff"))
-                    .attr("stroke-width", d => q && d.nama.toLocaleLowerCase("id").includes(q) ? 5 : (d.dbKey === selectedNodeId ? 4 : 3));
+                    .attr("stroke", d => q && d.data.nama.toLocaleLowerCase("id").includes(q) ? "#f59e0b" : (d.data.dbKey === selectedNodeId ? "#f59e0b" : "#fff"))
+                    .attr("stroke-width", d => q && d.data.nama.toLocaleLowerCase("id").includes(q) ? 5 : (d.data.dbKey === selectedNodeId ? 4 : 3));
             });
 
             window.addEventListener("resize", () => { if (map) setTimeout(() => map.invalidateSize(), 100); });
