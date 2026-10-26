@@ -10,7 +10,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <!-- Leaflet CSS (Peta) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 
     <!-- D3.js (Visualisasi Silsilah) -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -28,8 +28,9 @@
         .leaflet-container { z-index: 10 !important; }
         
         /* CSS Khusus untuk D3.js Nodes & Links */
-        .node circle { fill: #10b981; stroke: #fff; stroke-width: 2px; }
-        .node text { font-size: 10px; font-weight: 800; fill: #1e293b; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .node circle { fill: #10b981; stroke: #fff; stroke-width: 2px; transition: all 0.2s; }
+        .node:hover circle { fill: #f59e0b; transform: scale(1.3); } /* Efek hover saat mau di-edit */
+        .node text { font-size: 10px; font-weight: 800; fill: #1e293b; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; }
         .node text.status { font-size: 8px; font-weight: 600; fill: #059669; }
         .link { fill: none; stroke: #cbd5e1; stroke-width: 2px; }
     </style>
@@ -87,7 +88,7 @@
                 <span class="text-[9px] text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full font-semibold border border-emerald-200">Live</span>
             </div>
             <div id="tree-container" class="w-full h-[350px] rounded-2xl border border-slate-200 shadow-inner bg-slate-50 overflow-hidden cursor-move relative"></div>
-            <p class="text-[10px] text-center text-slate-400 mt-3 font-medium"><i class="fas fa-hand-pointer mr-1"></i> Geser & zoom (cubit layar) untuk navigasi.</p>
+            <p class="text-[10px] text-center text-emerald-600 mt-3 font-bold"><i class="fas fa-edit mr-1"></i> Klik pada nama/titik di atas untuk MENGEDIT data.</p>
         </section>
 
         <!-- KANVAS PETA LEAFLET -->
@@ -100,7 +101,7 @@
     </main>
 
     <!-- ========================================== -->
-    <!-- MODAL FORM INPUT DATA WARGA                -->
+    <!-- MODAL FORM TAMBAH DATA WARGA               -->
     <!-- ========================================== -->
     <div id="modal-tambah" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex-col justify-center items-center p-4">
         <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative">
@@ -113,39 +114,63 @@
                     <input type="text" id="input-nama" required placeholder="Contoh: Mang Ujang" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 </div>
                 <div>
-    <label class="text-xs font-bold text-slate-600">Status Kekerabatan (Pancakaki)</label>
-    <select id="select-status" required class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-        <option value="">-- Pilih Status --</option>
-        <optgroup label="Keturunan (Ke Bawah)">
-            <option value="Anak">Anak (Keturunan ke-1)</option>
-            <option value="Incu">Incu (Cucu / Anak dari anak)</option>
-            <option value="Buyut">Buyut (Cicit / Anak dari incu)</option>
-            <option value="Bao">Bao (Anak dari buyut)</option>
-            <option value="Janggawaréng">Janggawaréng (Anak dari bao)</option>
-            <option value="Udeg-udeg">Udeg-udeg (Anak dari janggawaréng)</option>
-        </optgroup>
-        <optgroup label="Leluhur & Samping">
-            <option value="Bapak/Indung">Bapak / Indung (Orang Tua)</option>
-            <option value="Aki/Nini">Aki / Nini (Kakek / Nenek)</option>
-            <option value="Dulur">Dulur (Saudara Kandung / Kakak Adik)</option>
-            <option value="Dulur Sabrayna">Dulur Sabrayna (Sepupu)</option>
-            <option value="Lainnya">✍️ Lainnya (Tulis Sendiri...)</option>
-        </optgroup>
-    </select>
-    
-    <!-- Input Teks Muncul Kalau Pilih "Lainnya" -->
-    <input type="text" id="input-status-custom" placeholder="Ketik status (misal: Uwa, Mamang, Alo)" class="hidden w-full mt-2 bg-white border border-emerald-300 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all shadow-inner">
-</div>
+                    <label class="text-xs font-bold text-slate-600">Status Kekerabatan</label>
+                    <select id="select-status" required class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <option value="">-- Pilih Status --</option>
+                        <optgroup label="Keturunan (Ke Bawah)">
+                            <option value="Anak">Anak (Keturunan ke-1)</option>
+                            <option value="Incu">Incu (Cucu / Anak dari anak)</option>
+                            <option value="Buyut">Buyut (Cicit / Anak dari incu)</option>
+                            <option value="Bao">Bao (Anak dari buyut)</option>
+                            <option value="Janggawaréng">Janggawaréng (Anak dari bao)</option>
+                            <option value="Udeg-udeg">Udeg-udeg (Anak dari janggawaréng)</option>
+                        </optgroup>
+                        <optgroup label="Leluhur & Samping">
+                            <option value="Bapak/Indung">Bapak / Indung (Orang Tua)</option>
+                            <option value="Aki/Nini">Aki / Nini (Kakek / Nenek)</option>
+                            <option value="Dulur">Dulur (Saudara Kandung / Kakak Adik)</option>
+                            <option value="Dulur Sabrayna">Dulur Sabrayna (Sepupu)</option>
+                            <option value="Lainnya">✍️ Lainnya (Tulis Sendiri...)</option>
+                        </optgroup>
+                    </select>
+                    <input type="text" id="input-status-custom" placeholder="Ketik status (misal: Uwa, Mamang)" class="hidden w-full mt-2 bg-white border border-emerald-300 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all shadow-inner">
+                </div>
                 <div>
                     <label class="text-xs font-bold text-slate-600">Siapa Orang Tuanya? (Induk)</label>
                     <select id="select-parent" required class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-    <option value="">-- Pilih Orang Tua / Leluhur --</option>
-    <option value="">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option> <!-- TAMBAHKAN BARIS INI -->
-    <!-- Opsi akan dirender otomatis dari Firebase -->
-</select>
+                        <option value="">-- Pilih Orang Tua / Leluhur --</option>
+                        <option value="">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option>
+                        <!-- Opsi dirender otomatis -->
+                    </select>
                 </div>
                 <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm hover:bg-emerald-700 transition-colors shadow-md mt-2">
                     Simpan ke Silsilah Desa
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL FORM EDIT DATA WARGA                 -->
+    <!-- ========================================== -->
+    <div id="modal-edit" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] hidden flex-col justify-center items-center p-4">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative border-t-4 border-amber-500">
+            <button id="btn-close-edit" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fas fa-edit text-amber-500 mr-2"></i>Edit Data Keluarga</h3>
+            
+            <form id="form-edit" class="space-y-4">
+                <input type="hidden" id="edit-dbkey">
+                <div>
+                    <label class="text-xs font-bold text-slate-600">Nama Lengkap</label>
+                    <input type="text" id="edit-nama" required class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-600">Status Kekerabatan</label>
+                    <input type="text" id="edit-status" required class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <p class="text-[9px] text-slate-400 mt-1">Status dapat diketik bebas.</p>
+                </div>
+                <button type="submit" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-sm hover:bg-amber-600 transition-colors shadow-md mt-2">
+                    Update Data Silsilah
                 </button>
             </form>
         </div>
@@ -159,13 +184,14 @@
     <!-- SCRIPT UTAMA & FIREBASE (Versi Full) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        // 🚀 TAMBAHAN: Import fungsi update
+        import { getDatabase, ref, onValue, push, set, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // Konfigurasi Asli Lu
-       const firebaseConfig = {
+        // Konfigurasi Firebase Lu
+        const firebaseConfig = {
             apiKey: "AIzaSyA0JmHvkhB5oXPvnDMvcHJyooqSsLIccGQ",
             authDomain: "sakaruhun-desa.firebaseapp.com",
-            databaseURL: "https://sakaruhun-desa-default-rtdb.asia-southeast1.firebasedatabase.app/", // <-- TAMBAHKAN BARIS INI
+            databaseURL: "https://sakaruhun-desa-default-rtdb.asia-southeast1.firebasedatabase.app/",
             projectId: "sakaruhun-desa",
             storageBucket: "sakaruhun-desa.firebasestorage.app",
             messagingSenderId: "69221074382",
@@ -174,143 +200,148 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-
-        // KITA PAKAI FOLDER DATABASE BARU BIAR STRUKTURNYA LEBIH GAMPANG DI-EDIT WARGA
         const wargaRef = ref(db, 'silsilah_desa_v2');
 
-        // Setup Peta Leaflet
+        // Peta Leaflet
         const map = L.map('map').setView([-6.8320, 108.2140], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
         let layerGroup = L.layerGroup().addTo(map);
         setTimeout(() => { map.invalidateSize(); }, 1000);
 
-        // Setup D3.js (Kanvas)
+        // Kanvas D3.js
         const container = document.getElementById('tree-container');
         const svg = d3.select("#tree-container").append("svg").attr("width", container.clientWidth).attr("height", container.clientHeight);
         const g = svg.append("g");
         const zoom = d3.zoom().scaleExtent([0.5, 3]).on("zoom", (event) => { g.attr("transform", event.transform); });
         svg.call(zoom);
 
-        // Elemen Modal & Form
-        const modal = document.getElementById('modal-tambah');
-        const btnTambah = document.getElementById('btn-tambah-data');
-        const btnClose = document.getElementById('btn-close-modal');
-        const formTambah = document.getElementById('form-tambah');
-        const selectParent = document.getElementById('select-parent');
+        // Elemen UI
         const statsWarga = document.getElementById('stats-warga');
-
-        // Buka/Tutup Modal
-        btnTambah.addEventListener('click', () => {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+        const selectParent = document.getElementById('select-parent');
+        
+        // Modal Tambah
+        const modalTambah = document.getElementById('modal-tambah');
+        const formTambah = document.getElementById('form-tambah');
+        const selectStatus = document.getElementById('select-status');
+        const inputStatusCustom = document.getElementById('input-status-custom');
+        
+        document.getElementById('btn-tambah-data').addEventListener('click', () => { modalTambah.classList.remove('hidden'); modalTambah.classList.add('flex'); });
+        document.getElementById('btn-close-modal').addEventListener('click', () => { modalTambah.classList.add('hidden'); modalTambah.classList.remove('flex'); });
+        
+        selectStatus.addEventListener('change', (e) => {
+            if (e.target.value === 'Lainnya') {
+                inputStatusCustom.classList.remove('hidden');
+                inputStatusCustom.setAttribute('required', 'true');
+            } else {
+                inputStatusCustom.classList.add('hidden');
+                inputStatusCustom.removeAttribute('required');
+            }
         });
-        btnClose.addEventListener('click', () => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        });
 
-        // ----------------------------------------------------
-        // LOGIKA PENARIKAN DATA (REALTIME DARI FIREBASE)
-        // ----------------------------------------------------
+        // Modal Edit
+        const modalEdit = document.getElementById('modal-edit');
+        const formEdit = document.getElementById('form-edit');
+        document.getElementById('btn-close-edit').addEventListener('click', () => { modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex'); });
+
+        // Tarik Data Realtime
         let dataGlobal = [];
         onValue(wargaRef, (snapshot) => {
             if (!snapshot.exists()) {
-                // JIKA DATABASE KOSONG, BIKIN LELUHUR PERTAMA OTOMATIS (Akar Utama)
-                set(ref(db, 'silsilah_desa_v2/akar_utama'), {
-                    parentId: "", // Akar utama tidak punya orang tua
-                    name: "Aki Wahab",
-                    status: "Karuhun (Gen-1)",
-                    lat: -6.8320,
-                    lng: 108.2140
-                });
+                set(ref(db, 'silsilah_desa_v2/akar_utama'), { parentId: "", name: "Jayamanggala", status: "Karuhun (Gen-1)", lat: -6.8320, lng: 108.2140 });
                 return;
             }
 
             const data = snapshot.val();
-            
-            // Ubah objek dari Firebase jadi bentuk Array biar gampang diproses
-            dataGlobal = Object.keys(data).map(key => ({
-                dbKey: key,
-                ...data[key]
-            }));
-
-            // 1. Update Jumlah Warga di Header
+            dataGlobal = Object.keys(data).map(key => ({ dbKey: key, ...data[key] }));
             statsWarga.innerText = `${dataGlobal.length} Warga`;
 
-            // 2. Masukkan daftar nama ke dalam Dropdown Modal
-            selectParent.innerHTML = '<option value="">-- Pilih Orang Tua / Leluhur --</option>';
+            // Render Opsi Orang Tua
+            selectParent.innerHTML = '<option value="">-- Pilih Orang Tua / Leluhur --</option><option value="">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option>';
             dataGlobal.forEach(w => {
                 const opt = document.createElement('option');
-                opt.value = w.dbKey;
-                opt.text = w.name;
+                opt.value = w.dbKey; opt.text = w.name;
                 selectParent.appendChild(opt);
             });
 
-            // 3. Update Pin di Peta
+            // Render Peta
             layerGroup.clearLayers();
             dataGlobal.forEach(w => {
-                if (w.lat && w.lng) {
-                    L.marker([w.lat, w.lng]).addTo(layerGroup).bindPopup(`<b>${w.name}</b><br><span style="font-size:10px">${w.status}</span>`);
-                }
+                if (w.lat && w.lng) L.marker([w.lat, w.lng]).addTo(layerGroup).bindPopup(`<b>${w.name}</b><br><span style="font-size:10px">${w.status}</span>`);
             });
 
-            // 4. Update Pohon Silsilah (D3.js)
-            g.selectAll("*").remove(); // Bersihkan pohon lama
+            // Render D3.js (Pohon Keluarga)
+            g.selectAll("*").remove(); 
             try {
-                // d3.stratify mengubah data datar jadi bercabang (Hierarki)
-                const root = d3.stratify()
-                    .id(d => d.dbKey)
-                    .parentId(d => d.parentId)
-                    (dataGlobal);
-
-                const treeLayout = d3.tree().size([container.clientHeight - 60, container.clientWidth - 120]);
+                const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(dataGlobal);
+                const treeLayout = d3.tree().nodeSize([40, 120]); 
                 treeLayout(root);
 
+                // Pusatkan akar utama
+                let x0 = Infinity, x1 = -x0, y0 = Infinity, y1 = -y0;
+                root.each(d => {
+                    if (d.x > x1) x1 = d.x; if (d.x < x0) x0 = d.x;
+                    if (d.y > y1) y1 = d.y; if (d.y < y0) y0 = d.y;
+                });
+                
                 g.selectAll(".link").data(root.links()).enter().append("path").attr("class", "link")
-                    .attr("d", d3.linkHorizontal().x(d => d.y + 40).y(d => d.x));
+                    .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
 
-                const node = g.selectAll(".node").data(root.descendants()).enter().append("g").attr("class", "node")
-                    .attr("transform", d => `translate(${d.y + 40},${d.x})`);
+                // 🚀 TAMBAHAN: Bikin Titik (Node) Bisa Diklik buat Edit!
+                const node = g.selectAll(".node").data(root.descendants()).enter().append("g")
+                    .attr("class", "node cursor-pointer")
+                    .attr("transform", d => `translate(${d.y},${d.x})`)
+                    .on("click", (event, d) => {
+                        // Buka Modal Edit & Isi Datanya
+                        document.getElementById('edit-dbkey').value = d.data.dbKey;
+                        document.getElementById('edit-nama').value = d.data.name;
+                        document.getElementById('edit-status').value = d.data.status;
+                        modalEdit.classList.remove('hidden');
+                        modalEdit.classList.add('flex');
+                    });
 
                 node.append("circle").attr("r", 8);
                 node.append("text").attr("dy", -12).attr("x", 0).style("text-anchor", "middle").text(d => d.data.name);
                 node.append("text").attr("class", "status").attr("dy", 18).attr("x", 0).style("text-anchor", "middle").text(d => d.data.status);
                 
-                svg.call(zoom.transform, d3.zoomIdentity.translate(20, 20));
+                svg.call(zoom.transform, d3.zoomIdentity.translate(container.clientWidth/4, container.clientHeight/2));
             } catch (error) {
                 console.log("Struktur silsilah belum sempurna", error);
             }
         });
 
-        // ----------------------------------------------------
-        // LOGIKA SAAT WARGA KLIK TOMBOL SIMPAN
-        // ----------------------------------------------------
+        // Simpan Data Baru
         formTambah.addEventListener('submit', (e) => {
             e.preventDefault();
-            
             const nama = document.getElementById('input-nama').value;
-            const status = document.getElementById('input-status').value;
+            let status = selectStatus.value;
+            if (status === 'Lainnya') status = inputStatusCustom.value;
             const parentId = document.getElementById('select-parent').value;
 
-            // Bikin posisi rumah acak sedikit di sekitar pusat desa, biar pin peta ga numpuk di satu titik
-            const randomLat = -6.8320 + (Math.random() - 0.5) * 0.005;
-            const randomLng = 108.2140 + (Math.random() - 0.5) * 0.005;
-
-            // Kirim data baru ke Firebase Cloud
             push(wargaRef, {
-                parentId: parentId,
-                name: nama,
-                status: status,
-                lat: randomLat,
-                lng: randomLng
+                parentId: parentId, name: nama, status: status,
+                lat: -6.8320 + (Math.random() - 0.5) * 0.005, lng: 108.2140 + (Math.random() - 0.5) * 0.005
             }).then(() => {
-                // Tutup modal dan bersihkan form kalau sukses
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                formTambah.reset();
-                alert("Berhasil! Data " + nama + " resmi masuk ke silsilah Desa!");
-            }).catch((error) => {
-                alert("Gagal menyimpan data: " + error.message);
+                modalTambah.classList.add('hidden'); modalTambah.classList.remove('flex');
+                formTambah.reset(); inputStatusCustom.classList.add('hidden');
+            });
+        });
+
+        // 🚀 TAMBAHAN: Simpan Data Edit ke Firebase
+        formEdit.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const dbKey = document.getElementById('edit-dbkey').value;
+            const namaBaru = document.getElementById('edit-nama').value;
+            const statusBaru = document.getElementById('edit-status').value;
+
+            // Update spesifik ke key Firebase tersebut
+            update(ref(db, 'silsilah_desa_v2/' + dbKey), {
+                name: namaBaru,
+                status: statusBaru
+            }).then(() => {
+                modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex');
+                alert("Data berhasil diperbarui!");
+            }).catch((err) => {
+                alert("Gagal update data: " + err.message);
             });
         });
     </script>
