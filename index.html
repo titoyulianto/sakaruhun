@@ -1,612 +1,787 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sakaruhun - Sadulur Sadesa</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sakaruhun - Sadulur Sadesa</title>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <!-- D3.js -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://d3js.org/d3.v7.min.js"></script>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; -webkit-tap-highlight-color: transparent; }
-        
-        .bg-pattern {
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.12'%3E%3Cpath d='M30 0v60M0 30h60'/%3E%3C/g%3E%3C/svg%3E");
-        }
-        
-        /* D3.js Tree Styles */
-        #tree-container { height: 420px; overflow: hidden; position: relative; touch-action: none; }
-        .node { cursor: pointer; pointer-events: all; }
-        .node circle { stroke: #fff; stroke-width: 2px; transition: all 0.2s; }
-        .node.laki circle { fill: #3b82f6; }
-        .node.perempuan circle { fill: #ec4899; }
-        .node:hover circle { stroke: #f59e0b; stroke-width: 4; transform: scale(1.2); }
-        .node text { font-size: 11px; font-weight: 800; fill: #1e293b; pointer-events: none; }
-        .node text.status { font-size: 9px; font-weight: 600; fill: #059669; }
-        .link { fill: none; stroke: #cbd5e1; stroke-width: 2px; pointer-events: none; }
-        .spouse-link { fill: none; stroke: #ec4899; stroke-width: 2px; stroke-dasharray: 4,4; pointer-events: none; }
-        
-        /* Map & Modals */
-        #map { height: 250px; z-index: 10; }
-        .leaflet-container { z-index: 10 !important; }
-        .modal { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
-        .modal.open { display: flex !important; }
-        .modal-card { background: white; border-radius: 24px; padding: 24px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-    </style>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
+.bg-pattern{background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.12'%3E%3Cpath d='M30 0v60M0 30h60'/%3E%3C/g%3E%3C/svg%3E")}
+#tree-container{height:420px;overflow:hidden;position:relative;touch-action:none}
+.node{cursor:pointer}
+.node circle{stroke:#fff;stroke-width:2}
+.node.laki circle{fill:#3b82f6}
+.node.perempuan circle{fill:#ec4899}
+.node:hover circle{stroke:#f59e0b;stroke-width:4}
+.node text{font-size:11px;font-weight:800;fill:#1e293b;pointer-events:none}
+.node text.status{font-size:9px;font-weight:600;fill:#059669}
+.link{fill:none;stroke:#cbd5e1;stroke-width:2}
+.spouse-link{fill:none;stroke:#ec4899;stroke-width:2;stroke-dasharray:4 4}
+#map{height:250px}
+.modal{position:fixed;inset:0;z-index:100;background:#0009;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.modal-card{background:white;border-radius:24px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow:auto}
+</style>
 </head>
 
 <body class="text-slate-800 pb-20">
 
-    <header class="bg-emerald-700 rounded-b-[2.5rem] shadow-lg pt-10 pb-16 px-5 bg-pattern relative z-20">
-        <div class="max-w-md mx-auto text-center relative z-10">
-            <div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl text-white mb-3 shadow-sm">
-                <i class="fas fa-tree text-2xl"></i>
-            </div>
-            <h1 class="text-3xl font-extrabold text-white">Sakaruhun</h1>
-            <p class="text-emerald-100 text-xs tracking-widest uppercase">Sadulur Sadesa</p>
-            <div class="mt-6 relative">
-                <input id="input-pencarian" type="search" placeholder="Cari dulur atau karuhun..." class="w-full bg-white py-3.5 pl-12 pr-5 rounded-2xl text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-400">
-                <i class="fas fa-search absolute left-4 top-4 text-slate-400"></i>
-            </div>
-            <div class="mt-3 text-xs text-emerald-100">
-                <i class="fas fa-users mr-1"></i> Terhubung: <strong id="stats-warga">Memuat...</strong>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-md mx-auto px-5 -mt-6 relative z-30 space-y-5">
-        <div class="grid grid-cols-2 gap-4">
-            <button id="btn-lihat-pohon" type="button" class="bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-200 flex flex-col items-center gap-3 hover:bg-emerald-100 transition-colors">
-                <i class="fas fa-network-wired text-2xl text-emerald-600"></i>
-                <div class="text-center">
-                    <strong class="block text-xs text-slate-700">Pohon Karuhun</strong>
-                    <span class="block text-[9px] text-slate-500 mt-0.5">Lihat grafis silsilah</span>
-                </div>
-            </button>
-
-            <button id="btn-tambah-data" type="button" class="bg-purple-600 text-white p-4 rounded-2xl shadow-md border border-purple-500 flex flex-col items-center gap-3 hover:bg-purple-700 transition-colors active:scale-95">
-                <i class="fas fa-user-plus text-2xl"></i>
-                <div class="text-center">
-                    <strong class="block text-xs">Tambah Data</strong>
-                    <span class="block text-[9px] text-purple-200 mt-0.5">Isi silsilah keluarga</span>
-                </div>
-            </button>
-        </div>
-
-        <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 relative z-40">
-            <h2 class="text-sm font-bold mb-3 flex items-center text-slate-800">
-                <i class="fas fa-sitemap text-emerald-600 mr-2"></i> Pohon Silsilah Mandiri
-            </h2>
-            <div id="tree-container" class="rounded-2xl border border-slate-200 bg-slate-50"></div>
-            <p class="text-[10px] text-center text-emerald-600 mt-3 font-bold">
-                <i class="fas fa-hand-pointer mr-1"></i> Sentuh nama untuk Edit, Hapus, atau Tambah Cabang.
-            </p>
-        </section>
-
-        <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 relative z-10">
-            <h2 class="text-sm font-bold mb-3 flex items-center text-slate-800">
-                <i class="fas fa-map-pin text-amber-600 mr-2"></i> Radar Peta Desa
-            </h2>
-            <div id="map" class="rounded-2xl border border-slate-200 bg-slate-50"></div>
-        </section>
-    </main>
-
-    <!-- MODAL TAMBAH DATA -->
-    <div id="modal-tambah" class="modal">
-        <div class="modal-card relative">
-            <button id="btn-close-modal" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
-            <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-user-plus text-emerald-600 mr-2"></i>Tambah Individu</h3>
-
-            <form id="form-tambah" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap</label>
-                    <input id="input-nama" required placeholder="Contoh: Pangeran Kertadiningrat" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Jenis Kelamin</label>
-                    <select id="select-gender" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="L">Laki-laki (Ayah/Suami)</option>
-                        <option value="P">Perempuan (Ibu/Istri)</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Orang Tua Kandung</label>
-                    <select id="select-parent" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
-                    <input id="input-parent-manual" placeholder="Ketik nama orang tua baru..." class="hidden w-full bg-white border border-emerald-300 rounded-xl p-3 mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Pasangan (Suami / Istri)</label>
-                    <select id="select-spouse" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
-                    <input id="input-spouse-manual" placeholder="Ketik nama pasangan baru..." class="hidden w-full bg-white border border-emerald-300 rounded-xl p-3 mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl p-3 font-bold text-sm transition-colors mt-2 shadow-md">
-                    Simpan Individu
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL EDIT DATA -->
-    <div id="modal-edit" class="modal">
-        <div class="modal-card relative border-t-4 border-amber-500">
-            <button id="btn-close-edit" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
-            <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-cog text-amber-500 mr-2"></i>Kelola Individu</h3>
-
-            <form id="form-edit" class="space-y-4">
-                <input type="hidden" id="edit-dbkey">
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap</label>
-                    <input id="edit-nama" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Jenis Kelamin</label>
-                    <select id="edit-gender" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                        <option value="L">Laki-laki</option>
-                        <option value="P">Perempuan</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Orang Tua Kandung</label>
-                    <select id="edit-parent" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"></select>
-                    <input id="edit-parent-manual" placeholder="Ketik nama orang tua baru..." class="hidden w-full bg-white border border-amber-300 rounded-xl p-3 mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Pasangan (Suami / Istri)</label>
-                    <select id="edit-spouse" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"></select>
-                    <input id="edit-spouse-manual" placeholder="Ketik nama pasangan baru..." class="hidden w-full bg-white border border-amber-300 rounded-xl p-3 mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                </div>
-
-                <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl p-3 font-bold text-sm shadow-md transition-colors">
-                        <i class="fas fa-save mr-1"></i> Update Data
-                    </button>
-                    <button id="btn-hapus-data" type="button" class="bg-red-100 hover:bg-red-200 text-red-600 rounded-xl px-4 transition-colors" title="Hapus Data">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
-            </form>
-
-            <hr class="my-5 border-slate-100">
-
-            <button id="btn-tambah-cabang" type="button" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl p-3 font-bold text-xs transition-colors">
-                <i class="fas fa-code-branch mr-2"></i>Tambah Keturunan di Bawah Nama Ini
-            </button>
-        </div>
-    </div>
-
-    <!-- SCRIPT LEAFLET -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <!-- SCRIPT FIREBASE & UTAMA -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyA0JmHvkhB5oXPvnDMvcHJyooqSsLIccGQ",
-            authDomain: "sakaruhun-desa.firebaseapp.com",
-            databaseURL: "https://sakaruhun-desa-default-rtdb.asia-southeast1.firebasedatabase.app/",
-            projectId: "sakaruhun-desa",
-            storageBucket: "sakaruhun-desa.firebasestorage.app",
-            messagingSenderId: "69221074382",
-            appId: "1:69221074382:web:b15104ddc2618c1c70979f"
-        };
-
-        const $ = id => document.getElementById(id);
-        const DB_PATH = "silsilah_desa_v3";
-
-        let db, wargaRef;
-        let dataMap = {};
-        let dataGlobal = [];
-        let map, layerGroup;
-        let nodeSelection = null;
-        let zoomBehavior = null;
-        let treeReady = false;
-
-        const modalTambah = $("modal-tambah");
-        const modalEdit = $("modal-edit");
-        const formTambah = $("form-tambah");
-        const formEdit = $("form-edit");
-
-        function showModal(el) { el.classList.add("open"); }
-        function hideModal(el) { el.classList.remove("open"); }
-        function notify(msg) { alert(msg); }
-        
-        function escapeHtml(v) {
-            return String(v ?? "").replace(/[&<>"']/g, c => ({
-                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-            }[c]));
-        }
-
-        function randomCoords() {
-            return {
-                lat: -6.832 + (Math.random() - 0.5) * 0.005,
-                lng: 108.214 + (Math.random() - 0.5) * 0.005
-            };
-        }
-
-        function syncManual(sel, input) {
-            const active = sel.value === "manual";
-            input.classList.toggle("hidden", !active);
-            input.required = active;
-            if (!active) input.value = "";
-        }
-
-        function fillSelect(sel, kind, selected = "") {
-            const isParent = kind === "parent";
-            const options = isParent
-                ? '<option value="">-- Pilih Orang Tua --</option><option value="akar_utama">🌟 Jadikan Leluhur Utama</option><option value="unknown">❓ Belum Diketahui</option><option value="manual">✍️ Ketik Nama Baru</option>'
-                : '<option value="">-- Belum Menikah / Lajang --</option><option value="unknown">❓ Belum Diketahui</option><option value="manual">✍️ Ketik Nama Baru</option>';
-
-            const currentKey = $("edit-dbkey").value;
-            const people = dataGlobal
-                .filter(p => p.dbKey !== currentKey || sel.id === "select-parent")
-                .map(p => `<option value="${escapeHtml(p.dbKey)}">${escapeHtml(p.name)} (${p.gender === "L" ? "Laki-laki" : "Perempuan"})</option>`)
-                .join("");
-
-            sel.innerHTML = options + people;
-            if (selected && [...sel.options].some(o => o.value === selected)) {
-                sel.value = selected;
-            } else {
-                sel.value = isParent ? "akar_utama" : "";
-            }
-        }
-
-        function normalizeData(raw) {
-            const result = {};
-            Object.entries(raw || {}).forEach(([key, v]) => {
-                if (!v || typeof v !== "object") return;
-                result[key] = {
-                    dbKey: key,
-                    name: String(v.name || "Tanpa Nama"),
-                    gender: v.gender === "P" ? "P" : "L",
-                    parentId: v.parentId || "",
-                    spouseId: v.spouseId || "",
-                    lat: Number(v.lat),
-                    lng: Number(v.lng)
-                };
-            });
-
-            if (!result.akar_utama) {
-                result.akar_utama = {
-                    dbKey: "akar_utama", name: "Pangeran Kertadiningrat", gender: "L", parentId: "", spouseId: "", lat: -6.832, lng: 108.214
-                };
-            }
-
-            Object.values(result).forEach(p => {
-                if (p.dbKey === "akar_utama") { p.parentId = ""; return; }
-                if (!p.parentId || p.parentId === "unknown" || !result[p.parentId] || p.parentId === p.dbKey) {
-                    p.parentId = "akar_utama";
-                }
-            });
-
-            return result;
-        }
-
-        function statusFor(key) {
-            if (key === "akar_utama") return "Karuhun Utama";
-            let p = dataMap[key], depth = 1, seen = new Set([key]);
-            while (p && p.parentId && p.parentId !== "akar_utama" && dataMap[p.parentId] && !seen.has(p.parentId)) {
-                seen.add(p.parentId);
-                depth++;
-                p = dataMap[p.parentId];
-            }
-            const kamus = { 1: "Karuhun Utama", 2: "Bapak / Indung (Gen-2)", 3: "Aki / Nini (Gen-3)", 4: "Buyut (Cicit)", 5: "Bao", 6: "Janggawaréng", 7: "Udeg-udeg", 8: "Gantung-siwur" };
-            return kamus[depth] || `Keturunan Gen-${depth}`;
-        }
-
-        function initMap() {
-            if (!window.L || map) return;
-            map = L.map("map").setView([-6.832, 108.214], 15);
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
-            layerGroup = L.layerGroup().addTo(map);
-            setTimeout(() => map.invalidateSize(), 400);
-        }
-
-        function drawMap() {
-            if (!map || !layerGroup) return;
-            layerGroup.clearLayers();
-            dataGlobal.forEach(p => {
-                if (Number.isFinite(p.lat) && Number.isFinite(p.lng)) {
-                    L.marker([p.lat, p.lng]).addTo(layerGroup).bindPopup(`<b>${escapeHtml(p.name)}</b><br><span style="font-size:10px">${p.gender === "L" ? "Laki-laki" : "Perempuan"}</span>`);
-                }
-            });
-        }
-
-        function renderTree() {
-            if (!window.d3) return;
-            const container = $("tree-container");
-            const width = Math.max(container.clientWidth, 320);
-            const height = Math.max(container.clientHeight, 300);
-
-            const svg = d3.select(container).selectAll("svg").data([null]).join("svg")
-                .attr("width", "100%").attr("height", "100%").attr("viewBox", `0 0 ${width} ${height}`);
-
-            svg.selectAll("*").remove();
-            const g = svg.append("g");
-            zoomBehavior = d3.zoom().scaleExtent([0.15, 2.5]).on("zoom", e => g.attr("transform", e.transform));
-            svg.call(zoomBehavior).on("dblclick.zoom", null);
-
-            try {
-                const all = dataGlobal.map(p => ({ ...p }));
-                const byId = new Map(all.map(p => [p.dbKey, p]));
-                const spouseOf = new Map();
-
-                function linkSpouse(a, b) {
-                    if (!a || !b || a === b || !byId.has(a) || !byId.has(b)) return;
-                    if (!spouseOf.has(a)) spouseOf.set(a, []);
-                    if (!spouseOf.has(b)) spouseOf.set(b, []);
-                    if (!spouseOf.get(a).includes(b)) spouseOf.get(a).push(b);
-                    if (!spouseOf.get(b).includes(a)) spouseOf.get(b).push(a);
-                }
-                all.forEach(p => linkSpouse(p.dbKey, p.spouseId));
-
-                const spouseIds = new Set();
-                spouseOf.forEach(ids => ids.forEach(id => spouseIds.add(id)));
-                const primary = all.filter(p => p.dbKey === "akar_utama" || !spouseIds.has(p.dbKey));
-                const primaryIds = new Set(primary.map(p => p.dbKey));
-
-                const records = primary.map(p => {
-                    let parent = p.dbKey === "akar_utama" ? null : p.parentId;
-                    if (parent && !primaryIds.has(parent)) {
-                        const alternatives = spouseOf.get(parent) || [];
-                        parent = alternatives.find(id => primaryIds.has(id)) || "akar_utama";
-                    }
-                    if (p.dbKey !== "akar_utama" && (!parent || !primaryIds.has(parent) || parent === p.dbKey)) {
-                        parent = "akar_utama";
-                    }
-                    return { ...p, parentId: parent };
-                });
-
-                const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(records);
-                d3.tree().nodeSize([210, 155])(root);
-
-                const nodes = root.descendants();
-                const links = root.links();
-
-                g.selectAll(".link").data(links).join("path").attr("class", "link")
-                    .attr("d", d => `M${d.source.x},${d.source.y} V${(d.source.y + d.target.y) / 2} H${d.target.x} V${d.target.y}`);
-
-                const spousePositions = [];
-                const renderedPairs = new Set();
-
-                nodes.forEach(n => {
-                    const ids = spouseOf.get(n.data.dbKey) || [];
-                    if (!ids.length) return;
-                    const spouses = ids.filter(id => byId.has(id));
-                    const owner = n.data.dbKey;
-
-                    spouses.forEach((id, index) => {
-                        const pairKey = [owner, id].sort().join("::");
-                        if (renderedPairs.has(pairKey)) return;
-                        renderedPairs.add(pairKey);
-                        const person = byId.get(id);
-                        const offset = (index - (spouses.length - 1) / 2) * 48;
-                        spousePositions.push({ person, source: n, x: n.x + 125, y: n.y + offset });
-                    });
-                });
-
-                g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link")
-                    .attr("d", d => `M${d.source.x + 17},${d.source.y} L${d.x - 17},${d.y}`);
-
-                const drawNodes = nodes.map(n => ({ data: { ...n.data, status: statusFor(n.data.dbKey) }, x: n.x, y: n.y, primary: true }));
-                spousePositions.forEach(s => { drawNodes.push({ data: { ...s.person, status: "Pasangan" }, x: s.x, y: s.y, primary: false }); });
-
-                nodeSelection = g.selectAll(".node").data(drawNodes).join("g")
-                    .attr("class", d => "node " + (d.data.gender === "P" ? "perempuan" : "laki"))
-                    .attr("transform", d => `translate(${d.x},${d.y})`)
-                    .on("click", (event, d) => {
-                        event.stopPropagation();
-                        openEdit(d.data);
-                    });
-
-                nodeSelection.append("circle").attr("r", 16);
-
-                nodeSelection.append("text").attr("dy", -25).attr("text-anchor", "middle")
-                    .text(d => d.data.name.length > 28 ? d.data.name.slice(0, 26) + "…" : d.data.name);
-
-                nodeSelection.append("text").attr("class", "status").attr("dy", 29).attr("text-anchor", "middle")
-                    .text(d => d.data.status);
-
-                const extent = d3.extent(drawNodes, d => d.x);
-                const extentY = d3.extent(drawNodes, d => d.y);
-                if(extent[0] !== undefined) {
-                    const cx = (extent[0] + extent[1]) / 2;
-                    const cy = (extentY[0] + extentY[1]) / 2;
-                    svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - cx, height / 2 - cy));
-                }
-                treeReady = true;
-            } catch (err) {
-                console.error("Gagal merender pohon:", err);
-            }
-        }
-
-        function openEdit(person) {
-            $("edit-dbkey").value = person.dbKey;
-            $("edit-nama").value = person.name;
-            $("edit-gender").value = person.gender;
-            fillSelect($("edit-parent"), "parent", person.parentId || "akar_utama");
-            fillSelect($("edit-spouse"), "spouse", person.spouseId || "");
-            syncManual($("edit-parent"), $("edit-parent-manual"));
-            syncManual($("edit-spouse"), $("edit-spouse-manual"));
-            showModal(modalEdit);
-        }
-
-        function refreshSearch() {
-            const q = $("input-pencarian").value.trim().toLocaleLowerCase("id");
-            if (!nodeSelection) return;
-            nodeSelection.select("circle")
-                .attr("stroke", d => q && d.data.name.toLocaleLowerCase("id").includes(q) ? "#f59e0b" : "#fff")
-                .attr("stroke-width", d => q && d.data.name.toLocaleLowerCase("id").includes(q) ? 5 : 2);
-        }
-
-        async function resolvePerson(value, input, gender, parentDefault = "akar_utama") {
-            if (value === "manual") {
-                const name = input.value.trim();
-                if (!name) throw new Error("Nama baru wajib diisi.");
-                const newRef = push(wargaRef);
-                await set(newRef, { name, gender: gender === "L" ? "P" : "L", parentId: parentDefault, spouseId: "", ...randomCoords() });
-                return newRef.key;
-            }
-            if (value === "unknown") return "";
-            return value || "";
-        }
-
-        async function saveNew(e) {
-            e.preventDefault();
-            const button = formTambah.querySelector('button[type="submit"]');
-            button.disabled = true;
-            try {
-                const name = $("input-nama").value.trim();
-                const gender = $("select-gender").value;
-                let parentId = $("select-parent").value;
-                if (parentId === "manual") parentId = await resolvePerson(parentId, $("input-parent-manual"), gender);
-                if (parentId === "unknown" || !parentId) parentId = "akar_utama";
-                let spouseId = $("select-spouse").value;
-                if (spouseId === "manual") spouseId = await resolvePerson(spouseId, $("input-spouse-manual"), gender);
-                if (spouseId === "unknown") spouseId = "";
-                
-                const newRef = push(wargaRef);
-                await set(newRef, { name, gender, parentId, spouseId: spouseId || "", ...randomCoords() });
-                if (spouseId && dataMap[spouseId]) await update(ref(db, `${DB_PATH}/${spouseId}`), { spouseId: newRef.key });
-                
-                hideModal(modalTambah);
-                formTambah.reset();
-            } catch (err) { notify("Gagal menyimpan: " + err.message); } 
-            finally { button.disabled = false; }
-        }
-
-        async function saveEdit(e) {
-            e.preventDefault();
-            const button = formEdit.querySelector('button[type="submit"]');
-            button.disabled = true;
-            try {
-                const key = $("edit-dbkey").value;
-                const name = $("edit-nama").value.trim();
-                const gender = $("edit-gender").value;
-                let parentId = $("edit-parent").value;
-                if (parentId === "manual") parentId = await resolvePerson(parentId, $("edit-parent-manual"), gender);
-                if (parentId === "unknown" || !parentId) parentId = "akar_utama";
-                if (parentId === key) throw new Error("Orang tua tidak boleh dirinya sendiri.");
-                let spouseId = $("edit-spouse").value;
-                if (spouseId === "manual") spouseId = await resolvePerson(spouseId, $("edit-spouse-manual"), gender);
-                if (spouseId === "unknown") spouseId = "";
-                
-                const old = dataMap[key];
-                await update(ref(db, `${DB_PATH}/${key}`), { name, gender, parentId, spouseId: spouseId || "" });
-                if (old?.spouseId && old.spouseId !== spouseId && dataMap[old.spouseId]) {
-                    await update(ref(db, `${DB_PATH}/${old.spouseId}`), { spouseId: "" });
-                }
-                if (spouseId && dataMap[spouseId]) {
-                    await update(ref(db, `${DB_PATH}/${spouseId}`), { spouseId: key });
-                }
-                hideModal(modalEdit);
-            } catch (err) { notify("Gagal memperbarui: " + err.message); } 
-            finally { button.disabled = false; }
-        }
-
-        async function deletePerson() {
-            const key = $("edit-dbkey").value;
-            if (!key) return;
-            if (key === "akar_utama") { notify("Leluhur utama tidak dapat dihapus."); return; }
-            if (!confirm("Hapus individu ini? Anak-anak akan dipindahkan ke leluhur utama.")) return;
-            try {
-                const updates = {};
-                dataGlobal.filter(p => p.parentId === key).forEach(p => { updates[`${DB_PATH}/${p.dbKey}/parentId`] = "akar_utama"; });
-                const person = dataMap[key];
-                if (person?.spouseId && dataMap[person.spouseId]) updates[`${DB_PATH}/${person.spouseId}/spouseId`] = "";
-                if (Object.keys(updates).length) await update(ref(db), updates);
-                await remove(ref(db, `${DB_PATH}/${key}`));
-                hideModal(modalEdit);
-            } catch (err) { notify("Gagal menghapus: " + err.message); }
-        }
-
-        function wireEvents() {
-            $("btn-tambah-data").addEventListener("click", () => {
-                formTambah.reset();
-                fillSelect($("select-parent"), "parent", "akar_utama");
-                fillSelect($("select-spouse"), "spouse", "");
-                syncManual($("select-parent"), $("input-parent-manual"));
-                syncManual($("select-spouse"), $("input-spouse-manual"));
-                showModal(modalTambah);
-            });
-            $("btn-lihat-pohon").addEventListener("click", () => {
-                $("tree-container").scrollIntoView({ behavior: "smooth", block: "center" });
-                if (treeReady) renderTree();
-            });
-            $("btn-close-modal").addEventListener("click", () => hideModal(modalTambah));
-            $("btn-close-edit").addEventListener("click", () => hideModal(modalEdit));
-            modalTambah.addEventListener("click", e => { if (e.target === modalTambah) hideModal(modalTambah); });
-            modalEdit.addEventListener("click", e => { if (e.target === modalEdit) hideModal(modalEdit); });
-            $("select-parent").addEventListener("change", () => syncManual($("select-parent"), $("input-parent-manual")));
-            $("select-spouse").addEventListener("change", () => syncManual($("select-spouse"), $("input-spouse-manual")));
-            $("edit-parent").addEventListener("change", () => syncManual($("edit-parent"), $("edit-parent-manual")));
-            $("edit-spouse").addEventListener("change", () => syncManual($("edit-spouse"), $("edit-spouse-manual")));
-            formTambah.addEventListener("submit", saveNew);
-            formEdit.addEventListener("submit", saveEdit);
-            $("btn-hapus-data").addEventListener("click", deletePerson);
-            $("btn-tambah-cabang").addEventListener("click", () => {
-                const key = $("edit-dbkey").value;
-                hideModal(modalEdit);
-                formTambah.reset();
-                fillSelect($("select-parent"), "parent", key);
-                fillSelect($("select-spouse"), "spouse", "");
-                syncManual($("select-parent"), $("input-parent-manual"));
-                syncManual($("select-spouse"), $("input-spouse-manual"));
-                showModal(modalTambah);
-                $("input-nama").focus();
-            });
-            $("input-pencarian").addEventListener("input", refreshSearch);
-            window.addEventListener("resize", () => {
-                if (treeReady) renderTree();
-                if (map) setTimeout(() => map.invalidateSize(), 100);
-            });
-        }
-
-        function startFirebase() {
-            try {
-                const app = initializeApp(firebaseConfig);
-                db = getDatabase(app);
-                wargaRef = ref(db, DB_PATH);
-                onValue(wargaRef, async snapshot => {
-                    try {
-                        if (!snapshot.exists()) {
-                            await set(ref(db, `${DB_PATH}/akar_utama`), { name: "Pangeran Kertadiningrat", gender: "L", parentId: "", spouseId: "", lat: -6.832, lng: 108.214 });
-                            return;
-                        }
-                        dataMap = normalizeData(snapshot.val());
-                        dataGlobal = Object.values(dataMap).map(p => ({ ...p, status: statusFor(p.dbKey) }));
-                        $("stats-warga").textContent = `${dataGlobal.length} Warga`;
-                        fillSelect($("select-parent"), "parent", $("select-parent").value);
-                        fillSelect($("select-spouse"), "spouse", $("select-spouse").value);
-                        if (!$("edit-dbkey").value) { fillSelect($("edit-parent"), "parent"); fillSelect($("edit-spouse"), "spouse"); }
-                        renderTree();
-                        drawMap();
-                        refreshSearch();
-                    } catch (err) { notify("Data terbaca tetapi gagal ditampilkan: " + err.message); }
-                });
-            } catch (err) { notify("Firebase gagal diinisialisasi."); }
-        }
-
-        wireEvents();
-        try { initMap(); } catch (err) {}
-        startFirebase();
-    </script>
+<header class="bg-emerald-700 rounded-b-[2.5rem] shadow-lg pt-10 pb-16 px-5 bg-pattern">
+<div class="max-w-md mx-auto text-center">
+<div class="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl text-white mb-3">
+<i class="fas fa-tree text-2xl"></i>
+</div>
+<h1 class="text-3xl font-extrabold text-white">Sakaruhun</h1>
+<p class="text-emerald-100 text-xs tracking-widest uppercase">Sadulur Sadesa</p>
+<div class="mt-6 relative">
+<input id="input-pencarian" type="search" placeholder="Cari dulur atau karuhun..."
+class="w-full bg-white py-3.5 pl-12 pr-5 rounded-2xl text-sm shadow-md">
+<i class="fas fa-search absolute left-4 top-4 text-slate-400"></i>
+</div>
+<div class="mt-3 text-xs text-emerald-100">
+<i class="fas fa-users mr-1"></i> Terhubung:
+<strong id="stats-warga">Memuat...</strong>
+</div>
+</div>
+</header>
+
+<main class="max-w-md mx-auto px-5 -mt-6 relative z-20 space-y-5">
+
+<div class="grid grid-cols-2 gap-4">
+<button id="btn-lihat-pohon" type="button"
+class="bg-emerald-50 p-4 rounded-2xl shadow border border-emerald-200 flex flex-col items-center gap-3">
+<i class="fas fa-network-wired text-2xl text-emerald-600"></i>
+<strong class="text-xs">Pohon Karuhun</strong>
+<span class="text-[10px]">Lihat grafis silsilah</span>
+</button>
+
+<button id="btn-tambah-data" type="button"
+class="bg-purple-600 text-white p-4 rounded-2xl shadow flex flex-col items-center gap-3">
+<i class="fas fa-user-plus text-2xl"></i>
+<strong class="text-xs">Tambah Data</strong>
+<span class="text-[10px]">Isi silsilah keluarga</span>
+</button>
+</div>
+
+<section class="bg-white rounded-3xl p-4 shadow border border-slate-100">
+<h2 class="text-sm font-bold mb-3">
+<i class="fas fa-sitemap text-emerald-600 mr-2"></i>
+Pohon Silsilah Mandiri
+</h2>
+<div id="tree-container" class="rounded-2xl border bg-slate-50"></div>
+<p class="text-[10px] text-center text-emerald-600 mt-3">
+Sentuh nama untuk Edit, Hapus, atau Tambah Cabang.
+</p>
+</section>
+
+<section class="bg-white rounded-3xl p-4 shadow border border-slate-100">
+<h2 class="text-sm font-bold mb-3">
+<i class="fas fa-map-pin text-amber-600 mr-2"></i>Radar Peta Desa
+</h2>
+<div id="map" class="rounded-2xl border bg-slate-50"></div>
+</section>
+</main>
+
+<div id="modal-tambah" class="modal">
+<div class="modal-card">
+<button id="btn-close-modal" type="button" class="float-right text-xl">×</button>
+<h3 class="font-bold text-lg mb-4">Tambah Individu</h3>
+
+<form id="form-tambah" class="space-y-4">
+<label class="block text-xs font-bold">Nama Lengkap
+<input id="input-nama" required class="w-full border rounded-xl p-3 mt-1">
+</label>
+
+<label class="block text-xs font-bold">Jenis Kelamin
+<select id="select-gender" class="w-full border rounded-xl p-3 mt-1">
+<option value="L">Laki-laki</option>
+<option value="P">Perempuan</option>
+</select>
+</label>
+
+<label class="block text-xs font-bold">Orang Tua Kandung
+<select id="select-parent" required class="w-full border rounded-xl p-3 mt-1"></select>
+<input id="input-parent-manual" placeholder="Nama orang tua baru"
+class="hidden w-full border rounded-xl p-3 mt-2">
+</label>
+
+<label class="block text-xs font-bold">Pasangan
+<select id="select-spouse" class="w-full border rounded-xl p-3 mt-1"></select>
+<input id="input-spouse-manual" placeholder="Nama pasangan baru"
+class="hidden w-full border rounded-xl p-3 mt-2">
+</label>
+
+<button type="submit" class="w-full bg-emerald-600 text-white rounded-xl p-3 font-bold">
+Simpan Individu
+</button>
+</form>
+</div>
+</div>
+
+<div id="modal-edit" class="modal">
+<div class="modal-card">
+<button id="btn-close-edit" type="button" class="float-right text-xl">×</button>
+<h3 class="font-bold text-lg mb-4">Kelola Individu</h3>
+
+<form id="form-edit" class="space-y-4">
+<input type="hidden" id="edit-dbkey">
+
+<label class="block text-xs font-bold">Nama Lengkap
+<input id="edit-nama" required class="w-full border rounded-xl p-3 mt-1">
+</label>
+
+<label class="block text-xs font-bold">Jenis Kelamin
+<select id="edit-gender" class="w-full border rounded-xl p-3 mt-1">
+<option value="L">Laki-laki</option>
+<option value="P">Perempuan</option>
+</select>
+</label>
+
+<label class="block text-xs font-bold">Orang Tua Kandung
+<select id="edit-parent" required class="w-full border rounded-xl p-3 mt-1"></select>
+<input id="edit-parent-manual" placeholder="Nama orang tua baru"
+class="hidden w-full border rounded-xl p-3 mt-2">
+</label>
+
+<label class="block text-xs font-bold">Pasangan
+<select id="edit-spouse" class="w-full border rounded-xl p-3 mt-1"></select>
+<input id="edit-spouse-manual" placeholder="Nama pasangan baru"
+class="hidden w-full border rounded-xl p-3 mt-2">
+</label>
+
+<div class="flex gap-2">
+<button type="submit" class="flex-1 bg-amber-500 text-white rounded-xl p-3 font-bold">
+Update Data
+</button>
+<button id="btn-hapus-data" type="button" class="bg-red-100 text-red-600 rounded-xl px-4">
+<i class="fas fa-trash"></i>
+</button>
+</div>
+</form>
+
+<button id="btn-tambah-cabang" type="button"
+class="w-full bg-emerald-50 text-emerald-700 rounded-xl p-3 mt-4 font-bold text-sm">
+Tambah Keturunan di Bawah Nama Ini
+</button>
+</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import {
+ getDatabase,ref,onValue,push,set,update,remove
+} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+const firebaseConfig={
+ apiKey:"AIzaSyA0JmHvkhB5oXPvnDMvcHJyooqSsLIccGQ",
+ authDomain:"sakaruhun-desa.firebaseapp.com",
+ databaseURL:"https://sakaruhun-desa-default-rtdb.asia-southeast1.firebasedatabase.app/",
+ projectId:"sakaruhun-desa",
+ storageBucket:"sakaruhun-desa.firebasestorage.app",
+ messagingSenderId:"69221074382",
+ appId:"1:69221074382:web:b15104ddc2618c1c70979f"
+};
+
+const $=id=>document.getElementById(id);
+const DB_PATH="silsilah_desa_v3";
+
+let db,wargaRef;
+let dataMap={};
+let dataGlobal=[];
+let map,layerGroup;
+let nodeSelection=null;
+let zoomBehavior=null;
+let treeReady=false;
+
+const modalTambah=$("modal-tambah");
+const modalEdit=$("modal-edit");
+const formTambah=$("form-tambah");
+const formEdit=$("form-edit");
+
+function showModal(el){el.classList.add("open")}
+function hideModal(el){el.classList.remove("open")}
+function notify(msg){alert(msg)}
+function escapeHtml(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+function randomCoords(){
+ return {
+  lat:-6.832+(Math.random()-.5)*.005,
+  lng:108.214+(Math.random()-.5)*.005
+ };
+}
+function syncManual(sel,input){
+ const active=sel.value==="manual";
+ input.classList.toggle("hidden",!active);
+ input.required=active;
+ if(!active)input.value="";
+}
+
+function fillSelect(sel,kind,selected=""){
+ const isParent=kind==="parent";
+ const options=isParent
+  ? '<option value="akar_utama">Jadikan leluhur utama / garis baru</option><option value="unknown">Belum diketahui</option><option value="manual">Ketik nama baru</option>'
+  : '<option value="">Belum menikah / lajang</option><option value="unknown">Belum diketahui</option><option value="manual">Ketik nama baru</option>';
+
+ const currentKey=$("edit-dbkey").value;
+ const people=dataGlobal
+  .filter(p=>p.dbKey!==currentKey || sel.id==="select-parent")
+  .map(p=>`<option value="${escapeHtml(p.dbKey)}">${escapeHtml(p.name)} (${p.gender==="L"?"L":"P"})</option>`)
+  .join("");
+
+ sel.innerHTML=options+people;
+ if(selected && [...sel.options].some(o=>o.value===selected)){
+  sel.value=selected;
+ }else{
+  sel.value=isParent?"akar_utama":"";
+ }
+}
+
+function normalizeData(raw){
+ const result={};
+ Object.entries(raw||{}).forEach(([key,v])=>{
+  if(!v||typeof v!=="object")return;
+  result[key]={
+   dbKey:key,
+   name:String(v.name||"Tanpa Nama"),
+   gender:v.gender==="P"?"P":"L",
+   parentId:v.parentId||"",
+   spouseId:v.spouseId||"",
+   lat:Number(v.lat),
+   lng:Number(v.lng)
+  };
+ });
+
+ if(!result.akar_utama){
+  result.akar_utama={
+   dbKey:"akar_utama",
+   name:"Pangeran Kertadiningrat",
+   gender:"L",
+   parentId:"",
+   spouseId:"",
+   lat:-6.832,
+   lng:108.214
+  };
+ }
+
+ Object.values(result).forEach(p=>{
+  if(p.dbKey==="akar_utama"){p.parentId="";return}
+  if(!p.parentId || p.parentId==="unknown" ||
+     !result[p.parentId] || p.parentId===p.dbKey){
+   p.parentId="akar_utama";
+  }
+ });
+
+ return result;
+}
+
+function statusFor(key){
+ if(key==="akar_utama")return "Karuhun Utama";
+ let p=dataMap[key],depth=1,seen=new Set([key]);
+ while(p&&p.parentId&&p.parentId!=="akar_utama"&&
+       dataMap[p.parentId]&&!seen.has(p.parentId)){
+  seen.add(p.parentId);
+  depth++;
+  p=dataMap[p.parentId];
+ }
+ return `Keturunan Gen-${depth}`;
+}
+
+function initMap(){
+ if(!window.L||map)return;
+ map=L.map("map").setView([-6.832,108.214],15);
+ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+  maxZoom:19,attribution:"&copy; OpenStreetMap"
+ }).addTo(map);
+ layerGroup=L.layerGroup().addTo(map);
+ setTimeout(()=>map.invalidateSize(),400);
+}
+
+function drawMap(){
+ if(!map||!layerGroup)return;
+ layerGroup.clearLayers();
+ dataGlobal.forEach(p=>{
+  if(Number.isFinite(p.lat)&&Number.isFinite(p.lng)&&
+     Math.abs(p.lat)<=90&&Math.abs(p.lng)<=180){
+   L.marker([p.lat,p.lng]).addTo(layerGroup)
+    .bindPopup(`<b>${escapeHtml(p.name)}</b><br>${p.gender==="L"?"Laki-laki":"Perempuan"}`);
+  }
+ });
+}
+
+function renderTree(){
+ if(!window.d3)return;
+
+ const container=$("tree-container");
+ const width=Math.max(container.clientWidth,320);
+ const height=Math.max(container.clientHeight,300);
+
+ const svg=d3.select(container).selectAll("svg")
+  .data([null]).join("svg")
+  .attr("width","100%")
+  .attr("height","100%")
+  .attr("viewBox",`0 0 ${width} ${height}`);
+
+ svg.selectAll("*").remove();
+
+ const g=svg.append("g");
+ zoomBehavior=d3.zoom().scaleExtent([.15,2.5])
+  .on("zoom",e=>g.attr("transform",e.transform));
+
+ svg.call(zoomBehavior).on("dblclick.zoom",null);
+
+ try{
+  const all=dataGlobal.map(p=>({...p}));
+  const byId=new Map(all.map(p=>[p.dbKey,p]));
+
+  const spouseOf=new Map();
+  function linkSpouse(a,b){
+   if(!a||!b||a===b||!byId.has(a)||!byId.has(b))return;
+   if(!spouseOf.has(a))spouseOf.set(a,[]);
+   if(!spouseOf.has(b))spouseOf.set(b,[]);
+   if(!spouseOf.get(a).includes(b))spouseOf.get(a).push(b);
+   if(!spouseOf.get(b).includes(a))spouseOf.get(b).push(a);
+  }
+  all.forEach(p=>linkSpouse(p.dbKey,p.spouseId));
+
+  const spouseIds=new Set();
+  spouseOf.forEach(ids=>ids.forEach(id=>spouseIds.add(id)));
+  const primary=all.filter(p=>
+   p.dbKey==="akar_utama"||!spouseIds.has(p.dbKey)
+  );
+
+  const primaryIds=new Set(primary.map(p=>p.dbKey));
+
+  const records=primary.map(p=>{
+   let parent=p.dbKey==="akar_utama"?null:p.parentId;
+   if(parent&&!primaryIds.has(parent)){
+    const alternatives=spouseOf.get(parent)||[];
+    parent=alternatives.find(id=>primaryIds.has(id))||"akar_utama";
+   }
+   if(p.dbKey!=="akar_utama"&&
+      (!parent||!primaryIds.has(parent)||parent===p.dbKey)){
+    parent="akar_utama";
+   }
+   return {...p,parentId:parent};
+  });
+
+  const root=d3.stratify()
+   .id(d=>d.dbKey)
+   .parentId(d=>d.parentId)(records);
+
+  d3.tree().nodeSize([210,155])(root);
+
+  const nodes=root.descendants();
+  const links=root.links();
+
+  g.selectAll(".link").data(links).join("path")
+   .attr("class","link")
+   .attr("d",d=>
+    `M${d.source.x},${d.source.y}
+     V${(d.source.y+d.target.y)/2}
+     H${d.target.x} V${d.target.y}`
+   );
+
+  const spousePositions=[];
+  const renderedPairs=new Set();
+
+  nodes.forEach(n=>{
+   const ids=spouseOf.get(n.data.dbKey)||[];
+   if(!ids.length)return;
+
+   const spouses=ids.filter(id=>byId.has(id));
+   const owner=n.data.dbKey;
+
+   spouses.forEach((id,index)=>{
+    const pairKey=[owner,id].sort().join("::");
+    if(renderedPairs.has(pairKey))return;
+    renderedPairs.add(pairKey);
+
+    const person=byId.get(id);
+    const offset=(index-(spouses.length-1)/2)*48;
+
+    spousePositions.push({
+     person,
+     source:n,
+     x:n.x+125,
+     y:n.y+offset
+    });
+   });
+  });
+
+  g.selectAll(".spouse-link")
+   .data(spousePositions).join("path")
+   .attr("class","spouse-link")
+   .attr("d",d=>
+    `M${d.source.x+17},${d.source.y} L${d.x-17},${d.y}`
+   );
+
+  const drawNodes=nodes.map(n=>({
+   data:{...n.data,status:statusFor(n.data.dbKey)},
+   x:n.x,y:n.y,primary:true
+  }));
+
+  spousePositions.forEach(s=>{
+   drawNodes.push({
+    data:{...s.person,status:"Pasangan"},
+    x:s.x,y:s.y,primary:false
+   });
+  });
+
+  nodeSelection=g.selectAll(".node")
+   .data(drawNodes).join("g")
+   .attr("class",d=>"node "+(d.data.gender==="P"?"perempuan":"laki"))
+   .attr("transform",d=>`translate(${d.x},${d.y})`)
+   .on("click",(event,d)=>{
+    event.stopPropagation();
+    openEdit(d.data);
+   });
+
+  nodeSelection.append("circle").attr("r",16);
+
+  nodeSelection.append("text")
+   .attr("dy",-25).attr("text-anchor","middle")
+   .text(d=>d.data.name.length>28
+    ?d.data.name.slice(0,26)+"…":d.data.name);
+
+  nodeSelection.append("text")
+   .attr("class","status")
+   .attr("dy",29).attr("text-anchor","middle")
+   .text(d=>d.data.status);
+
+  const extent=d3.extent(drawNodes,d=>d.x);
+  const extentY=d3.extent(drawNodes,d=>d.y);
+  const cx=(extent[0]+extent[1])/2;
+  const cy=(extentY[0]+extentY[1])/2;
+
+  svg.call(zoomBehavior.transform,
+   d3.zoomIdentity.translate(width/2-cx,height/2-cy)
+  );
+
+  treeReady=true;
+ }catch(err){
+  console.error("Gagal merender pohon:",err);
+  container.insertAdjacentHTML("beforeend",
+   '<p style="position:absolute;bottom:5px;background:#fef3c7;padding:8px;font-size:11px">Gagal menggambar pohon. Periksa Console browser.</p>'
+  );
+ }
+}
+
+function openEdit(person){
+ $("edit-dbkey").value=person.dbKey;
+ $("edit-nama").value=person.name;
+ $("edit-gender").value=person.gender;
+ fillSelect($("edit-parent"),"parent",person.parentId||"akar_utama");
+ fillSelect($("edit-spouse"),"spouse",person.spouseId||"");
+ syncManual($("edit-parent"),$("edit-parent-manual"));
+ syncManual($("edit-spouse"),$("edit-spouse-manual"));
+ showModal(modalEdit);
+}
+
+function refreshSearch(){
+ const q=$("input-pencarian").value.trim().toLocaleLowerCase("id");
+ if(!nodeSelection)return;
+
+ nodeSelection.select("circle")
+  .attr("stroke",d=>q&&d.data.name.toLocaleLowerCase("id").includes(q)?"#f59e0b":"#fff")
+  .attr("stroke-width",d=>q&&d.data.name.toLocaleLowerCase("id").includes(q)?5:2);
+
+ if(!q)return;
+
+ const match=drawSearchMatch(q);
+ if(match){
+  const container=$("tree-container");
+  const w=container.clientWidth,h=container.clientHeight;
+  d3.select(container).select("svg").transition().duration(300)
+   .call(zoomBehavior.transform,
+    d3.zoomIdentity.translate(w/2-match.x,h/2-match.y)
+   );
+ }
+}
+
+function drawSearchMatch(q){
+ let result=null;
+ nodeSelection.each(d=>{
+  if(!result&&d.data.name.toLocaleLowerCase("id").includes(q))result=d;
+ });
+ return result;
+}
+
+async function resolvePerson(value,input,gender,parentDefault="akar_utama"){
+ if(value==="manual"){
+  const name=input.value.trim();
+  if(!name)throw new Error("Nama baru wajib diisi.");
+
+  const newRef=push(wargaRef);
+  await set(newRef,{
+   name,
+   gender:gender==="L"?"P":"L",
+   parentId:parentDefault,
+   spouseId:"",
+   ...randomCoords()
+  });
+  return newRef.key;
+ }
+ if(value==="unknown")return "";
+ return value||"";
+}
+
+async function saveNew(e){
+ e.preventDefault();
+ const button=formTambah.querySelector('button[type="submit"]');
+ button.disabled=true;
+
+ try{
+  const name=$("input-nama").value.trim();
+  const gender=$("select-gender").value;
+  if(!name)throw new Error("Nama wajib diisi.");
+
+  let parentId=$("select-parent").value;
+  if(parentId==="manual"){
+   parentId=await resolvePerson(parentId,$("input-parent-manual"),gender);
+  }
+  if(parentId==="unknown"||!parentId)parentId="akar_utama";
+
+  let spouseId=$("select-spouse").value;
+  if(spouseId==="manual"){
+   spouseId=await resolvePerson(spouseId,$("input-spouse-manual"),gender);
+  }
+  if(spouseId==="unknown")spouseId="";
+
+  const newRef=push(wargaRef);
+  await set(newRef,{
+   name,gender,parentId,spouseId:spouseId||"",...randomCoords()
+  });
+
+  if(spouseId&&dataMap[spouseId]){
+   await update(ref(db,`${DB_PATH}/${spouseId}`),{spouseId:newRef.key});
+  }
+
+  hideModal(modalTambah);
+  formTambah.reset();
+  syncManual($("select-parent"),$("input-parent-manual"));
+  syncManual($("select-spouse"),$("input-spouse-manual"));
+ }catch(err){
+  console.error(err);
+  notify("Gagal menyimpan: "+err.message);
+ }finally{
+  button.disabled=false;
+ }
+}
+
+async function saveEdit(e){
+ e.preventDefault();
+ const button=formEdit.querySelector('button[type="submit"]');
+ button.disabled=true;
+
+ try{
+  const key=$("edit-dbkey").value;
+  const name=$("edit-nama").value.trim();
+  const gender=$("edit-gender").value;
+
+  if(!key||!name)throw new Error("Nama wajib diisi.");
+
+  let parentId=$("edit-parent").value;
+  if(parentId==="manual"){
+   parentId=await resolvePerson(parentId,$("edit-parent-manual"),gender);
+  }
+  if(parentId==="unknown"||!parentId)parentId="akar_utama";
+  
+  // LOGIC FIX: HAPUS ATURAN "DIRI SENDIRI" UNTUK AKAR UTAMA
+  if(key === "akar_utama") {
+      parentId = ""; // Karuhun utama tidak butuh parentId
+  } else if(parentId === key) {
+      throw new Error("Orang tua tidak boleh dirinya sendiri.");
+  }
+
+  let spouseId=$("edit-spouse").value;
+  if(spouseId==="manual"){
+   spouseId=await resolvePerson(spouseId,$("edit-spouse-manual"),gender);
+  }
+  if(spouseId==="unknown")spouseId="";
+  if(spouseId===key)throw new Error("Tidak dapat menikah dengan diri sendiri.");
+
+  const old=dataMap[key];
+
+  await update(ref(db,`${DB_PATH}/${key}`),{
+   name,gender,parentId,spouseId:spouseId||""
+  });
+
+  if(old?.spouseId&&old.spouseId!==spouseId&&dataMap[old.spouseId]){
+   await update(ref(db,`${DB_PATH}/${old.spouseId}`),{spouseId:""});
+  }
+
+  if(spouseId&&dataMap[spouseId]){
+   await update(ref(db,`${DB_PATH}/${spouseId}`),{spouseId:key});
+  }
+
+  hideModal(modalEdit);
+ }catch(err){
+  console.error(err);
+  notify("Gagal memperbarui: "+err.message);
+ }finally{
+  button.disabled=false;
+ }
+}
+
+async function deletePerson(){
+ const key=$("edit-dbkey").value;
+ if(!key)return;
+
+ if(key==="akar_utama"){
+  notify("Leluhur utama tidak dapat dihapus.");
+  return;
+ }
+
+ if(!confirm("Hapus individu ini? Anak-anak akan dipindahkan ke leluhur utama."))return;
+
+ try{
+  const updates={};
+  dataGlobal.filter(p=>p.parentId===key).forEach(p=>{
+   updates[`${DB_PATH}/${p.dbKey}/parentId`]="akar_utama";
+  });
+
+  const person=dataMap[key];
+  if(person?.spouseId&&dataMap[person.spouseId]){
+   updates[`${DB_PATH}/${person.spouseId}/spouseId`]="";
+  }
+
+  if(Object.keys(updates).length)await update(ref(db),updates);
+  await remove(ref(db,`${DB_PATH}/${key}`));
+  hideModal(modalEdit);
+ }catch(err){
+  console.error(err);
+  notify("Gagal menghapus: "+err.message);
+ }
+}
+
+function wireEvents(){
+ $("btn-tambah-data").addEventListener("click",()=>{
+  formTambah.reset();
+  fillSelect($("select-parent"),"parent","akar_utama");
+  fillSelect($("select-spouse"),"spouse","");
+  syncManual($("select-parent"),$("input-parent-manual"));
+  syncManual($("select-spouse"),$("input-spouse-manual"));
+  showModal(modalTambah);
+ });
+
+ $("btn-lihat-pohon").addEventListener("click",()=>{
+  $("tree-container").scrollIntoView({behavior:"smooth",block:"center"});
+  if(treeReady)renderTree();
+ });
+
+ $("btn-close-modal").addEventListener("click",()=>hideModal(modalTambah));
+ $("btn-close-edit").addEventListener("click",()=>hideModal(modalEdit));
+
+ modalTambah.addEventListener("click",e=>{
+  if(e.target===modalTambah)hideModal(modalTambah);
+ });
+ modalEdit.addEventListener("click",e=>{
+  if(e.target===modalEdit)hideModal(modalEdit);
+ });
+
+ $("select-parent").addEventListener("change",()=>syncManual($("select-parent"),$("input-parent-manual")));
+ $("select-spouse").addEventListener("change",()=>syncManual($("select-spouse"),$("input-spouse-manual")));
+ $("edit-parent").addEventListener("change",()=>syncManual($("edit-parent"),$("edit-parent-manual")));
+ $("edit-spouse").addEventListener("change",()=>syncManual($("edit-spouse"),$("edit-spouse-manual")));
+
+ formTambah.addEventListener("submit",saveNew);
+ formEdit.addEventListener("submit",saveEdit);
+ $("btn-hapus-data").addEventListener("click",deletePerson);
+
+ $("btn-tambah-cabang").addEventListener("click",()=>{
+  const key=$("edit-dbkey").value;
+  hideModal(modalEdit);
+  formTambah.reset();
+  fillSelect($("select-parent"),"parent",key);
+  fillSelect($("select-spouse"),"spouse","");
+  syncManual($("select-parent"),$("input-parent-manual"));
+  syncManual($("select-spouse"),$("input-spouse-manual"));
+  showModal(modalTambah);
+  $("input-nama").focus();
+ });
+
+ $("input-pencarian").addEventListener("input",refreshSearch);
+
+ window.addEventListener("resize",()=>{
+  if(treeReady)renderTree();
+  if(map)setTimeout(()=>map.invalidateSize(),100);
+ });
+
+ document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){
+   hideModal(modalTambah);
+   hideModal(modalEdit);
+  }
+ });
+}
+
+function startFirebase(){
+ try{
+  const app=initializeApp(firebaseConfig);
+  db=getDatabase(app);
+  wargaRef=ref(db,DB_PATH);
+
+  onValue(wargaRef,async snapshot=>{
+   try{
+    if(!snapshot.exists()){
+     await set(ref(db,`${DB_PATH}/akar_utama`),{
+      name:"Pangeran Kertadiningrat",
+      gender:"L",
+      parentId:"",
+      spouseId:"",
+      lat:-6.832,
+      lng:108.214
+     });
+     return;
+    }
+
+    dataMap=normalizeData(snapshot.val());
+    dataGlobal=Object.values(dataMap).map(p=>({
+     ...p,status:statusFor(p.dbKey)
+    }));
+
+    $("stats-warga").textContent=`${dataGlobal.length} Warga`;
+
+    fillSelect($("select-parent"),"parent",$("select-parent").value);
+    fillSelect($("select-spouse"),"spouse",$("select-spouse").value);
+
+    if(!$("edit-dbkey").value){
+     fillSelect($("edit-parent"),"parent");
+     fillSelect($("edit-spouse"),"spouse");
+    }
+
+    renderTree();
+    drawMap();
+    refreshSearch();
+   }catch(err){
+    console.error("Gagal memproses Firebase:",err);
+    notify("Data terbaca tetapi gagal ditampilkan: "+err.message);
+   }
+  },err=>{
+   console.error("Firebase read error:",err);
+   notify("Gagal membaca Firebase: "+err.message);
+  });
+ }catch(err){
+  console.error(err);
+  notify("Firebase gagal diinisialisasi: "+err.message);
+ }
+}
+
+wireEvents();
+try{initMap()}catch(err){console.error("Peta gagal dimuat:",err)}
+startFirebase();
+</script>
 </body>
 </html>
