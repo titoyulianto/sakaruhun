@@ -131,7 +131,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-3xl z-10">
                 <h2 class="text-base font-bold text-slate-800"><i class="fas fa-project-diagram text-emerald-600 mr-2"></i>Pohon Genealogi</h2>
                 <p id="tree-instruction" class="text-xs text-emerald-600 font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-                    <i class="fas fa-hand-pointer mr-1"></i> Klik profil/lingkaran untuk memunculkan tombol Relasi & Profil.
+                    <i class="fas fa-hand-pointer mr-1"></i> Klik profil/lingkaran untuk memunculkan tombol Relasi.
                 </p>
             </div>
             
@@ -298,6 +298,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         </select>
                     </div>
                 </div>
+                
+                <!-- KOLOM TAMBAHAN UNTUK URUTAN ANAK -->
+                <div class="grid grid-cols-2 gap-2 bg-blue-50 p-2 rounded-xl border border-blue-100">
+                    <div>
+                        <label class="block text-xs font-bold text-blue-800">Tahun Lahir</label>
+                        <input type="text" id="input-tahun-tambah" placeholder="Contoh: 1990" class="w-full bg-white border border-blue-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-blue-800">Anak Ke- (Urutan)</label>
+                        <input type="number" id="input-urutan-tambah" min="1" placeholder="1, 2, 3..." class="w-full bg-white border border-blue-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
 
                 <div class="grid grid-cols-3 gap-2">
                     <div>
@@ -338,12 +350,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 <button id="tab-btn-edit" class="flex-1 py-2 px-4 text-sm font-bold text-slate-500 hover:text-slate-700 transition" onclick="window.switchTab('edit')">📝 Edit Data Profile</button>
             </div>
 
-            <!-- KONTEN TAB URAIAN SUNDA -->
             <div id="tab-content-uraian" class="block min-h-[150px]">
                 <!-- Dihasilkan otomatis oleh JavaScript -->
             </div>
 
-            <!-- KONTEN TAB EDIT -->
             <div id="tab-content-edit" class="hidden">
                 <form id="form-edit" class="space-y-4">
                     <input type="hidden" id="edit-dbkey">
@@ -367,6 +377,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                                 <option value="Hidup">Masih Hidup</option>
                                 <option value="Meninggal">Sudah Meninggal</option>
                             </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 bg-blue-50 p-2 rounded-xl border border-blue-100">
+                        <div>
+                            <label class="block text-xs font-bold text-blue-800">Tahun Lahir</label>
+                            <input type="text" id="edit-tahun" placeholder="Contoh: 1990" class="w-full bg-white border border-blue-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-blue-800">Anak Ke- (Urutan)</label>
+                            <input type="number" id="edit-urutan" min="1" placeholder="1, 2, 3..." class="w-full bg-white border border-blue-200 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
 
@@ -468,9 +489,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 } 
                 else if (context === 'ADD_SIBLING_KAKAK') {
                     title.innerHTML = `<i class="fas fa-user-plus text-amber-500 mr-2"></i>Tambah Kakak dari ${escapeHtml(targetName)}`;
+                    const targetNode = dataMap[targetKey];
+                    if(window.$("input-urutan-tambah") && targetNode && targetNode.urutan) window.$("input-urutan-tambah").value = Math.max(1, targetNode.urutan - 1);
                 } 
                 else if (context === 'ADD_SIBLING_ADIK') {
                     title.innerHTML = `<i class="fas fa-user-plus text-amber-500 mr-2"></i>Tambah Adik dari ${escapeHtml(targetName)}`;
+                    const targetNode = dataMap[targetKey];
+                    if(window.$("input-urutan-tambah") && targetNode && targetNode.urutan) window.$("input-urutan-tambah").value = targetNode.urutan + 1;
                 } 
                 else {
                     title.innerHTML = `<i class="fas fa-user-secret text-purple-600 mr-2"></i>Bikin Garis Keturunan Baru`;
@@ -480,14 +505,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             setTimeout(() => window.$("input-nama")?.focus(), 100);
         };
 
-        // ==========================================
-        // PROFIL & GENERATOR URAIAN SUNDA
-        // ==========================================
         window.bukaProfilGeni = function(key) {
             const nodeData = dataMap[key];
             if(!nodeData) return;
 
-            // 1. Isi Form Edit
             if(window.$("edit-dbkey")) window.$("edit-dbkey").value = key;
             if(window.$("edit-nama")) window.$("edit-nama").value = nodeData.nama;
             if(window.$("edit-gender")) window.$("edit-gender").value = nodeData.gender;
@@ -495,11 +516,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             if(window.$("edit-dusun")) window.$("edit-dusun").value = nodeData.dusun || "Manis";
             if(window.$("edit-rt")) window.$("edit-rt").value = nodeData.rt || "";
             if(window.$("edit-rw")) window.$("edit-rw").value = nodeData.rw || "";
+            if(window.$("edit-tahun")) window.$("edit-tahun").value = nodeData.tahun || "";
+            if(window.$("edit-urutan")) window.$("edit-urutan").value = nodeData.urutan || "";
 
-            // 2. Generate Uraian Silsilah Sunda
             window.generateUraianSunda(key);
-
-            // Buka Modal, Set Default Tab Uraian
             window.switchTab('uraian');
             window.showModal('modal-profil');
         };
@@ -507,16 +527,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         window.generateUraianSunda = function(key) {
             const p = dataMap[key];
             if(!p) return;
-            
             const cont = window.$("tab-content-uraian");
             if(!cont) return;
 
             let html = `<div class="space-y-3 text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">`;
             
-            // Header Identitas Utama
-            html += `<p><b class="text-base text-slate-900">${escapeHtml(p.displayNama)}</b> mangrupikeun warga asal Dusun ${escapeHtml(p.dusun)} RT ${escapeHtml(p.rt)}/RW ${escapeHtml(p.rw)}.</p>`;
+            let lahirStr = p.tahun ? ` lahir kaping/taun <b>${escapeHtml(p.tahun)}</b>` : '';
+            let anakKeStr = p.urutan ? ` (Putra ka-${p.urutan})` : '';
+            html += `<p><b class="text-base text-slate-900">${escapeHtml(p.displayNama)}</b>${anakKeStr}${lahirStr}, mangrupikeun warga asal Dusun ${escapeHtml(p.dusun)} RT ${escapeHtml(p.rt)}/RW ${escapeHtml(p.rw)}.</p>`;
 
-            // Bapak & Ibu
             const bapak = dataMap[p.fatherId];
             const indung = dataMap[p.motherId];
             if (bapak || indung) {
@@ -527,36 +546,41 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 html += `.</p>`;
             }
 
-            // Pasangan (Suami/Istri)
             if (p.spouseIds && p.spouseIds.length > 0) {
                 const spouses = p.spouseIds.map(sid => {
                     const sp = dataMap[sid];
                     return sp ? `<a href="#" onclick="window.focusToNode('${sp.dbKey}')" class="text-purple-600 font-bold hover:underline cursor-pointer">${escapeHtml(sp.displayNama)}</a>` : '';
                 }).filter(Boolean);
-                
                 if(spouses.length > 0) {
                     html += `<p class="border-l-4 border-purple-400 pl-3">Pasangan hirupna nyaéta: ${spouses.join(", ")}.</p>`;
                 }
             }
 
-            // Anak-anak
-            const anakList = dataGlobal.filter(a => a.fatherId === key || a.motherId === key);
+            let anakList = dataGlobal.filter(a => a.fatherId === key || a.motherId === key);
             if (anakList.length > 0) {
+                // Urutkan anak di teks uraian juga
+                anakList.sort((a, b) => {
+                    let aVal = a.urutan ? parseInt(a.urutan) : (parseInt(a.tahun) || 9999);
+                    let bVal = b.urutan ? parseInt(b.urutan) : (parseInt(b.tahun) || 9999);
+                    return aVal - bVal;
+                });
                 const anakLinks = anakList.map(a => `<a href="#" onclick="window.focusToNode('${a.dbKey}')" class="text-emerald-600 font-bold hover:underline cursor-pointer">${escapeHtml(a.displayNama)}</a>`);
                 html += `<p class="border-l-4 border-emerald-400 pl-3">Sareng gaduh putra/putri: ${anakLinks.join(", ")}.</p>`;
             }
 
-            // Dulur (Saudara)
             let dulurList = [];
             if (p.fatherId || p.motherId) {
                 dulurList = dataGlobal.filter(a => a.dbKey !== key && 
                     ((p.fatherId && a.fatherId === p.fatherId) || (p.motherId && a.motherId === p.motherId))
                 );
             }
-            // Hapus duplikat saudara jika bapak/ibu sama
             dulurList = [...new Map(dulurList.map(item => [item.dbKey, item])).values()];
-            
             if (dulurList.length > 0) {
+                dulurList.sort((a, b) => {
+                    let aVal = a.urutan ? parseInt(a.urutan) : (parseInt(a.tahun) || 9999);
+                    let bVal = b.urutan ? parseInt(b.urutan) : (parseInt(b.tahun) || 9999);
+                    return aVal - bVal;
+                });
                 const dulurLinks = dulurList.map(a => `<a href="#" onclick="window.focusToNode('${a.dbKey}')" class="text-amber-600 font-bold hover:underline cursor-pointer">${escapeHtml(a.displayNama)}</a>`);
                 html += `<p class="border-l-4 border-amber-400 pl-3">Gaduh dulur sadarah: ${dulurLinks.join(", ")}.</p>`;
             }
@@ -625,6 +649,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     gender: v.gender === "P" ? "P" : "L",
                     statusHidup: v.statusHidup || "Hidup",
                     tahun: v.tahun || "",
+                    urutan: (v.urutan != null && v.urutan !== "") ? parseInt(v.urutan) : null, // DATA URUTAN ANAK
                     fatherId: v.fatherId || "", 
                     motherId: v.motherId || "",
                     spouseIds: sIds,
@@ -662,9 +687,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             });
         }
 
-        // ==========================================
-        // TABEL DIREKTORI (LIST VIEW)
-        // ==========================================
         window.renderDirektori = function() {
             const tbody = window.$("tbody-direktori");
             if(!tbody) return;
@@ -706,6 +728,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const height = container.clientHeight;
                 let tx = focusNode.manualX || 0;
                 let ty = focusNode.manualY || 0;
+                
                 window.svg.transition().duration(800).call(window.zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - tx, height / 2 - ty + 50));
             }
             renderTree();
@@ -819,6 +842,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 }
 
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(treeNodes);
+
+                // =========================================================================
+                // URUTKAN ANAK DARI KIRI KE KANAN BERDASARKAN URUTAN ANAK ATAU TAHUN LAHIR
+                // =========================================================================
+                root.sort((a, b) => {
+                    let aVal = a.data.urutan ? parseInt(a.data.urutan) : (parseInt(a.data.tahun) || 9999);
+                    let bVal = b.data.urutan ? parseInt(b.data.urutan) : (parseInt(b.data.tahun) || 9999);
+                    return aVal - bVal;
+                });
+
                 d3.tree().nodeSize([320, 180])(root);
                 const nodes = root.descendants();
                 
@@ -910,13 +943,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     let dName = d.data.displayNama;
                     return dName.length > 25 ? dName.slice(0, 23) + "…" : dName;
                 });
+                
                 nodeSelection.append("text").attr("class", "status").attr("dy", 35).attr("text-anchor", "middle").text(d => {
-                    let detailText = `Dusun ${d.data.dusun}`;
-                    if(d.data.rt) detailText += ` RT ${d.data.rt}`;
+                    let detailText = d.data.urutan ? `Anak ka-${d.data.urutan} | ` : '';
+                    detailText += `Dusun ${d.data.dusun}`;
                     return detailText;
                 });
 
-                // UI GENI-STYLE (STATIS, HANYA SHOW/HIDE)
+                // UI GENI-STYLE: BADGE ACTION
                 nodeSelection.each(function(d) {
                     const nodeGroup = d3.select(this);
                     const badgeGroup = nodeGroup.append("g").attr("class", "geni-badges")
@@ -968,7 +1002,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         btnAdik.append("text").attr("x", 32.5).attr("y", 14).text("+ Adik");
                     }
 
-                    // TOMBOL PROFIL / EDIT (KUNCI RELASI SILANG)
                     const btnEdit = badgeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(-90, 30)")
                         .on("click", (e) => { e.stopPropagation(); window.bukaProfilGeni(dbKey); });
                     btnEdit.append("rect").attr("width", 65).attr("height", 22);
@@ -993,9 +1026,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             } catch (err) { console.error("Gagal merender pohon:", err); }
         }
 
-        // =========================================================================
-        // SAFE EVENT BINDINGS
-        // =========================================================================
         window.attachSafeListener = function(id, event, callback) {
             const el = window.$(id);
             if (el) el.addEventListener(event, callback);
@@ -1012,6 +1042,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const dusun = window.$("input-dusun-tambah")?.value;
                 const rt = window.$("input-rt-tambah")?.value.trim();
                 const rw = window.$("input-rw-tambah")?.value.trim();
+                
+                const tahun = window.$("input-tahun-tambah")?.value.trim();
+                const urutanAnak = window.$("input-urutan-tambah")?.value ? parseInt(window.$("input-urutan-tambah").value) : null;
 
                 if (!name) throw new Error("Nama wajib diisi.");
                 
@@ -1050,7 +1083,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     initCoord.manualX = 0; initCoord.manualY = 0;
                 }
                 
-                let newRecord = { nama: name, gender, statusHidup, dusun, rt, rw, fatherId: fId, motherId: mId, spouseIds: [], ...initCoord };
+                let newRecord = { nama: name, gender, statusHidup, dusun, rt, rw, tahun, urutan: urutanAnak, fatherId: fId, motherId: mId, spouseIds: [], ...initCoord };
                 await set(newRef, newRecord);
                 
                 if (ctx === 'ADD_PARENT_FATHER') {
@@ -1084,39 +1117,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const dusun = window.$("edit-dusun")?.value;
                 const rt = window.$("edit-rt")?.value.trim();
                 const rw = window.$("edit-rw")?.value.trim();
+                const tahun = window.$("edit-tahun")?.value.trim();
+                const urutanAnak = window.$("edit-urutan")?.value ? parseInt(window.$("edit-urutan").value) : null;
                 
                 if (!key || !nama) throw new Error("Nama wajib diisi.");
-                const updates = { nama: nama, gender, statusHidup, dusun, rt, rw };
+                const updates = { nama: nama, gender, statusHidup, dusun, rt, rw, tahun, urutan: urutanAnak };
                 await update(ref(db, `${DB_PATH}/${key}`), updates);
                 window.hideModal('modal-profil');
             } catch (err) { window.notify("Gagal memperbarui: " + err.message); } 
             finally { if(button) button.disabled = false; }
-        });
-
-        window.attachSafeListener("btn-hapus-data", "click", async () => {
-            const key = window.$("edit-dbkey")?.value;
-            if (!key) return;
-            if (!confirm("Hapus individu ini? Relasi anak dan pasangan akan diputuskan permanen.")) return;
-            try {
-                const updates = {};
-                // Hapus dari ortu anak-anak
-                dataGlobal.forEach(p => { 
-                    if(p.fatherId === key) updates[`${DB_PATH}/${p.dbKey}/fatherId`] = "";
-                    if(p.motherId === key) updates[`${DB_PATH}/${p.dbKey}/motherId`] = "";
-                });
-                // Hapus dari daftar spouse pasangannya
-                dataGlobal.forEach(p => {
-                    if (p.spouseIds && p.spouseIds.includes(key)) {
-                        let newList = p.spouseIds.filter(id => id !== key);
-                        updates[`${DB_PATH}/${p.dbKey}/spouseIds`] = newList;
-                    }
-                });
-
-                if (Object.keys(updates).length) await update(ref(db), updates);
-                await remove(ref(db, `${DB_PATH}/${key}`));
-                window.hideModal('modal-profil');
-                selectedNodeId = null;
-            } catch (err) { window.notify("Gagal menghapus: " + err.message); }
         });
 
         window.attachSafeListener("btn-toggle-drag", "click", () => {
