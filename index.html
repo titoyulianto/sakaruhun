@@ -167,7 +167,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     <select id="edit-parent" class="w-full bg-blue-50 border border-blue-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
                 </div>
 
-                <!-- DAFTAR PASANGAN (MULTI-SPOUSE SUPPORT) -->
                 <div>
                     <label class="block text-xs font-bold text-slate-800 mb-1"><i class="fas fa-heart text-pink-500 mr-1"></i> DAFTAR PASANGAN / ISTRI-SUAMI</label>
                     <div id="spouse-list-container" class="space-y-2 bg-pink-50/50 border border-pink-100 rounded-xl p-3 max-h-40 overflow-y-auto">
@@ -279,7 +278,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             if (selectedKey) sel.value = selectedKey;
         }
 
-        // RENDER CHECKBOX ATAU LIST PASANGAN DI MODAL EDIT (MULTI-SPOUSE)
         function renderSpouseCheckboxes(currentPersonKey) {
             const container = $("spouse-list-container");
             const person = dataMap[currentPersonKey];
@@ -305,7 +303,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             container.innerHTML = html;
         }
 
-        // NORMALISASI DATA (Mendukung spouseIds Array & konversi legacy spouseId)
         function normalizeData(raw) {
             const result = {};
             Object.entries(raw || {}).forEach(([key, v]) => {
@@ -385,7 +382,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 let safeDataGlobal = dataGlobal.map(d => ({...d}));
                 const byIdGlobal = new Map(safeDataGlobal.map(p => [p.dbKey, p]));
                 
-                // MULTI-SPOUSE MAPPING
                 const spouseOf = new Map();
                 const isSpouseNode = new Set();
                 const renderedPairs = new Set();
@@ -454,7 +450,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     if (n.data.manualY !== null && n.data.manualY !== undefined) n.y = n.data.manualY;
                 });
 
-                // RENDER MULTI-SPOUSE POSITIONS (BERDERET KE SAMPING/BAWAH)
                 const spousePositions = [];
                 const pairsRendered = new Set();
                 nodes.forEach(n => {
@@ -467,7 +462,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         
                         const person = byIdGlobal.get(id);
                         if(person) {
-                            // Jika istri lebih dari satu, posisikan vertikal di sebelah kanan suami
                             let sx = n.x + 160;
                             let sy = n.y + (idx * 55); 
                             if (person.manualX !== null && person.manualX !== undefined) sx = person.manualX;
@@ -477,7 +471,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     });
                 });
 
-                // GRAVITASI ORANG TUA DARI SEORANG PASANGAN
+                // =========================================================================
+                // GRAVITASI POSISI PRESISI: ORANG TUA DARI SEORANG PASANGAN (SPOUSE)
+                // =========================================================================
                 const mainRootKey = roots.length > 0 ? roots[0].dbKey : null;
                 if (root.children) {
                     root.children.forEach(subRoot => {
@@ -491,10 +487,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                                 if (sp) { connectedSpouse = sp; connectingNode = n; break; }
                             }
                             if (connectedSpouse && connectingNode) {
+                                // Hitung target X dan Y persis di atas pasangan terkait (tanpa numpuk)
                                 const targetX = connectedSpouse.x;
                                 const targetY = connectedSpouse.y - 180;
                                 const dx = targetX - connectingNode.x;
                                 const dy = targetY - connectingNode.y;
+                                
                                 subNodes.forEach(n => {
                                     if (n.data.manualX == null) n.x += dx;
                                     if (n.data.manualY == null) n.y += dy;
@@ -543,7 +541,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
                 g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link");
 
-                // TOMBOL PLUS DI TENGAH PASANGAN
                 const addChildBtn = g.selectAll(".add-child-btn").data(spousePositions).join("g")
                     .attr("class", "add-child-btn")
                     .style("cursor", "pointer")
@@ -746,7 +743,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const gender = $("edit-gender").value;
                 const parentId = $("edit-parent").value;
                 
-                // Ambil daftar checkbox pasangan yang dicentang
                 const checkboxes = document.querySelectorAll('input[name="spouseCheckbox"]:checked');
                 const selectedSpouseIds = Array.from(checkboxes).map(cb => cb.value);
                 
@@ -772,9 +768,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
                 await update(ref(db, `${DB_PATH}/${key}`), updates);
 
-                // Sinkronisasi Multi-Pasangan Dua Arah
                 const oldSpouses = old.spouseIds || [];
-                // Putus relasi untuk pasangan yang di-uncheck
                 for (let oldSId of oldSpouses) {
                     if (!selectedSpouseIds.includes(oldSId) && dataMap[oldSId]) {
                         let spData = dataMap[oldSId];
@@ -783,7 +777,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         await update(ref(db, `${DB_PATH}/${oldSId}`), { spouseIds: spList });
                     }
                 }
-                // Sambungkan relasi untuk pasangan yang baru dicentang
                 for (let newSId of selectedSpouseIds) {
                     if (dataMap[newSId]) {
                         let spData = dataMap[newSId];
@@ -812,7 +805,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     updates[`${DB_PATH}/${p.dbKey}/manualY`] = null;
                 });
                 
-                // Putus dari semua pasangan
                 dataGlobal.forEach(p => {
                     if (p.spouseIds && p.spouseIds.includes(key)) {
                         let newList = p.spouseIds.filter(id => id !== key);
