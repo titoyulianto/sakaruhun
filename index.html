@@ -97,7 +97,7 @@
     <!-- MODAL FORM TAMBAH DATA WARGA               -->
     <!-- ========================================== -->
     <div id="modal-tambah" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button id="btn-close-modal" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
             <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fas fa-user-plus text-emerald-600 mr-2"></i>Tambah Keluarga</h3>
             
@@ -107,15 +107,22 @@
                     <input type="text" id="input-nama" required placeholder="Contoh: Mang Ujang" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-600">Siapa Orang Tuanya? (Induk)</label>
+                    <label class="text-xs font-bold text-slate-600">Siapa Orang Tuanya? (Induk Utama)</label>
                     <select id="select-parent" required class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                         <option value="">-- Pilih Orang Tua / Leluhur --</option>
                         <option value="">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option>
                     </select>
                 </div>
+                <hr class="border-slate-100 my-2">
                 <div>
-                    <label class="text-xs font-bold text-slate-600">Nama Pasangan / Istri (Opsional)</label>
+                    <label class="text-xs font-bold text-slate-600">Nama Pasangan / Istri / Suami (Opsional)</label>
                     <input type="text" id="input-pasangan" placeholder="Contoh: Siti Aisyah" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-600">Orang Tua Pasangan / Mertua (Opsional)</label>
+                    <select id="select-parent-pasangan" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <option value="">-- Pilih Orang Tua Pasangan (Jika ada di data) --</option>
+                    </select>
                 </div>
                 <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm hover:bg-emerald-700 transition-colors shadow-md mt-2">
                     Simpan Silsilah
@@ -128,7 +135,7 @@
     <!-- MODAL KELOLA (EDIT/HAPUS/TAMBAH ANAK)      -->
     <!-- ========================================== -->
     <div id="modal-edit" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] hidden flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative border-t-4 border-amber-500">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative border-t-4 border-amber-500 max-h-[90vh] overflow-y-auto">
             <button id="btn-close-edit" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
             <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fas fa-cog text-amber-500 mr-2"></i>Kelola Data Warga</h3>
             
@@ -139,8 +146,14 @@
                     <input type="text" id="edit-nama" required class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-600">Nama Pasangan / Istri</label>
+                    <label class="text-xs font-bold text-slate-600">Nama Pasangan / Istri / Suami</label>
                     <input type="text" id="edit-pasangan" placeholder="Nama Istri/Suami" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-600">Orang Tua Pasangan / Mertua</label>
+                    <select id="edit-select-parent-pasangan" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        <option value="">-- Pilih Orang Tua Pasangan --</option>
+                    </select>
                 </div>
                 
                 <div class="flex gap-2 pt-2">
@@ -216,12 +229,14 @@
         const modalTambah = document.getElementById('modal-tambah');
         const formTambah = document.getElementById('form-tambah');
         const selectParent = document.getElementById('select-parent');
+        const selectParentPasangan = document.getElementById('select-parent-pasangan');
         
         document.getElementById('btn-tambah-data').addEventListener('click', () => { modalTambah.classList.remove('hidden'); modalTambah.classList.add('flex'); });
         document.getElementById('btn-close-modal').addEventListener('click', () => { modalTambah.classList.add('hidden'); modalTambah.classList.remove('flex'); });
 
         const modalEdit = document.getElementById('modal-edit');
         const formEdit = document.getElementById('form-edit');
+        const editSelectParentPasangan = document.getElementById('edit-select-parent-pasangan');
         document.getElementById('btn-close-edit').addEventListener('click', () => { modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex'); });
 
         document.getElementById('btn-hapus-data').addEventListener('click', () => {
@@ -244,7 +259,7 @@
         let dataGlobal = [];
         onValue(wargaRef, (snapshot) => {
             if (!snapshot.exists()) {
-                set(ref(db, 'silsilah_desa_v2/akar_utama'), { parentId: "", name: "Jayamanggala", pasangan: "Siti Aisyah", lat: -6.8320, lng: 108.2140 });
+                set(ref(db, 'silsilah_desa_v2/akar_utama'), { parentId: "", name: "Jayamanggala", pasangan: "Siti Aisyah", parentPasanganId: "", lat: -6.8320, lng: 108.2140 });
                 return;
             }
 
@@ -260,12 +275,14 @@
 
             document.getElementById('stats-warga').innerText = `${dataGlobal.length} Warga`;
 
-            selectParent.innerHTML = '<option value="">-- Pilih Orang Tua / Leluhur --</option><option value="">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option>';
+            // Update Dropdown Ortu & Mertua
+            let optionsHTML = '<option value="">-- Pilih Orang Tua / Leluhur --</option><option value="">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option>';
             dataGlobal.forEach(w => {
-                const opt = document.createElement('option');
-                opt.value = w.dbKey; opt.text = w.name + (w.pasangan ? ` & ${w.pasangan}` : '');
-                selectParent.appendChild(opt);
+                optionsHTML += `<option value="${w.dbKey}">${w.name}${w.pasangan ? ' & ' + w.pasangan : ''}</option>`;
             });
+            selectParent.innerHTML = optionsHTML;
+            selectParentPasangan.innerHTML = '<option value="">-- Pilih Orang Tua Pasangan (Mertua) --</option>' + optionsHTML;
+            editSelectParentPasangan.innerHTML = '<option value="">-- Pilih Orang Tua Pasangan (Mertua) --</option>' + optionsHTML;
 
             layerGroup.clearLayers();
             dataGlobal.forEach(w => {
@@ -275,23 +292,20 @@
                 }
             });
 
-            // 🌳 RENDER D3.JS VERTIKAL (Atas ke Bawah dengan Jarak Aman)
+            // 🌳 RENDER D3.JS VERTIKAL (Atas ke Bawah dengan Jarak Aman & Teks Dinaikkan)
             g.selectAll("*").remove(); 
             try {
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(dataGlobal);
                 
-                // Jarak vertikal dan horizontal diperlebar agar tidak tumpang tindih
-                const treeLayout = d3.tree().nodeSize([220, 140]); 
+                const treeLayout = d3.tree().nodeSize([240, 150]); 
                 treeLayout(root);
                 
-                // Render Garis Hubung (Links) Vertikal
                 g.selectAll(".link").data(root.links()).enter().append("path").attr("class", "link")
                     .attr("d", d3.linkVertical()
                         .x(d => d.x)
                         .y(d => d.y)
                     );
 
-                // Render Node
                 const node = g.selectAll(".node").data(root.descendants()).enter().append("g")
                     .attr("class", "node")
                     .attr("transform", d => `translate(${d.x},${d.y})`)
@@ -299,6 +313,7 @@
                         document.getElementById('edit-dbkey').value = d.data.dbKey;
                         document.getElementById('edit-nama').value = d.data.name;
                         document.getElementById('edit-pasangan').value = d.data.pasangan || '';
+                        editSelectParentPasangan.value = d.data.parentPasanganId || '';
                         modalEdit.classList.remove('hidden');
                         modalEdit.classList.add('flex');
                     });
@@ -306,9 +321,9 @@
                 node.append("circle").attr("r", 16).attr("fill", "transparent").attr("stroke", "transparent"); 
                 node.append("circle").attr("r", 8).style("pointer-events", "none");
                 
-                // Teks Nama + Pasangan (Dinaikkan posisinya agar tidak menumpuk di lingkaran)
+                // Teks Nama + Pasangan (Dinaikkan posisinya ke dy: -32 agar tidak menumpuk di lingkaran)
                 node.append("text")
-                    .attr("dy", -26)
+                    .attr("dy", -32)
                     .attr("x", 0)
                     .style("text-anchor", "middle")
                     .each(function(d) {
@@ -324,8 +339,8 @@
                             let baris2 = teksLengkap.substring(spasiIdx + 1);
                             
                             el.text("");
-                            el.append("tspan").attr("x", 0).attr("dy", "-1.2em").text(baris1);
-                            el.append("tspan").attr("x", 0).attr("dy", "1.1em").text(baris2);
+                            el.append("tspan").attr("x", 0).attr("dy", "-1.4em").text(baris1);
+                            el.append("tspan").attr("x", 0).attr("dy", "1.2em").text(baris2);
                         } else {
                             el.text(teksLengkap);
                         }
@@ -334,12 +349,11 @@
                 // Teks Status Pancakaki (di bawah lingkaran)
                 node.append("text")
                     .attr("class", "status")
-                    .attr("dy", 24)
+                    .attr("dy", 26)
                     .attr("x", 0)
                     .style("text-anchor", "middle")
                     .text(d => d.data.status);
                 
-                // Pusatkan kamera di tengah atas
                 svg.call(zoom.transform, d3.zoomIdentity.translate(container.clientWidth / 2, 60));
             } catch (error) {
                 console.log("Menyesuaikan struktur silsilah...", error);
@@ -350,12 +364,17 @@
         formTambah.addEventListener('submit', (e) => {
             e.preventDefault();
             const nama = document.getElementById('input-nama').value;
-            const pasangan = document.getElementById('input-pasangan').value;
             const parentId = document.getElementById('select-parent').value;
+            const pasangan = document.getElementById('input-pasangan').value;
+            const parentPasanganId = selectParentPasangan.value;
 
             push(wargaRef, {
-                parentId: parentId, name: nama, pasangan: pasangan,
-                lat: -6.8320 + (Math.random() - 0.5) * 0.005, lng: 108.2140 + (Math.random() - 0.5) * 0.005
+                parentId: parentId, 
+                name: nama, 
+                pasangan: pasangan,
+                parentPasanganId: parentPasanganId,
+                lat: -6.8320 + (Math.random() - 0.5) * 0.005, 
+                lng: 108.2140 + (Math.random() - 0.5) * 0.005
             }).then(() => {
                 modalTambah.classList.add('hidden'); modalTambah.classList.remove('flex');
                 formTambah.reset();
@@ -368,8 +387,13 @@
             const dbKey = document.getElementById('edit-dbkey').value;
             const namaBaru = document.getElementById('edit-nama').value;
             const pasanganBaru = document.getElementById('edit-pasangan').value;
+            const parentPasanganBaru = editSelectParentPasangan.value;
 
-            update(ref(db, 'silsilah_desa_v2/' + dbKey), { name: namaBaru, pasangan: pasanganBaru }).then(() => {
+            update(ref(db, 'silsilah_desa_v2/' + dbKey), { 
+                name: namaBaru, 
+                pasangan: pasanganBaru,
+                parentPasanganId: parentPasanganBaru 
+            }).then(() => {
                 modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex');
             });
         });
