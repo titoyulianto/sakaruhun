@@ -19,17 +19,18 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         .bg-pattern { background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4H6zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
-        .leaflet-container { z-index: 10 !important; pointer-events: auto !important; }
+        .leaflet-container { z-index: 10 !important; }
         
-        /* CSS Khusus untuk D3.js Nodes & Links */
-        .node circle { stroke: #fff; stroke-width: 2px; transition: all 0.2s; cursor: pointer; pointer-events: auto !important; }
-        .node.laki circle { fill: #3b82f6; } /* Biru untuk Laki-laki */
-        .node.perempuan circle { fill: #ec4899; } /* Pink untuk Perempuan */
+        /* CSS D3.js dengan Pointer Events Aktif */
+        .node { cursor: pointer; pointer-events: all !important; }
+        .node circle { stroke: #fff; stroke-width: 2px; transition: all 0.2s; pointer-events: all !important; }
+        .node.laki circle { fill: #3b82f6; } 
+        .node.perempuan circle { fill: #ec4899; } 
         .node:hover circle { fill: #f59e0b; transform: scale(1.4); } 
-        .node text { font-size: 11px; font-weight: 800; fill: #1e293b; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; pointer-events: auto !important;}
-        .node text.status { font-size: 9px; font-weight: 600; fill: #059669; pointer-events: auto !important;}
-        .link { fill: none; stroke: #cbd5e1; stroke-width: 2px; }
-        .spouse-link { fill: none; stroke: #ec4899; stroke-width: 2px; stroke-dasharray: 4,4; }
+        .node text { font-size: 11px; font-weight: 800; fill: #1e293b; font-family: 'Plus Jakarta Sans', sans-serif; pointer-events: all !important; }
+        .node text.status { font-size: 9px; font-weight: 600; fill: #059669; pointer-events: all !important; }
+        .link { fill: none; stroke: #cbd5e1; stroke-width: 2px; pointer-events: none; }
+        .spouse-link { fill: none; stroke: #ec4899; stroke-width: 2px; stroke-dasharray: 4,4; pointer-events: none; }
     </style>
 </head>
 <body class="text-slate-800 pb-20">
@@ -57,7 +58,7 @@
     <main class="max-w-md mx-auto px-5 -mt-6 relative z-20 space-y-5">
         
         <div class="grid grid-cols-2 gap-4">
-            <button id="btn-pohon-karuhun" class="bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-200 flex flex-col items-center justify-center gap-3 ring-2 ring-emerald-400 ring-offset-1 cursor-pointer">
+            <button class="bg-emerald-50 p-4 rounded-2xl shadow-sm border border-emerald-200 flex flex-col items-center justify-center gap-3 ring-2 ring-emerald-400 ring-offset-1 cursor-pointer">
                 <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
                     <i class="fas fa-network-wired text-xl animate-pulse"></i>
                 </div>
@@ -391,7 +392,7 @@
                 }
             });
 
-            // 🌳 RENDER D3.JS VERTIKAL (COUPLE LAYOUT: Suami-Istri Sejajar & Garis Anak dari Titik Tengah)
+            // 🌳 RENDER D3.JS VERTIKAL
             g.selectAll("*").remove(); 
             try {
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(dataGlobal);
@@ -454,7 +455,6 @@
                 const node = g.selectAll(".node").data(root.descendants()).enter().append("g")
                     .attr("class", d => `node ${d.data.gender === 'L' ? 'laki' : 'perempuan'}`)
                     .attr("transform", d => `translate(${d.x},${d.y})`)
-                    .style("pointer-events", "auto")
                     .on("click", (event, d) => {
                         event.stopPropagation();
                         document.getElementById('edit-dbkey').value = d.data.dbKey;
@@ -475,14 +475,12 @@
                         modalEdit.classList.add('flex');
                     });
 
-                node.append("circle").attr("r", 16).attr("fill", "transparent").attr("stroke", "transparent"); 
-                node.append("circle").attr("r", 8).style("pointer-events", "none");
+                node.append("circle").attr("r", 16);
                 
                 node.append("text")
                     .attr("dy", -28)
                     .attr("x", 0)
                     .style("text-anchor", "middle")
-                    .style("pointer-events", "auto")
                     .each(function(d) {
                         let teksLengkap = d.data.name;
                         let el = d3.select(this);
@@ -512,7 +510,7 @@
                 
                 svg.call(zoom.transform, d3.zoomIdentity.translate(container.clientWidth / 2, 60));
             } catch (error) {
-                console.log("Menyesuaikan struktur silsilah...", error);
+                console.log("Struktur silsilah sedang menyesuaikan...", error);
             }
         });
 
