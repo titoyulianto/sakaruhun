@@ -21,7 +21,7 @@
         .bg-pattern { background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4H6zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
         .leaflet-container { z-index: 10 !important; }
         
-        /* CSS Khusus untuk D3.js Nodes & Links */
+        /* CSS Khusus untuk D3.js Nodes & Links (Vertikal) */
         .node circle { fill: #10b981; stroke: #fff; stroke-width: 2px; transition: all 0.2s; cursor: pointer; }
         .node:hover circle { fill: #f59e0b; transform: scale(1.4); } 
         .node text { font-size: 11px; font-weight: 800; fill: #1e293b; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; pointer-events: none;}
@@ -74,13 +74,13 @@
             </button>
         </div>
 
-        <!-- KANVAS SILSILAH D3.JS -->
+        <!-- KANVAS SILSILAH D3.JS (VERTIKAL) -->
         <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
             <div class="flex justify-between items-center mb-3 px-1">
-                <h2 class="text-sm font-bold text-slate-800"><i class="fas fa-sitemap text-emerald-600 mr-1.5"></i> Kaki-Kaki Silsilah</h2>
-                <span class="text-[9px] text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full font-semibold border border-emerald-200">Otomatis Pancakaki</span>
+                <h2 class="text-sm font-bold text-slate-800"><i class="fas fa-sitemap text-emerald-600 mr-1.5"></i> Pohon Silsilah Vertikal</h2>
+                <span class="text-[9px] text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full font-semibold border border-emerald-200">Generasi Jelas</span>
             </div>
-            <div id="tree-container" class="w-full h-[380px] rounded-2xl border border-slate-200 shadow-inner bg-slate-50 overflow-hidden cursor-move relative"></div>
+            <div id="tree-container" class="w-full h-[400px] rounded-2xl border border-slate-200 shadow-inner bg-slate-50 overflow-hidden cursor-move relative"></div>
             <p class="text-[10px] text-center text-emerald-600 mt-3 font-bold"><i class="fas fa-hand-pointer mr-1"></i> Sentuh titik nama untuk Edit, Hapus, atau Tambah Cabang.</p>
         </section>
 
@@ -114,11 +114,11 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-600">Nama Pasangan / Istri (Opsional jika poligami)</label>
+                    <label class="text-xs font-bold text-slate-600">Nama Pasangan / Istri (Opsional)</label>
                     <input type="text" id="input-pasangan" placeholder="Contoh: Siti Aisyah" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 </div>
                 <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm hover:bg-emerald-700 transition-colors shadow-md mt-2">
-                    Simpan & Deteksi Pancakaki Otomatis
+                    Simpan Silsilah
                 </button>
             </form>
         </div>
@@ -171,7 +171,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // Konfigurasi Firebase Lu
         const firebaseConfig = {
             apiKey: "AIzaSyA0JmHvkhB5oXPvnDMvcHJyooqSsLIccGQ",
             authDomain: "sakaruhun-desa.firebaseapp.com",
@@ -199,38 +198,21 @@
         const zoom = d3.zoom().scaleExtent([0.5, 3]).on("zoom", (event) => { g.attr("transform", event.transform); });
         svg.call(zoom);
 
-        // 🧠 FUNGSI UTAMA: KALKULATOR OTOMATIS PANCAKAKI SUNDA
+        // Kalkulator Otomatis Pancakaki
         function hitungPancakakiOtomatis(nodeKey, allDataMap) {
             let node = allDataMap[nodeKey];
-            if (!node || !node.parentId || node.parentId === "") {
-                return "Karuhun (Gen-1)";
-            }
-
+            if (!node || !node.parentId || node.parentId === "") return "Karuhun (Gen-1)";
             let generationCount = 1;
             let currentParentId = node.parentId;
-
-            // Naik ke atas menghitung jumlah generasi/lompatan
             while (currentParentId && allDataMap[currentParentId]) {
                 generationCount++;
                 currentParentId = allDataMap[currentParentId].parentId;
             }
-
-            // Pemetaan istilah Pancakaki Sunda berdasarkan kedalaman generasi
-            const kamusPancakaki = {
-                1: "Karuhun (Gen-1)",
-                2: "Bapak / Indung (Gen-2)",
-                3: "Aki / Nini (Gen-3)",
-                4: "Buyut (Cicit)",
-                5: "Bao",
-                6: "Janggawaréng",
-                7: "Udeg-udeg",
-                8: "Gantung-siwur"
-            };
-
+            const kamusPancakaki = { 1: "Karuhun (Gen-1)", 2: "Bapak / Indung (Gen-2)", 3: "Aki / Nini (Gen-3)", 4: "Buyut (Cicit)", 5: "Bao", 6: "Janggawaréng", 7: "Udeg-udeg", 8: "Gantung-siwur" };
             return kamusPancakaki[generationCount] || `Keturunan Gen-${generationCount}`;
         }
 
-        // Modal Handler
+        // Modal Handlers
         const modalTambah = document.getElementById('modal-tambah');
         const formTambah = document.getElementById('form-tambah');
         const selectParent = document.getElementById('select-parent');
@@ -242,21 +224,14 @@
         const formEdit = document.getElementById('form-edit');
         document.getElementById('btn-close-edit').addEventListener('click', () => { modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex'); });
 
-        // Hapus Data
         document.getElementById('btn-hapus-data').addEventListener('click', () => {
             const dbKey = document.getElementById('edit-dbkey').value;
-            if (dbKey === 'akar_utama') {
-                alert("Luhur Utama tidak dapat dihapus!");
-                return;
-            }
-            if (confirm("Yakin ingin menghapus data ini? Keturunannya akan otomatis terhubung ke akar utama.")) {
-                remove(ref(db, 'silsilah_desa_v2/' + dbKey)).then(() => {
-                    modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex');
-                });
+            if (dbKey === 'akar_utama') { alert("Karuhun Utama tidak dapat dihapus!"); return; }
+            if (confirm("Yakin ingin menghapus data ini? Keturunannya otomatis terhubung ke karuhun utama.")) {
+                remove(ref(db, 'silsilah_desa_v2/' + dbKey)).then(() => { modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex'); });
             }
         });
 
-        // Tambah Cabang Pintasan
         document.getElementById('btn-tambah-cabang').addEventListener('click', () => {
             const dbKey = document.getElementById('edit-dbkey').value;
             modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex');
@@ -265,7 +240,7 @@
             document.getElementById('input-nama').focus();
         });
 
-        // Tarik Data Realtime
+        // Realtime Data Sync
         let dataGlobal = [];
         onValue(wargaRef, (snapshot) => {
             if (!snapshot.exists()) {
@@ -274,14 +249,9 @@
             }
 
             const rawData = snapshot.val();
-            
-            // Konversi ke Map untuk pencarian instan
             let dataMap = {};
-            Object.keys(rawData).forEach(key => {
-                dataMap[key] = { dbKey: key, ...rawData[key] };
-            });
+            Object.keys(rawData).forEach(key => { dataMap[key] = { dbKey: key, ...rawData[key] }; });
 
-            // Hitung otomatis status Pancakaki untuk setiap node
             dataGlobal = Object.keys(dataMap).map(key => {
                 let item = dataMap[key];
                 let statusOtomatis = (key === "akar_utama") ? "Karuhun Utama" : hitungPancakakiOtomatis(key, dataMap);
@@ -290,7 +260,6 @@
 
             document.getElementById('stats-warga').innerText = `${dataGlobal.length} Warga`;
 
-            // Update Dropdown Ortu
             selectParent.innerHTML = '<option value="">-- Pilih Orang Tua / Leluhur --</option><option value="">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option>';
             dataGlobal.forEach(w => {
                 const opt = document.createElement('option');
@@ -298,7 +267,6 @@
                 selectParent.appendChild(opt);
             });
 
-            // Update Peta
             layerGroup.clearLayers();
             dataGlobal.forEach(w => {
                 if (w.lat && w.lng) {
@@ -307,19 +275,26 @@
                 }
             });
 
-            // Update D3.js Pohon Keluarga (Jarak longgar 120 x 350 agar tidak tumpang tindih)
+            // 🌳 RENDER D3.JS VERTIKAL (Atas ke Bawah)
             g.selectAll("*").remove(); 
             try {
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(dataGlobal);
-                const treeLayout = d3.tree().nodeSize([120, 350]); 
+                
+                // Gunakan tree layout standar (vertical: x ke samping, y ke bawah)
+                const treeLayout = d3.tree().nodeSize([180, 100]); 
                 treeLayout(root);
                 
+                // Render Garis Hubung (Links) Vertikal
                 g.selectAll(".link").data(root.links()).enter().append("path").attr("class", "link")
-                    .attr("d", d3.linkHorizontal().x(d => d.y).y(d => d.x));
+                    .attr("d", d3.linkVertical()
+                        .x(d => d.x)
+                        .y(d => d.y)
+                    );
 
+                // Render Node
                 const node = g.selectAll(".node").data(root.descendants()).enter().append("g")
                     .attr("class", "node")
-                    .attr("transform", d => `translate(${d.y},${d.x})`)
+                    .attr("transform", d => `translate(${d.x},${d.y})`)
                     .on("click", (event, d) => {
                         document.getElementById('edit-dbkey').value = d.data.dbKey;
                         document.getElementById('edit-nama').value = d.data.name;
@@ -331,21 +306,22 @@
                 node.append("circle").attr("r", 14).attr("fill", "transparent").attr("stroke", "transparent"); 
                 node.append("circle").attr("r", 8).style("pointer-events", "none");
                 
-                // Render Nama + Pasangan (Poligami Support)
-                node.append("text").attr("dy", -12).attr("x", 0).style("text-anchor", "middle").text(d => {
+                // Teks Nama + Pasangan
+                node.append("text").attr("dy", -15).attr("x", 0).style("text-anchor", "middle").text(d => {
                     return d.data.pasangan ? `${d.data.name} & ${d.data.pasangan}` : d.data.name;
                 });
                 
-                // Render Status Pancakaki Otomatis
-                node.append("text").attr("class", "status").attr("dy", 18).attr("x", 0).style("text-anchor", "middle").text(d => d.data.status);
+                // Teks Status Pancakaki
+                node.append("text").attr("class", "status").attr("dy", 22).attr("x", 0).style("text-anchor", "middle").text(d => d.data.status);
                 
-                svg.call(zoom.transform, d3.zoomIdentity.translate(container.clientWidth/4, container.clientHeight/2));
+                // Pusatkan kamera di tengah atas
+                svg.call(zoom.transform, d3.zoomIdentity.translate(container.clientWidth / 2, 50));
             } catch (error) {
                 console.log("Menyesuaikan struktur silsilah...", error);
             }
         });
 
-        // Simpan Data Baru
+        // Form Submit Tambah
         formTambah.addEventListener('submit', (e) => {
             e.preventDefault();
             const nama = document.getElementById('input-nama').value;
@@ -353,28 +329,22 @@
             const parentId = document.getElementById('select-parent').value;
 
             push(wargaRef, {
-                parentId: parentId, 
-                name: nama, 
-                pasangan: pasangan,
-                lat: -6.8320 + (Math.random() - 0.5) * 0.005, 
-                lng: 108.2140 + (Math.random() - 0.5) * 0.005
+                parentId: parentId, name: nama, pasangan: pasangan,
+                lat: -6.8320 + (Math.random() - 0.5) * 0.005, lng: 108.2140 + (Math.random() - 0.5) * 0.005
             }).then(() => {
                 modalTambah.classList.add('hidden'); modalTambah.classList.remove('flex');
                 formTambah.reset();
             });
         });
 
-        // Update Data Edit
+        // Form Submit Edit
         formEdit.addEventListener('submit', (e) => {
             e.preventDefault();
             const dbKey = document.getElementById('edit-dbkey').value;
             const namaBaru = document.getElementById('edit-nama').value;
             const pasanganBaru = document.getElementById('edit-pasangan').value;
 
-            update(ref(db, 'silsilah_desa_v2/' + dbKey), { 
-                name: namaBaru, 
-                pasangan: pasanganBaru 
-            }).then(() => {
+            update(ref(db, 'silsilah_desa_v2/' + dbKey), { name: namaBaru, pasangan: pasanganBaru }).then(() => {
                 modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex');
             });
         });
