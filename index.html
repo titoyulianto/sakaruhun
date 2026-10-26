@@ -120,14 +120,20 @@
                     <label class="text-xs font-bold text-slate-600">Orang Tua Kandung (Jalur Silsilah ke Atas)</label>
                     <select id="select-parent" required class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                         <option value="">-- Pilih Orang Tua --</option>
-                        <option value="">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option>
+                        <option value="akar_utama">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option>
+                        <option value="unknown">❓ Belum Diketahui (Bisa Diedit Nanti)</option>
+                        <option value="manual">✍️ Ketik Manual (Nama Baru)</option>
                     </select>
+                    <input type="text" id="input-parent-manual" placeholder="Ketik nama orang tua secara manual..." class="hidden w-full mt-2 bg-white border border-emerald-300 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-inner">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-slate-600">Menikah dengan Pasangan (Opsional)</label>
                     <select id="select-spouse" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                         <option value="">-- Belum Menikah / Lajang --</option>
+                        <option value="unknown">❓ Belum Diketahui / Misterius</option>
+                        <option value="manual">✍️ Ketik Manual (Nama Baru)</option>
                     </select>
+                    <input type="text" id="input-spouse-manual" placeholder="Ketik nama pasangan secara manual..." class="hidden w-full mt-2 bg-white border border-emerald-300 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-inner">
                 </div>
                 <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm hover:bg-emerald-700 transition-colors shadow-md mt-2">
                     Simpan Individu
@@ -161,7 +167,10 @@
                     <label class="text-xs font-bold text-slate-600">Pasangan (Suami / Istri)</label>
                     <select id="edit-spouse" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
                         <option value="">-- Belum Menikah / Lajang --</option>
+                        <option value="unknown">❓ Belum Diketahui / Misterius</option>
+                        <option value="manual">✍️ Ketik Manual (Nama Baru)</option>
                     </select>
+                    <input type="text" id="edit-spouse-manual" placeholder="Ketik nama pasangan manual..." class="hidden w-full mt-2 bg-white border border-amber-300 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-inner">
                 </div>
                 
                 <div class="flex gap-2 pt-2">
@@ -204,7 +213,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const wargaRef = ref(db, 'silsilah_desa_v3'); // Menggunakan v3 untuk struktur individu mandiri
+        const wargaRef = ref(db, 'silsilah_desa_v3');
 
         // Peta Leaflet
         const map = L.map('map').setView([-6.8320, 108.2140], 15);
@@ -222,7 +231,7 @@
         // Kalkulator Otomatis Pancakaki
         function hitungPancakakiOtomatis(nodeKey, allDataMap) {
             let node = allDataMap[nodeKey];
-            if (!node || !node.parentId || node.parentId === "") return "Karuhun Utama";
+            if (!node || !node.parentId || node.parentId === "" || node.parentId === "akar_utama") return "Karuhun Utama";
             let generationCount = 1;
             let currentParentId = node.parentId;
             while (currentParentId && allDataMap[currentParentId]) {
@@ -237,7 +246,9 @@
         const modalTambah = document.getElementById('modal-tambah');
         const formTambah = document.getElementById('form-tambah');
         const selectParent = document.getElementById('select-parent');
+        const inputParentManual = document.getElementById('input-parent-manual');
         const selectSpouse = document.getElementById('select-spouse');
+        const inputSpouseManual = document.getElementById('input-spouse-manual');
         
         document.getElementById('btn-tambah-data').addEventListener('click', () => { modalTambah.classList.remove('hidden'); modalTambah.classList.add('flex'); });
         document.getElementById('btn-close-modal').addEventListener('click', () => { modalTambah.classList.add('hidden'); modalTambah.classList.remove('flex'); });
@@ -246,7 +257,39 @@
         const formEdit = document.getElementById('form-edit');
         const editGender = document.getElementById('edit-gender');
         const editSpouse = document.getElementById('edit-spouse');
+        const editSpouseManual = document.getElementById('edit-spouse-manual');
         document.getElementById('btn-close-edit').addEventListener('click', () => { modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex'); });
+
+        // Logika Tampil/Sembunyikan Input Manual
+        selectParent.addEventListener('change', (e) => {
+            if (e.target.value === 'manual') {
+                inputParentManual.classList.remove('hidden');
+                inputParentManual.setAttribute('required', 'true');
+            } else {
+                inputParentManual.classList.add('hidden');
+                inputParentManual.removeAttribute('required');
+            }
+        });
+
+        selectSpouse.addEventListener('change', (e) => {
+            if (e.target.value === 'manual') {
+                inputSpouseManual.classList.remove('hidden');
+                inputSpouseManual.setAttribute('required', 'true');
+            } else {
+                inputSpouseManual.classList.add('hidden');
+                inputSpouseManual.removeAttribute('required');
+            }
+        });
+
+        editSpouse.addEventListener('change', (e) => {
+            if (e.target.value === 'manual') {
+                editSpouseManual.classList.remove('hidden');
+                editSpouseManual.setAttribute('required', 'true');
+            } else {
+                editSpouseManual.classList.add('hidden');
+                editSpouseManual.removeAttribute('required');
+            }
+        });
 
         document.getElementById('btn-hapus-data').addEventListener('click', () => {
             const dbKey = document.getElementById('edit-dbkey').value;
@@ -285,13 +328,26 @@
             document.getElementById('stats-warga').innerText = `${dataGlobal.length} Warga`;
 
             // Populate Dropdowns
-            let optionsHTML = '<option value="">-- Pilih Individu --</option>';
+            let optionsHTML = '';
             dataGlobal.forEach(w => {
                 optionsHTML += `<option value="${w.dbKey}">${w.name} (${w.gender === 'L' ? 'Laki-laki' : 'Perempuan'})</option>`;
             });
-            selectParent.innerHTML = '<option value="">-- Pilih Orang Tua --</option><option value="">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option>' + optionsHTML;
-            selectSpouse.innerHTML = '<option value="">-- Belum Menikah / Lajang --</option>' + optionsHTML;
-            editSpouse.innerHTML = '<option value="">-- Belum Menikah / Lajang --</option>' + optionsHTML;
+
+            selectParent.innerHTML = `
+                <option value="">-- Pilih Orang Tua --</option>
+                <option value="akar_utama">🌟 JADIKAN LELUHUR UTAMA (GARIS BARU) 🌟</option>
+                <option value="unknown">❓ Belum Diketahui (Bisa Diedit Nanti)</option>
+                <option value="manual">✍️ Ketik Manual (Nama Baru)</option>
+            ` + optionsHTML;
+
+            const spouseOptionsHTML = `
+                <option value="">-- Belum Menikah / Lajang --</option>
+                <option value="unknown">❓ Belum Diketahui / Misterius</option>
+                <option value="manual">✍️ Ketik Manual (Nama Baru)</option>
+            ` + optionsHTML;
+
+            selectSpouse.innerHTML = spouseOptionsHTML;
+            editSpouse.innerHTML = spouseOptionsHTML;
 
             layerGroup.clearLayers();
             dataGlobal.forEach(w => {
@@ -312,7 +368,6 @@
                 g.selectAll(".link").data(root.links()).enter().append("path").attr("class", "link")
                     .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y));
 
-                // Map node coordinates for spouse linking
                 let nodeMap = {};
                 root.descendants().forEach(d => { nodeMap[d.data.dbKey] = d; });
 
@@ -345,7 +400,15 @@
                         document.getElementById('edit-dbkey').value = d.data.dbKey;
                         document.getElementById('edit-nama').value = d.data.name;
                         editGender.value = d.data.gender || 'L';
-                        editSpouse.value = d.data.spouseId || '';
+                        
+                        if (d.data.spouseId && dataMap[d.data.spouseId]) {
+                            editSpouse.value = d.data.spouseId;
+                            editSpouseManual.classList.add('hidden');
+                        } else {
+                            editSpouse.value = "";
+                            editSpouseManual.classList.add('hidden');
+                        }
+
                         modalEdit.classList.remove('hidden');
                         modalEdit.classList.add('flex');
                     });
@@ -392,41 +455,102 @@
             }
         });
 
-        // Form Submit Tambah
-        formTambah.addEventListener('submit', (e) => {
+        // Form Submit Tambah (Dengan dukungan parent & spouse manual)
+        formTambah.addEventListener('submit', async (e) => {
             e.preventDefault();
             const nama = document.getElementById('input-nama').value;
             const gender = document.getElementById('select-gender').value;
-            const parentId = document.getElementById('select-parent').value;
-            const spouseId = selectSpouse.value;
+            
+            let parentId = selectParent.value;
+            if (parentId === 'unknown') {
+                parentId = 'akar_utama'; // atau node placeholder "Belum Diketahui"
+            } else if (parentId === 'manual') {
+                const manualParentName = inputParentManual.value;
+                if (manualParentName) {
+                    const newParentRef = push(wargaRef, {
+                        parentId: 'akar_utama',
+                        name: manualParentName,
+                        gender: gender === 'L' ? 'P' : 'L', // Perkiraan gender lawan atau netral
+                        spouseId: '',
+                        lat: -6.8320 + (Math.random() - 0.5) * 0.005,
+                        lng: 108.2140 + (Math.random() - 0.5) * 0.005
+                    });
+                    parentId = newParentRef.key;
+                }
+            }
 
-            push(wargaRef, {
-                parentId: parentId, 
+            let spouseId = selectSpouse.value;
+            if (spouseId === 'unknown') {
+                // Buat node pasangan belum diketahui jika perlu, atau kosongkan
+                spouseId = '';
+            } else if (spouseId === 'manual') {
+                const manualSpouseName = inputSpouseManual.value;
+                if (manualSpouseName) {
+                    const newSpouseRef = push(wargaRef, {
+                        parentId: 'akar_utama',
+                        name: manualSpouseName,
+                        gender: gender === 'L' ? 'P' : 'L',
+                        spouseId: '',
+                        lat: -6.8320 + (Math.random() - 0.5) * 0.005,
+                        lng: 108.2140 + (Math.random() - 0.5) * 0.005
+                    });
+                    spouseId = newSpouseRef.key;
+                }
+            }
+
+            // Simpan Data Utama
+            const newWargaRef = push(wargaRef, {
+                parentId: parentId || 'akar_utama', 
                 name: nama, 
                 gender: gender,
-                spouseId: spouseId,
+                spouseId: spouseId || '',
                 lat: -6.8320 + (Math.random() - 0.5) * 0.005, 
                 lng: 108.2140 + (Math.random() - 0.5) * 0.005
-            }).then(() => {
-                modalTambah.classList.add('hidden'); modalTambah.classList.remove('flex');
-                formTambah.reset();
             });
+
+            // Jika ada pasangan, update balik pasangan tersebut agar saling terhubung (Two-way spouse link)
+            if (spouseId && spouseId !== 'unknown') {
+                update(ref(db, 'silsilah_desa_v3/' + spouseId), {
+                    spouseId: newWargaRef.key
+                });
+            }
+
+            modalTambah.classList.add('hidden'); modalTambah.classList.remove('flex');
+            formTambah.reset();
+            inputParentManual.classList.add('hidden');
+            inputSpouseManual.classList.add('hidden');
         });
 
         // Form Submit Edit
-        formEdit.addEventListener('submit', (e) => {
+        formEdit.addEventListener('submit', async (e) => {
             e.preventDefault();
             const dbKey = document.getElementById('edit-dbkey').value;
             const namaBaru = document.getElementById('edit-nama').value;
             const genderBaru = editGender.value;
-            const spouseBaru = editSpouse.value;
+            
+            let spouseBaru = editSpouse.value;
+            if (spouseBaru === 'manual') {
+                const manualSpouseName = editSpouseManual.value;
+                if (manualSpouseName) {
+                    const newSpouseRef = push(wargaRef, {
+                        parentId: 'akar_utama',
+                        name: manualSpouseName,
+                        gender: genderBaru === 'L' ? 'P' : 'L',
+                        spouseId: dbKey,
+                        lat: -6.8320 + (Math.random() - 0.5) * 0.005,
+                        lng: 108.2140 + (Math.random() - 0.5) * 0.005
+                    });
+                    spouseBaru = newSpouseRef.key;
+                }
+            }
 
             update(ref(db, 'silsilah_desa_v3/' + dbKey), { 
                 name: namaBaru, 
                 gender: genderBaru,
-                spouseId: spouseBaru 
+                spouseId: spouseBaru === 'unknown' ? '' : spouseBaru 
             }).then(() => {
                 modalEdit.classList.add('hidden'); modalEdit.classList.remove('flex');
+                editSpouseManual.classList.add('hidden');
             });
         });
     </script>
