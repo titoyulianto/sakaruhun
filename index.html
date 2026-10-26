@@ -110,19 +110,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         </section>
     </main>
 
-    <!-- MODAL TAMBAH DATA BIKIN BARU -->
+    <!-- MODAL TAMBAH DATA -->
     <div id="modal-tambah" class="modal">
         <div class="modal-card relative border-t-4 border-emerald-500">
             <button id="btn-close-modal-tambah" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
-            <h3 id="modal-tambah-title" class="font-bold text-lg mb-4 text-slate-800">Tambah Individu Baru</h3>
+            <h3 id="modal-tambah-title" class="font-bold text-lg mb-4 text-slate-800">Tambah Data Baru</h3>
 
             <form id="form-tambah" class="space-y-4">
                 <input type="hidden" id="tambah-context" value="MAIN">
                 <input type="hidden" id="tambah-target" value="">
-
-                <div class="bg-amber-50 border border-amber-200 text-amber-700 text-[11px] p-3 rounded-xl font-semibold">
-                    <i class="fas fa-info-circle mr-1"></i> Form ini untuk <strong>menciptakan orang baru</strong>. Jika orangnya sudah ada di silsilah, gunakan menu <i>"Pautkan"</i> di jendela Kelola.
-                </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-600">Nama Lengkap Orang Baru</label>
@@ -144,7 +140,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         </div>
     </div>
 
-    <!-- MODAL KELOLA & PAUTKAN (EDIT) DATA -->
+    <!-- MODAL KELOLA & MULTI-PASANGAN (EDIT) DATA -->
     <div id="modal-edit" class="modal">
         <div class="modal-card relative border-t-4 border-amber-500">
             <button id="btn-close-modal-edit" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
@@ -170,17 +166,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     <label class="block text-xs font-bold text-slate-800"><i class="fas fa-link text-blue-500 mr-1"></i> PAUTKAN KE ORANG TUA (JIKA SUDAH ADA)</label>
                     <select id="edit-parent" class="w-full bg-blue-50 border border-blue-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
                 </div>
-                
+
+                <!-- DAFTAR PASANGAN (MULTI-SPOUSE SUPPORT) -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-800"><i class="fas fa-link text-pink-500 mr-1"></i> PAUTKAN KE PASANGAN (JIKA SUDAH ADA)</label>
-                    <select id="edit-spouse" class="w-full bg-pink-50 border border-pink-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"></select>
+                    <label class="block text-xs font-bold text-slate-800 mb-1"><i class="fas fa-heart text-pink-500 mr-1"></i> DAFTAR PASANGAN / ISTRI-SUAMI</label>
+                    <div id="spouse-list-container" class="space-y-2 bg-pink-50/50 border border-pink-100 rounded-xl p-3 max-h-40 overflow-y-auto">
+                        <!-- Rendered via JS -->
+                    </div>
                 </div>
 
                 <div class="flex gap-2 pt-2">
                     <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl p-3 font-bold text-sm shadow-md transition-colors">
                         <i class="fas fa-save mr-1"></i> Update Data & Relasi
                     </button>
-                    <button id="btn-hapus-data" type="button" class="bg-red-100 hover:bg-red-200 text-red-600 rounded-xl px-5 transition-colors font-bold" title="Hapus Permanen">
+                    <button id="btn-hapus-data" type="button" class="bg-red-100 hover:bg-red-200 text-red-600 rounded-xl px-4 transition-colors font-bold" title="Hapus Permanen">
                         <i class="fas fa-trash-alt"></i> Hapus
                     </button>
                 </div>
@@ -268,7 +267,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             setTimeout(() => $("input-nama").focus(), 100);
         }
 
-        // FUNGSI ISI DROPDOWN PAUTAN SECARA DINAMIS
         function fillSelectEdit(sel, selectedKey) {
             const currentKey = $("edit-dbkey").value;
             let options = '<option value="">-- Kosong / Tidak Dipautkan --</option>';
@@ -281,6 +279,33 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             if (selectedKey) sel.value = selectedKey;
         }
 
+        // RENDER CHECKBOX ATAU LIST PASANGAN DI MODAL EDIT (MULTI-SPOUSE)
+        function renderSpouseCheckboxes(currentPersonKey) {
+            const container = $("spouse-list-container");
+            const person = dataMap[currentPersonKey];
+            const currentSpouses = person?.spouseIds || (person?.spouseId ? [person.spouseId] : []);
+            
+            let html = '';
+            let availablePeople = dataGlobal.filter(p => p.dbKey !== currentPersonKey);
+            
+            if (availablePeople.length === 0) {
+                container.innerHTML = '<span class="text-[11px] text-slate-400">Belum ada warga lain di database.</span>';
+                return;
+            }
+
+            availablePeople.forEach(p => {
+                const isChecked = currentSpouses.includes(p.dbKey) ? 'checked' : '';
+                html += `
+                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white p-2 rounded-lg border border-pink-100 hover:bg-pink-50/50 cursor-pointer">
+                        <input type="checkbox" name="spouseCheckbox" value="${p.dbKey}" ${isChecked} class="w-4 h-4 text-pink-600 rounded border-slate-300 focus:ring-pink-500">
+                        <span>${escapeHtml(p.name)} (${p.gender === 'L' ? 'L' : 'P'})</span>
+                    </label>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // NORMALISASI DATA (Mendukung spouseIds Array & konversi legacy spouseId)
         function normalizeData(raw) {
             const result = {};
             Object.entries(raw || {}).forEach(([key, v]) => {
@@ -288,12 +313,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 let mx = (v.manualX != null && v.manualX !== "" && !isNaN(v.manualX)) ? Number(v.manualX) : null;
                 let my = (v.manualY != null && v.manualY !== "" && !isNaN(v.manualY)) ? Number(v.manualY) : null;
 
+                let sIds = [];
+                if (Array.isArray(v.spouseIds)) {
+                    sIds = v.spouseIds;
+                } else if (v.spouseId) {
+                    sIds = [v.spouseId];
+                }
+
                 result[key] = {
                     dbKey: key,
                     name: String(v.name || "Tanpa Nama"),
                     gender: v.gender === "P" ? "P" : "L",
                     parentId: v.parentId || "",
-                    spouseId: v.spouseId || "",
+                    spouseIds: sIds,
                     lat: Number(v.lat) || -6.832,
                     lng: Number(v.lng) || 108.214,
                     manualX: mx,
@@ -302,7 +334,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             });
             Object.values(result).forEach(p => {
                 if (p.parentId && !result[p.parentId]) { p.parentId = ""; }
-                if (p.spouseId && !result[p.spouseId]) { p.spouseId = ""; }
             });
             return result;
         }
@@ -354,29 +385,30 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 let safeDataGlobal = dataGlobal.map(d => ({...d}));
                 const byIdGlobal = new Map(safeDataGlobal.map(p => [p.dbKey, p]));
                 
+                // MULTI-SPOUSE MAPPING
                 const spouseOf = new Map();
                 const isSpouseNode = new Set();
                 const renderedPairs = new Set();
                 
                 safeDataGlobal.forEach(p => {
-                    if (p.spouseId) {
+                    const sList = p.spouseIds || [];
+                    sList.forEach(sId => {
+                        if (!byIdGlobal.has(sId)) return;
                         if(!spouseOf.has(p.dbKey)) spouseOf.set(p.dbKey, []);
-                        if(!spouseOf.has(p.spouseId)) spouseOf.set(p.spouseId, []);
-                        if(!spouseOf.get(p.dbKey).includes(p.spouseId)) spouseOf.get(p.dbKey).push(p.spouseId);
-                        if(!spouseOf.get(p.spouseId).includes(p.dbKey)) spouseOf.get(p.spouseId).push(p.dbKey);
+                        if(!spouseOf.get(p.dbKey).includes(sId)) spouseOf.get(p.dbKey).push(sId);
 
-                        const pairKey = [p.dbKey, p.spouseId].sort().join("::");
+                        const pairKey = [p.dbKey, sId].sort().join("::");
                         if (!renderedPairs.has(pairKey)) {
                             renderedPairs.add(pairKey);
                             const p1 = byIdGlobal.get(p.dbKey);
-                            const p2 = byIdGlobal.get(p.spouseId);
+                            const p2 = byIdGlobal.get(sId);
                             if (p1 && p2) {
                                 if (p1.parentId && !p2.parentId) isSpouseNode.add(p2.dbKey);
                                 else if (p2.parentId && !p1.parentId) isSpouseNode.add(p1.dbKey);
                                 else isSpouseNode.add(p2.dbKey); 
                             }
                         }
-                    }
+                    });
                 });
 
                 let primary = safeDataGlobal.filter(p => !isSpouseNode.has(p.dbKey));
@@ -414,7 +446,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 }
 
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(primary);
-                d3.tree().nodeSize([280, 180])(root);
+                d3.tree().nodeSize([300, 180])(root);
                 const nodes = root.descendants();
                 
                 nodes.forEach(n => {
@@ -422,58 +454,47 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     if (n.data.manualY !== null && n.data.manualY !== undefined) n.y = n.data.manualY;
                 });
 
+                // RENDER MULTI-SPOUSE POSITIONS (BERDERET KE SAMPING/BAWAH)
                 const spousePositions = [];
                 const pairsRendered = new Set();
                 nodes.forEach(n => {
                     if(n.data.isDummy) return;
                     const spIds = spouseOf.get(n.data.dbKey) || [];
-                    spIds.forEach(id => {
+                    spIds.forEach((id, idx) => {
                         const pairKey = [n.data.dbKey, id].sort().join("::");
                         if (pairsRendered.has(pairKey)) return;
                         pairsRendered.add(pairKey);
                         
                         const person = byIdGlobal.get(id);
                         if(person) {
-                            let sx = n.x + 150, sy = n.y; 
+                            // Jika istri lebih dari satu, posisikan vertikal di sebelah kanan suami
+                            let sx = n.x + 160;
+                            let sy = n.y + (idx * 55); 
                             if (person.manualX !== null && person.manualX !== undefined) sx = person.manualX;
                             if (person.manualY !== null && person.manualY !== undefined) sy = person.manualY;
-                            spousePositions.push({ data: { ...person, status: "Pasangan" }, source: n, x: sx, y: sy, isSpouse: true });
+                            spousePositions.push({ data: { ...person, status: `Istri / Suami Ke-${idx+1}` }, source: n, x: sx, y: sy, isSpouse: true });
                         }
                     });
                 });
 
-                // =========================================================================
-                // LOGIKA CERDAS: GRAVITASI ORANG TUA DARI SEORANG PASANGAN (SPOUSE)
-                // =========================================================================
+                // GRAVITASI ORANG TUA DARI SEORANG PASANGAN
                 const mainRootKey = roots.length > 0 ? roots[0].dbKey : null;
                 if (root.children) {
                     root.children.forEach(subRoot => {
                         const subNodes = subRoot.descendants();
                         const hasMainRoot = subNodes.some(n => n.data.dbKey === mainRootKey);
-                        
-                        // Jika ini adalah pohon akar terpisah (bukan silsilah utama)
                         if (!hasMainRoot) {
                             let connectedSpouse = null;
                             let connectingNode = null;
-                            
-                            // Cari apakah ada orang di sub-tree ini yang jadi Bapak/Ibu dari seorang Istri/Suami
                             for (let n of subNodes) {
                                 const sp = spousePositions.find(s => s.data.parentId === n.data.dbKey);
-                                if (sp) {
-                                    connectedSpouse = sp;
-                                    connectingNode = n;
-                                    break;
-                                }
+                                if (sp) { connectedSpouse = sp; connectingNode = n; break; }
                             }
-                            
-                            // Jika KETEMU! Geser seluruh sub-tree ini agar melayang di atas istri/suami tersebut
                             if (connectedSpouse && connectingNode) {
                                 const targetX = connectedSpouse.x;
-                                const targetY = connectedSpouse.y - 180; // 1 level generasi di atas
-                                
+                                const targetY = connectedSpouse.y - 180;
                                 const dx = targetX - connectingNode.x;
                                 const dy = targetY - connectingNode.y;
-                                
                                 subNodes.forEach(n => {
                                     if (n.data.manualX == null) n.x += dx;
                                     if (n.data.manualY == null) n.y += dy;
@@ -504,14 +525,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         return `M${l.source.x},${l.source.y} V${(l.source.y + l.target.y) / 2} H${l.target.x} V${l.target.y}`;
                     });
 
-                    g.selectAll(".spouse-link").attr("d", sp => `M${sp.source.x},${sp.source.y} L${sp.x},${sp.y}`);
+                    g.selectAll(".spouse-link").attr("d", sp => `M${sp.source.x+17},${sp.source.y} L${sp.x-17},${sp.y}`);
                     g.selectAll(".add-child-btn").attr("transform", sp => `translate(${(sp.source.x + sp.x) / 2}, ${(sp.source.y + sp.y) / 2})`);
                 }
 
                 const validLinks = root.links().filter(l => !l.source.data.isDummy);
                 g.selectAll(".link").data(validLinks).join("path").attr("class", "link");
                 
-                // GAMBAR GARIS KHUSUS: Hubungkan Pasangan dengan Orang Tuanya (Jika Ada)
                 const extraLinks = [];
                 spousePositions.forEach(sp => {
                     if (sp.data.parentId && sp.data.parentId !== "") {
@@ -523,6 +543,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
                 g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link");
 
+                // TOMBOL PLUS DI TENGAH PASANGAN
                 const addChildBtn = g.selectAll(".add-child-btn").data(spousePositions).join("g")
                     .attr("class", "add-child-btn")
                     .style("cursor", "pointer")
@@ -644,9 +665,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     $("edit-nama").value = d.data.name;
                     $("edit-gender").value = d.data.gender;
                     
-                    // OTOMATIS ISI DROPDOWN PAUTAN UNTUK ORANG INI
                     fillSelectEdit($("edit-parent"), d.data.parentId);
-                    fillSelectEdit($("edit-spouse"), d.data.spouseId);
+                    renderSpouseCheckboxes(d.data.dbKey);
                     
                     showModal(modalEdit);
                 }).call(dragBehavior);
@@ -693,19 +713,22 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const targetKey = $("tambah-target").value;
                 
                 let parentId = "";
-                let spouseId = "";
+                let spouseIds = [];
 
                 if (ctx === 'ADD_CHILD') { parentId = targetKey; } 
-                else if (ctx === 'ADD_SPOUSE') { spouseId = targetKey; } 
+                else if (ctx === 'ADD_SPOUSE') { spouseIds = [targetKey]; } 
                 
                 const newRef = push(wargaRef);
-                await set(newRef, { name, gender, parentId, spouseId, ...randomCoords() });
+                await set(newRef, { name, gender, parentId, spouseIds, ...randomCoords() });
                 
                 if (ctx === 'ADD_PARENT' && targetKey) {
                     await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: newRef.key, manualX: null, manualY: null });
                 }
                 if (ctx === 'ADD_SPOUSE' && targetKey) {
-                    await update(ref(db, `${DB_PATH}/${targetKey}`), { spouseId: newRef.key });
+                    const targetPerson = dataMap[targetKey];
+                    let currentSpouses = targetPerson?.spouseIds || (targetPerson?.spouseId ? [targetPerson.spouseId] : []);
+                    if (!currentSpouses.includes(newRef.key)) currentSpouses.push(newRef.key);
+                    await update(ref(db, `${DB_PATH}/${targetKey}`), { spouseIds: currentSpouses });
                 }
                 
                 hideModal(modalTambah);
@@ -722,7 +745,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const name = $("edit-nama").value.trim();
                 const gender = $("edit-gender").value;
                 const parentId = $("edit-parent").value;
-                const spouseId = $("edit-spouse").value;
+                
+                // Ambil daftar checkbox pasangan yang dicentang
+                const checkboxes = document.querySelectorAll('input[name="spouseCheckbox"]:checked');
+                const selectedSpouseIds = Array.from(checkboxes).map(cb => cb.value);
                 
                 if (!key || !name) throw new Error("Nama wajib diisi.");
 
@@ -737,20 +763,36 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 }
 
                 const old = dataMap[key];
-                const updates = { name, gender, parentId, spouseId };
+                const updates = { name, gender, parentId, spouseIds: selectedSpouseIds };
 
-                if (old.parentId !== parentId || old.spouseId !== spouseId) {
+                if (old.parentId !== parentId || JSON.stringify(old.spouseIds) !== JSON.stringify(selectedSpouseIds)) {
                     updates.manualX = null;
                     updates.manualY = null;
                 }
 
                 await update(ref(db, `${DB_PATH}/${key}`), updates);
 
-                if (old?.spouseId && old.spouseId !== spouseId && dataMap[old.spouseId]) {
-                    await update(ref(db, `${DB_PATH}/${old.spouseId}`), { spouseId: "" });
+                // Sinkronisasi Multi-Pasangan Dua Arah
+                const oldSpouses = old.spouseIds || [];
+                // Putus relasi untuk pasangan yang di-uncheck
+                for (let oldSId of oldSpouses) {
+                    if (!selectedSpouseIds.includes(oldSId) && dataMap[oldSId]) {
+                        let spData = dataMap[oldSId];
+                        let spList = spData.spouseIds || [];
+                        spList = spList.filter(id => id !== key);
+                        await update(ref(db, `${DB_PATH}/${oldSId}`), { spouseIds: spList });
+                    }
                 }
-                if (spouseId && dataMap[spouseId]) {
-                    await update(ref(db, `${DB_PATH}/${spouseId}`), { spouseId: key });
+                // Sambungkan relasi untuk pasangan yang baru dicentang
+                for (let newSId of selectedSpouseIds) {
+                    if (dataMap[newSId]) {
+                        let spData = dataMap[newSId];
+                        let spList = spData.spouseIds || [];
+                        if (!spList.includes(key)) {
+                            spList.push(key);
+                            await update(ref(db, `${DB_PATH}/${newSId}`), { spouseIds: spList });
+                        }
+                    }
                 }
 
                 hideModal(modalEdit);
@@ -761,7 +803,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         async function deletePerson() {
             const key = $("edit-dbkey").value;
             if (!key) return;
-            if (!confirm("Hapus individu ini? Anak-anak akan diputuskan dari orang tua ini.")) return;
+            if (!confirm("Hapus individu ini? Relasi anak dan pasangan akan diputuskan.")) return;
             try {
                 const updates = {};
                 dataGlobal.filter(p => p.parentId === key).forEach(p => { 
@@ -769,9 +811,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     updates[`${DB_PATH}/${p.dbKey}/manualX`] = null; 
                     updates[`${DB_PATH}/${p.dbKey}/manualY`] = null;
                 });
-                const person = dataMap[key];
-                if (person?.spouseId && dataMap[person.spouseId]) updates[`${DB_PATH}/${person.spouseId}/spouseId`] = "";
                 
+                // Putus dari semua pasangan
+                dataGlobal.forEach(p => {
+                    if (p.spouseIds && p.spouseIds.includes(key)) {
+                        let newList = p.spouseIds.filter(id => id !== key);
+                        updates[`${DB_PATH}/${p.dbKey}/spouseIds`] = newList;
+                    }
+                });
+
                 if (Object.keys(updates).length) await update(ref(db), updates);
                 await remove(ref(db, `${DB_PATH}/${key}`));
                 hideModal(modalEdit);
@@ -850,7 +898,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 onValue(wargaRef, async snapshot => {
                     try {
                         if (!snapshot.exists()) {
-                            await push(wargaRef, { name: "Pangeran Kertadiningrat", gender: "L", parentId: "", spouseId: "", lat: -6.832, lng: 108.214 });
+                            await push(wargaRef, { name: "Pangeran Kertadiningrat", gender: "L", parentId: "", spouseIds: [], lat: -6.832, lng: 108.214 });
                             return;
                         }
                         dataMap = normalizeData(snapshot.val());
