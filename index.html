@@ -16,11 +16,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
 .bg-pattern{background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.12'%3E%3Cpath d='M30 0v60M0 30h60'/%3E%3C/g%3E%3C/svg%3E")}
 #tree-container{height:420px;overflow:hidden;position:relative;touch-action:none}
 .node{cursor:pointer; pointer-events:all;}
-.node circle{stroke:#fff;stroke-width:2; pointer-events:all;}
+.node circle{stroke:#fff;stroke-width:2; pointer-events:all; transition:stroke 0.2s;}
 .node.laki circle{fill:#3b82f6}
 .node.perempuan circle{fill:#ec4899}
-.node:hover circle{stroke:#f59e0b;stroke-width:4; transform:scale(1.2);}
-.node text{font-size:11px;font-weight:800;fill:#1e293b;pointer-events:none}
+.node:hover circle{stroke:#f59e0b;stroke-width:4;}
+.node text{font-size:11px;font-weight:800;fill:#1e293b;pointer-events:none; user-select:none;}
 .node text.status{font-size:9px;font-weight:600;fill:#059669}
 .link{fill:none;stroke:#cbd5e1;stroke-width:2;pointer-events:none}
 .spouse-link{fill:none;stroke:#ec4899;stroke-width:2;stroke-dasharray:4 4;pointer-events:none}
@@ -65,15 +65,21 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 <i class="fas fa-user-plus text-2xl"></i>
                 <div class="text-center">
                     <strong class="block text-xs">Tambah Data</strong>
-                    <span class="block text-[9px] text-purple-200 mt-0.5">Isi silsilah keluarga</span>
+                    <span class="block text-[9px] text-purple-200 mt-0.5">Isi silsilah dari awal</span>
                 </div>
             </button>
         </div>
 
         <section class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 relative z-40">
-            <h2 class="text-sm font-bold mb-3 flex items-center text-slate-800">
-                <i class="fas fa-sitemap text-emerald-600 mr-2"></i> Pohon Silsilah Mandiri
-            </h2>
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-sm font-bold text-slate-800"><i class="fas fa-sitemap text-emerald-600 mr-1.5"></i> Pohon Silsilah</h2>
+                
+                <!-- TOMBOL MODE GESER / LOCK -->
+                <button id="btn-toggle-drag" class="text-[9px] text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full font-bold border border-slate-200 transition-colors">
+                    <i class="fas fa-lock"></i> Posisi Terkunci
+                </button>
+            </div>
+            
             <div id="tree-container" class="rounded-2xl border border-slate-200 bg-slate-50"></div>
             <p class="text-[10px] text-center text-emerald-600 mt-3 font-bold">
                 <i class="fas fa-hand-pointer mr-1"></i> Sentuh nama untuk kelola, sentuh (+) di tengah garis untuk tambah anak.
@@ -95,7 +101,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             <h3 id="modal-tambah-title" class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-user-plus text-emerald-600 mr-2"></i>Tambah Individu</h3>
 
             <form id="form-tambah" class="space-y-4">
-                <!-- Data Konteks Tersembunyi (Dikontrol JS) -->
+                <!-- Data Konteks Tersembunyi -->
                 <input type="hidden" id="tambah-context" value="MAIN">
                 <input type="hidden" id="tambah-target" value="">
 
@@ -112,15 +118,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     </select>
                 </div>
 
-                <!-- Bagian ini akan DISEMBUNYIKAN OTOMATIS jika context = Tambah Anak / Tambah Suami -->
+                <!-- Bagian ini HANYA MUNCUL kalau nambah dari tombol ungu "Tambah Data" (Manual Full) -->
                 <div id="wrapper-parent-tambah" class="hidden">
-                    <label class="block text-xs font-bold text-slate-600">Orang Tua Kandung (Opsional)</label>
+                    <label class="block text-xs font-bold text-slate-600 mt-2 border-t pt-3">Orang Tua (Khusus Manual)</label>
                     <select id="select-parent" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
                     <input id="input-parent-manual" placeholder="Ketik nama orang tuanya..." class="hidden w-full bg-white border border-emerald-300 rounded-xl p-3 mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
-
                 <div id="wrapper-spouse-tambah" class="hidden">
-                    <label class="block text-xs font-bold text-slate-600">Pasangan (Opsional)</label>
+                    <label class="block text-xs font-bold text-slate-600">Pasangan (Khusus Manual)</label>
                     <select id="select-spouse" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
                     <input id="input-spouse-manual" placeholder="Ketik nama pasangannya..." class="hidden w-full bg-white border border-emerald-300 rounded-xl p-3 mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
@@ -157,7 +162,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
 
                 <div class="flex gap-2 pt-2">
                     <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl p-3 font-bold text-sm shadow-md transition-colors">
-                        <i class="fas fa-save mr-1"></i> Update Data
+                        <i class="fas fa-save mr-1"></i> Update Nama/Gender
                     </button>
                     <button id="btn-hapus-data" type="button" class="bg-red-100 hover:bg-red-200 text-red-600 rounded-xl px-4 transition-colors" title="Hapus Individu Ini">
                         <i class="fas fa-trash-alt"></i>
@@ -205,6 +210,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
         let nodeSelection = null;
         let zoomBehavior = null;
         let treeReady = false;
+        
+        // STATUS MODE GESER
+        let isDragMode = false;
 
         const modalTambah = $("modal-tambah");
         const modalEdit = $("modal-edit");
@@ -224,7 +232,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             if (!active) input.value = "";
         }
 
-        // FUNGSI KHUSUS UNTUK MEMBUKA MODAL TAMBAH SECARA KONTEKSTUAL
+        // FUNGSI MEMBUKA MODAL TAMBAH KONTEKSTUAL
         function openTambahModal(context, targetKey, targetName, targetGender) {
             formTambah.reset();
             $("tambah-context").value = context;
@@ -235,18 +243,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             const title = $("modal-tambah-title");
 
             if (context === 'ADD_CHILD') {
-                title.innerHTML = `<i class="fas fa-child text-emerald-600 mr-2"></i>Tambah Anak dari ${escapeHtml(targetName)}`;
-                // Sembunyikan field Orang Tua & Pasangan biar UX gampang
+                title.innerHTML = `<i class="fas fa-child text-emerald-600 mr-2"></i>Anak dari ${escapeHtml(targetName)}`;
+                // Sembunyikan field relasi
                 wrapperParent.classList.add('hidden');
                 wrapperSpouse.classList.add('hidden');
             } else if (context === 'ADD_SPOUSE') {
-                title.innerHTML = `<i class="fas fa-heart text-pink-500 mr-2"></i>Tambah Pasangan untuk ${escapeHtml(targetName)}`;
+                title.innerHTML = `<i class="fas fa-heart text-pink-500 mr-2"></i>Pasangan untuk ${escapeHtml(targetName)}`;
                 wrapperParent.classList.add('hidden');
                 wrapperSpouse.classList.add('hidden');
-                // Otomatis set gender lawan jenis
                 $("select-gender").value = targetGender === 'L' ? 'P' : 'L';
             } else {
-                title.innerHTML = `<i class="fas fa-user-plus text-emerald-600 mr-2"></i>Tambah Individu`;
+                title.innerHTML = `<i class="fas fa-user-plus text-emerald-600 mr-2"></i>Tambah Data Baru`;
                 wrapperParent.classList.remove('hidden');
                 wrapperSpouse.classList.remove('hidden');
                 fillSelect($("select-parent"), "parent", "akar_utama");
@@ -290,29 +297,31 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     parentId: v.parentId || "",
                     spouseId: v.spouseId || "",
                     lat: Number(v.lat),
-                    lng: Number(v.lng)
+                    lng: Number(v.lng),
+                    manualX: v.manualX !== undefined ? Number(v.manualX) : undefined,
+                    manualY: v.manualY !== undefined ? Number(v.manualY) : undefined
                 };
             });
 
             if (!result.akar_utama) {
                 result.akar_utama = { dbKey: "akar_utama", name: "Pangeran Kertadiningrat", gender: "L", parentId: "", spouseId: "", lat: -6.832, lng: 108.214 };
             }
-
             Object.values(result).forEach(p => {
                 if (p.dbKey === "akar_utama") { p.parentId = ""; return; }
                 if (!p.parentId || p.parentId === "unknown" || !result[p.parentId] || p.parentId === p.dbKey) { p.parentId = "akar_utama"; }
             });
-
             return result;
         }
 
+        // FIX LOGIKA GENERASI: Agar anak "akar_utama" langsung Gen-2
         function statusFor(key) {
             if (key === "akar_utama") return "Karuhun Utama";
             let p = dataMap[key], depth = 1, seen = new Set([key]);
-            while (p && p.parentId && p.parentId !== "akar_utama" && dataMap[p.parentId] && !seen.has(p.parentId)) {
+            while (p && p.parentId && dataMap[p.parentId] && !seen.has(p.parentId)) {
                 seen.add(p.parentId);
                 depth++;
                 p = dataMap[p.parentId];
+                if (p.dbKey === "akar_utama") break; // Stop loop saat capai akar
             }
             const kamus = { 1: "Karuhun Utama", 2: "Bapak / Indung (Gen-2)", 3: "Aki / Nini (Gen-3)", 4: "Buyut (Cicit)", 5: "Bao", 6: "Janggawaréng", 7: "Udeg-udeg", 8: "Gantung-siwur" };
             return kamus[depth] || `Keturunan Gen-${depth}`;
@@ -339,7 +348,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
 
         function renderTree() {
             if (!window.d3) return;
-
             const container = $("tree-container");
             const width = Math.max(container.clientWidth, 320);
             const height = Math.max(container.clientHeight, 300);
@@ -348,7 +356,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 .attr("width", "100%").attr("height", "100%").attr("viewBox", `0 0 ${width} ${height}`);
 
             svg.selectAll("*").remove();
-
             const g = svg.append("g");
             zoomBehavior = d3.zoom().scaleExtent([.15, 2.5]).on("zoom", e => g.attr("transform", e.transform));
             svg.call(zoomBehavior).on("dblclick.zoom", null);
@@ -386,9 +393,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
 
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(records);
                 d3.tree().nodeSize([210, 155])(root);
-
                 const nodes = root.descendants();
                 
+                // Override posisi jika user pernah geser manual & kunci
+                nodes.forEach(n => {
+                    if (n.data.manualX !== undefined) n.x = n.data.manualX;
+                    if (n.data.manualY !== undefined) n.y = n.data.manualY;
+                });
+
                 const spousePositions = [];
                 const renderedPairs = new Set();
 
@@ -404,66 +416,92 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                         renderedPairs.add(pairKey);
                         
                         const person = byId.get(id);
-                        spousePositions.push({ person, source: n, x: n.x + 140, y: n.y });
+                        let sx = n.x + 140;
+                        let sy = n.y;
+                        if (person.manualX !== undefined) sx = person.manualX;
+                        if (person.manualY !== undefined) sy = person.manualY;
+
+                        spousePositions.push({
+                            data: { ...person, status: "Pasangan" },
+                            source: n,
+                            x: sx,
+                            y: sy,
+                            isSpouse: true
+                        });
                     });
                 });
 
-                const links = root.links();
-                g.selectAll(".link").data(links).join("path").attr("class", "link")
-                    .attr("d", d => {
-                        let startX = d.source.x;
-                        let startY = d.source.y;
-                        
-                        const spouseData = spousePositions.find(sp => sp.source.data.dbKey === d.source.data.dbKey || sp.person.dbKey === d.source.data.dbKey);
+                const drawNodes = [];
+                nodes.forEach(n => { n.data.status = statusFor(n.data.dbKey); drawNodes.push(n); });
+                spousePositions.forEach(s => { drawNodes.push(s); });
+
+                // FUNGSI UPDATE GARIS (Dipanggil saat awal & saat digeser)
+                function updateLinks() {
+                    g.selectAll(".link").attr("d", l => {
+                        let startX = l.source.x;
+                        let startY = l.source.y;
+                        const spouseData = spousePositions.find(sp => sp.source.data.dbKey === l.source.data.dbKey);
                         if (spouseData) {
                             startX = (spouseData.source.x + spouseData.x) / 2;
+                            startY = (spouseData.source.y + spouseData.y) / 2;
                         }
-                        
-                        return `M${startX},${startY} V${(startY + d.target.y) / 2} H${d.target.x} V${d.target.y}`;
+                        return `M${startX},${startY} V${(startY + l.target.y) / 2} H${l.target.x} V${l.target.y}`;
                     });
+                    g.selectAll(".spouse-link").attr("d", sp => `M${sp.source.x},${sp.source.y} L${sp.x},${sp.y}`);
+                    g.selectAll(".add-child-btn").attr("transform", sp => `translate(${(sp.source.x + sp.x) / 2}, ${(sp.source.y + sp.y) / 2})`);
+                }
 
-                g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link")
-                    .attr("d", d => `M${d.source.x + 17},${d.source.y} L${d.x - 17},${d.y}`);
+                // RENDERING DASAR (Garis dulu baru Node)
+                const links = root.links();
+                g.selectAll(".link").data(links).join("path").attr("class", "link");
+                g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link");
 
-                // TOMBOL PLUS DI TENGAH PASANGAN 
+                // TOMBOL PLUS TENGAH
                 const addChildBtn = g.selectAll(".add-child-btn").data(spousePositions).join("g")
                     .attr("class", "add-child-btn")
-                    .attr("transform", d => `translate(${(d.source.x + d.x) / 2}, ${d.source.y})`)
                     .style("cursor", "pointer")
                     .style("pointer-events", "all")
                     .on("click", (event, d) => {
+                        if (isDragMode) return;
                         event.preventDefault();
                         event.stopPropagation();
-                        // Buka form Add Child, ambil ID bapak/ibu sbg source
                         openTambahModal('ADD_CHILD', d.source.data.dbKey, d.source.data.name, null);
                     });
 
-                addChildBtn.append("circle")
-                    .attr("r", 12)
-                    .attr("fill", "#10b981")
-                    .attr("stroke", "#ffffff")
-                    .attr("stroke-width", 2)
-                    .style("transition", "transform 0.2s")
-                    .on("mouseover", function() { d3.select(this).attr("transform", "scale(1.2)"); })
-                    .on("mouseout", function() { d3.select(this).attr("transform", "scale(1)"); });
+                addChildBtn.append("circle").attr("r", 12).attr("fill", "#10b981").attr("stroke", "#ffffff").attr("stroke-width", 2)
+                    .on("mouseover", function() { d3.select(this).style("transform", "scale(1.2)"); })
+                    .on("mouseout", function() { d3.select(this).style("transform", "scale(1)"); });
 
-                addChildBtn.append("text")
-                    .attr("dy", 4)
-                    .attr("x", 0)
-                    .attr("text-anchor", "middle")
-                    .style("fill", "#ffffff")
-                    .style("font-size", "14px")
-                    .style("font-weight", "bold")
-                    .style("pointer-events", "none")
-                    .text("+");
+                addChildBtn.append("text").attr("dy", 4).attr("x", 0).attr("text-anchor", "middle")
+                    .style("fill", "#ffffff").style("font-size", "14px").style("font-weight", "bold").style("pointer-events", "none").text("+");
 
-                const drawNodes = nodes.map(n => ({ data: { ...n.data, status: statusFor(n.data.dbKey) }, x: n.x, y: n.y, primary: true }));
-                spousePositions.forEach(s => { drawNodes.push({ data: { ...s.person, status: "Pasangan" }, x: s.x, y: s.y, primary: false }); });
+                // BEHAVIOR DRAG & DROP
+                const dragBehavior = d3.drag()
+                    .filter(() => isDragMode)
+                    .on("start", function(event, d) {
+                        d3.select(this).raise().select("circle").attr("stroke", "#1e293b").attr("stroke-width", 4);
+                    })
+                    .on("drag", function(event, d) {
+                        d.x += event.dx;
+                        d.y += event.dy;
+                        d3.select(this).attr("transform", `translate(${d.x},${d.y})`);
+                        updateLinks();
+                    })
+                    .on("end", function(event, d) {
+                        d3.select(this).select("circle").attr("stroke", "#fff").attr("stroke-width", 2);
+                        const key = d.data.dbKey;
+                        if (key) {
+                            update(ref(db, `${DB_PATH}/${key}`), { manualX: d.x, manualY: d.y });
+                        }
+                    });
 
+                // RENDER NODE
                 nodeSelection = g.selectAll(".node").data(drawNodes).join("g")
                     .attr("class", d => "node " + (d.data.gender === "P" ? "perempuan" : "laki"))
                     .attr("transform", d => `translate(${d.x},${d.y})`)
+                    .call(dragBehavior)
                     .on("click", (event, d) => {
+                        if (event.defaultPrevented || isDragMode) return; // Blokir klik modal kalau lagi geser
                         event.stopPropagation();
                         openEdit(d.data);
                     });
@@ -472,6 +510,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 nodeSelection.append("text").attr("dy", -25).attr("text-anchor", "middle")
                     .text(d => d.data.name.length > 28 ? d.data.name.slice(0, 26) + "…" : d.data.name);
                 nodeSelection.append("text").attr("class", "status").attr("dy", 29).attr("text-anchor", "middle").text(d => d.data.status);
+
+                updateLinks(); // Setel posisi awal garis
 
                 const extent = d3.extent(drawNodes, d => d.x);
                 const extentY = d3.extent(drawNodes, d => d.y);
@@ -513,7 +553,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             return value || "";
         }
 
-        // SAVE DATA BARU
+        // SAVE DATA BARU 
         async function saveNew(e) {
             e.preventDefault();
             const button = formTambah.querySelector('button[type="submit"]');
@@ -530,17 +570,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 let spouseId = "";
 
                 if (ctx === 'ADD_CHILD') {
-                    // Otomatis assign parent tanpa tanya user
-                    parentId = targetKey;
+                    parentId = targetKey; // Set otomatis orang tuanya
                 } else if (ctx === 'ADD_SPOUSE') {
-                    // Otomatis assign pasangan tanpa tanya user
-                    spouseId = targetKey;
+                    spouseId = targetKey; // Set otomatis pasangannya
                 } else {
-                    // MAIN ADD - Baca dari dropdown
                     parentId = $("select-parent").value;
                     if (parentId === "manual") parentId = await resolvePerson(parentId, $("input-parent-manual"), gender);
                     if (!parentId || parentId === "unknown") parentId = "akar_utama";
-                    
                     spouseId = $("select-spouse").value;
                     if (spouseId === "manual") spouseId = await resolvePerson(spouseId, $("input-spouse-manual"), gender);
                     if (spouseId === "unknown") spouseId = "";
@@ -549,7 +585,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 const newRef = push(wargaRef);
                 await set(newRef, { name, gender, parentId, spouseId: spouseId || "", ...randomCoords() });
                 
-                // Two-way binding for spouse
                 if (spouseId && dataMap[spouseId]) {
                     await update(ref(db, `${DB_PATH}/${spouseId}`), { spouseId: newRef.key });
                 }
@@ -559,7 +594,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             finally { button.disabled = false; }
         }
 
-        // UPDATE DATA (HANYA INFO DASAR)
+        // UPDATE DATA INFO
         async function saveEdit(e) {
             e.preventDefault();
             const button = formEdit.querySelector('button[type="submit"]');
@@ -593,6 +628,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
         }
 
         function wireEvents() {
+            // TOGGLE DRAG
+            $("btn-toggle-drag").addEventListener("click", () => {
+                isDragMode = !isDragMode;
+                const btn = $("btn-toggle-drag");
+                if (isDragMode) {
+                    btn.className = "text-[9px] text-white bg-amber-500 px-3 py-1.5 rounded-full font-bold shadow-md transition-colors";
+                    btn.innerHTML = '<i class="fas fa-arrows-alt"></i> Bisa Digeser';
+                } else {
+                    btn.className = "text-[9px] text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full font-bold border border-slate-200 transition-colors";
+                    btn.innerHTML = '<i class="fas fa-lock"></i> Posisi Terkunci';
+                }
+                if (treeReady) renderTree(); // Re-render to attach/detach drag logic cleanly
+            });
+
             $("btn-tambah-data-main").addEventListener("click", () => {
                 openTambahModal('MAIN', '', '', null);
             });
