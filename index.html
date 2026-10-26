@@ -471,9 +471,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     });
                 });
 
-                // =========================================================================
-                // GRAVITASI POSISI PRESISI: ORANG TUA DARI SEORANG PASANGAN (SPOUSE)
-                // =========================================================================
                 const mainRootKey = roots.length > 0 ? roots[0].dbKey : null;
                 if (root.children) {
                     root.children.forEach(subRoot => {
@@ -487,7 +484,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                                 if (sp) { connectedSpouse = sp; connectingNode = n; break; }
                             }
                             if (connectedSpouse && connectingNode) {
-                                // Hitung target X dan Y persis di atas pasangan terkait (tanpa numpuk)
                                 const targetX = connectedSpouse.x;
                                 const targetY = connectedSpouse.y - 180;
                                 const dx = targetX - connectingNode.x;
@@ -648,6 +644,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                                 } else { renderTree(); }
                             }
                         } else {
+                            // SIMPAN POSISI MANUAL AGAR TIDAK TERGESER KE ATAS SAAT DI DROP
                             await update(ref(db, `${DB_PATH}/${d.data.dbKey}`), { manualX: d.x, manualY: d.y });
                         }
                         draggedNode = null;
@@ -716,10 +713,24 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 else if (ctx === 'ADD_SPOUSE') { spouseIds = [targetKey]; } 
                 
                 const newRef = push(wargaRef);
-                await set(newRef, { name, gender, parentId, spouseIds, ...randomCoords() });
+                // PERBAIKAN: Berikan koordinat awal yang proporsional di dekat target jika ada
+                let initCoord = randomCoords();
+                if (targetKey && dataMap[targetKey]) {
+                    initCoord.lat = dataMap[targetKey].lat + 0.001;
+                    initCoord.lng = dataMap[targetKey].lng;
+                }
+
+                await set(newRef, { name, gender, parentId, spouseIds, ...initCoord });
                 
                 if (ctx === 'ADD_PARENT' && targetKey) {
-                    await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: newRef.key, manualX: null, manualY: null });
+                    // FIX: Saat membuat orang tua baru untuk targetKey (misal Pangeran Dipati untuk Nyimas Bapang),
+                    // posisikan manualX & manualY persis di atas targetKey agar tidak melayang jauh ke atas layar!
+                    const targetNode = dataMap[targetKey];
+                    let mX = targetNode?.manualX !== undefined && targetNode?.manualX !== null ? targetNode.manualX : 0;
+                    let mY = targetNode?.manualY !== undefined && targetNode?.manualY !== null ? targetNode.manualY - 180 : -180;
+
+                    await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: newRef.key });
+                    await update(ref(db, `${DB_PATH}/${newRef.key}`), { manualX: mX, manualY: mY });
                 }
                 if (ctx === 'ADD_SPOUSE' && targetKey) {
                     const targetPerson = dataMap[targetKey];
