@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sakaruhun - Sadulur Sadesa (Desktop)</title>
+<title>Sakaruhun - Sadulur Sadesa (Developer Mode)</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -29,7 +29,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 .modal.open{display:flex !important}
 .modal-card{background:white;border-radius:24px;padding:24px;width:100%;max-width:450px;max-height:90vh;overflow-y:auto;box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);}
 
-/* Tombol Aksi Cepat Ala Geni */
 .geni-action-btn { position: absolute; z-index: 50; cursor: pointer; padding: 6px 12px; border-radius: 9999px; font-size: 11px; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
 .geni-action-btn:hover { transform: scale(1.05); }
 </style>
@@ -37,7 +36,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
 <body class="text-slate-800 flex flex-col min-h-screen">
 
-    <!-- OVERLAY LOGIN WA (MUNCUL PERTAMA KALI JIKA BELUM LOGIN) -->
+    <!-- OVERLAY LOGIN / AUTH -->
     <div id="modal-auth" class="modal open">
         <div class="modal-card border-t-4 border-emerald-600 max-w-md">
             <div class="text-center mb-6">
@@ -45,24 +44,34 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     <i class="fas fa-tree text-2xl"></i>
                 </div>
                 <h2 class="text-2xl font-extrabold text-slate-800">Sakaruhun Desa Cilaja</h2>
-                <p class="text-xs text-slate-500 mt-1">Bangun Arsip Sejarah & Silsilah Keluarga Warga Desa</p>
+                <p class="text-xs text-slate-500 mt-1">Sistem Silsilah & Arsip Warga Berbasis Kolaborasi</p>
             </div>
 
-            <!-- Step 1: Input Nomor WA -->
+            <!-- Form WA / Developer Login -->
             <form id="form-auth-wa" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1"><i class="fab fa-whatsapp text-emerald-600 mr-1 text-sm"></i> Nomor WhatsApp Aktif</label>
-                    <input type="tel" id="auth-wa" required placeholder="Contoh: 081234567890" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold">
+                    <label class="block text-xs font-bold text-slate-700 mb-1"><i class="fab fa-whatsapp text-emerald-600 mr-1 text-sm"></i> Nomor WhatsApp Warga</label>
+                    <input type="tel" id="auth-wa" placeholder="Contoh: 081234567890" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold">
                 </div>
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl p-3.5 font-bold text-sm shadow-md transition-colors">
-                    Lanjutkan <i class="fas fa-arrow-right ml-2"></i>
+                    Masuk sebagai Warga <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+                
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink mx-4 text-slate-400 text-[10px] uppercase font-bold">Atau Khusus Developer</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <button type="button" id="btn-login-dev" class="w-full bg-slate-900 hover:bg-black text-white rounded-xl p-3 font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-2">
+                    <i class="fas fa-code text-emerald-400"></i> Login Master Developer (Sakaruhun)
                 </button>
             </form>
 
-            <!-- Step 2: Input Biodata Diri (Hidden di awal) -->
+            <!-- Step Biodata Warga Baru -->
             <form id="form-auth-biodata" class="space-y-3 hidden">
                 <div class="bg-emerald-50 border border-emerald-100 p-3 rounded-xl text-xs text-emerald-800 font-semibold mb-2">
-                    <i class="fas id-card mr-1"></i> Selamat datang! Silakan lengkapi data diri Anda sebagai titik awal silsilah.
+                    <i class="fas fa-id-card mr-1"></i> Data Anda belum terdaftar. Silakan lengkapi biodata singkat:
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700">Nama Lengkap Anda</label>
@@ -84,7 +93,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 <div class="grid grid-cols-3 gap-2">
                     <div>
                         <label class="block text-xs font-bold text-slate-700">Dusun / Blok</label>
-                        <input type="text" id="bio-dusun" placeholder="Cilaja Girang" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" id="bio-dusun" placeholder="Cilaja" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-700">RT</label>
@@ -95,17 +104,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         <input type="text" id="bio-rw" placeholder="002" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
-                <div class="text-[10px] text-slate-400 bg-slate-50 p-2 rounded-lg">
-                    📍 Lokasi: Desa Cilaja, Kramatmulya, Kuningan, Jawa Barat, Indonesia.
-                </div>
                 <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-xl p-3 font-bold text-sm shadow-md transition-colors mt-2">
-                    Mulai Masuk Silsilah <i class="fas fa-sitemap ml-2"></i>
+                    Mulai Silsilah <i class="fas fa-sitemap ml-2"></i>
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- HEADER DESKTOP LEBAR -->
+    <!-- HEADER DESKTOP -->
     <header class="bg-emerald-700 shadow-md py-6 px-8 bg-pattern relative z-20 shrink-0">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-4">
@@ -128,19 +134,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     <i class="fas fa-users mr-2"></i><strong id="stats-warga">Memuat...</strong>
                 </div>
                 <button id="btn-logout" class="bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-xl text-xs font-bold transition-colors" title="Ganti Akun">
-                    <i class="fas fa-sign-out-alt"></i>
+                    <i class="fas fa-sign-out-alt"></i> Keluar
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- MAIN DESKTOP GRID -->
+    <!-- MAIN GRID -->
     <main class="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
         <aside class="col-span-1 flex flex-col gap-5">
             <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200">
-                <h2 class="text-sm font-bold mb-3 text-slate-800 uppercase tracking-wider"><i class="fas fa-user-circle text-emerald-600 mr-2"></i>Profil Pengguna</h2>
+                <h2 class="text-sm font-bold mb-3 text-slate-800 uppercase tracking-wider"><i class="fas fa-user-circle text-emerald-600 mr-2"></i>Status Sesi</h2>
                 <div id="user-profile-card" class="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs text-slate-600 space-y-1">
-                    <div><b>Nama:</b> <span id="profile-name">-</span></div>
+                    <div><b>Pengguna:</b> <span id="profile-name">-</span></div>
+                    <div><b>Akses:</b> <span id="profile-role" class="text-emerald-600 font-bold">-</span></div>
                     <div><b>Wilayah:</b> <span id="profile-region">-</span></div>
                 </div>
             </div>
@@ -151,17 +158,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             </div>
         </aside>
 
-        <!-- KANVAS SILSILAH UTAMA (ALA GENI) -->
+        <!-- KANVAS SILSILAH UTAMA -->
         <section class="col-span-1 lg:col-span-3 bg-white rounded-3xl shadow-md border border-slate-200 flex flex-col relative overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-3xl">
                 <h2 class="text-base font-bold text-slate-800"><i class="fas fa-project-diagram text-emerald-600 mr-2"></i>Pohon Silsilah Interaktif</h2>
                 <p class="text-xs text-emerald-600 font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-                    <i class="fas fa-hand-pointer mr-1"></i> Klik kotak nama untuk memunculkan tombol aksi cepat.
+                    <i class="fas fa-hand-pointer mr-1"></i> Klik kotak nama untuk memunculkan menu aksi cepat.
                 </p>
             </div>
             
             <div id="tree-container" class="rounded-b-3xl flex-1 cursor-move relative">
-                <!-- MENU AKSI CEPAT ALA GENI (MUNCUL SAAT NODE DIKLIK) -->
+                <!-- POPUP MENU ALA GENI -->
                 <div id="geni-popup-menu" class="absolute hidden z-50 bg-white/95 backdrop-blur-sm border border-slate-200 p-3 rounded-2xl shadow-xl flex flex-col gap-2 min-w-[200px]">
                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b pb-1 mb-1 text-center" id="popup-target-name">Kelola Anggota</div>
                     <button onclick="quickAction('ADD_PARENT_FATHER')" class="geni-action-btn bg-blue-50 text-blue-700 hover:bg-blue-100 w-full justify-start"><i class="fas fa-male mr-2"></i> Tambahkan Ayah</button>
@@ -176,7 +183,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         </section>
     </main>
 
-    <!-- MODAL FORM TAMBAH / EDIT -->
+    <!-- MODAL FORM -->
     <div id="modal-form" class="modal">
         <div class="modal-card relative border-t-4 border-emerald-500">
             <button onclick="hideModal($('modal-form'))" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
@@ -201,7 +208,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
                 <div class="grid grid-cols-3 gap-2">
                     <div>
-                        <label class="block text-xs font-bold text-slate-600">Dusun / Blok</label>
+                        <label class="block text-xs font-bold text-slate-600">Dusun</label>
                         <input type="text" id="input-dusun-keluarga" placeholder="Cilaja" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
                     </div>
                     <div>
@@ -247,7 +254,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         let treeReady = false;
         let activeSelectedNode = null;
 
-        // SESSION LOCALSTORAGE WA & USER
         let currentUser = JSON.parse(localStorage.getItem("sakaruhun_user") || "null");
 
         function showModal(el) { el.classList.add("open"); }
@@ -256,24 +262,36 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         function escapeHtml(v) { return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
         function randomCoords() { return { lat: -6.832 + (Math.random() - .5) * .005, lng: 108.214 + (Math.random() - .5) * .005 }; }
 
-        // --- AUTH & ONBOARDING SYSTEM ---
         function checkAuth() {
             if (!currentUser || !currentUser.wa) {
                 $("modal-auth").classList.add("open");
             } else {
                 $("modal-auth").classList.remove("open");
                 $("profile-name").textContent = currentUser.nama;
-                $("profile-region").textContent = `Dusun ${currentUser.dusun || 'Cilaja'}, RT ${currentUser.rt || '-'}/RW ${currentUser.rw || '-'}`;
+                $("profile-role").textContent = currentUser.isDev ? "👑 Master Developer" : "Warga Desa";
+                $("profile-region").textContent = currentUser.isDev ? "Full Access (All Regions)" : `Dusun ${currentUser.dusun || 'Cilaja'}, RT ${currentUser.rt || '-'}`;
                 initFirebaseAndApp();
             }
         }
+
+        // TOMBOL KHUSUS LOGIN DEVELOPER
+        $("btn-login-dev").addEventListener("click", () => {
+            currentUser = {
+                dbKey: "MASTER_DEV",
+                nama: "Developer Sakaruhun",
+                wa: "DEVELOPER_MASTER_KEY",
+                isDev: true,
+                dusun: "Pusat", rt: "00", rw: "00"
+            };
+            localStorage.setItem("sakaruhun_user", JSON.stringify(currentUser));
+            checkAuth();
+        });
 
         $("form-auth-wa").addEventListener("submit", (e) => {
             e.preventDefault();
             const wa = $("auth-wa").value.trim();
             if(!wa) return;
             
-            // Cek apakah nomor WA sudah ada di database
             const refWa = ref(db, `${DB_PATH}`);
             onValue(refWa, (snapshot) => {
                 const all = snapshot.val() || {};
@@ -287,7 +305,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     localStorage.setItem("sakaruhun_user", JSON.stringify(currentUser));
                     checkAuth();
                 } else {
-                    // Kalau belum ada, lanjut ke Step 2 (Biodata)
                     $("form-auth-wa").classList.add("hidden");
                     $("form-auth-biodata").classList.remove("hidden");
                 }
@@ -322,7 +339,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             location.reload();
         });
 
-        // --- POHON GENEALOGI & UI ALA GENI ---
         function initMap() {
             if (!window.L || map) return;
             map = L.map("map").setView([-6.832, 108.214], 15);
@@ -367,7 +383,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         if (!byIdGlobal.has(sId)) return;
                         if(!spouseOf.has(p.dbKey)) spouseOf.set(p.dbKey, []);
                         if(!spouseOf.get(p.dbKey).includes(sId)) spouseOf.get(p.dbKey).push(sId);
-                        isSpouseNode.add(sId); // Istri ditaruh ke samping
+                        isSpouseNode.add(sId);
                     });
                 });
 
@@ -410,7 +426,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link")
                     .attr("d", sp => `M${sp.source.x+17},${sp.source.y} L${sp.x-17},${sp.y}`);
 
-                // RENDER KOTAK PROFIL ALA GENI
                 const node = g.selectAll(".node").data(drawNodes).join("g")
                     .attr("class", d => "node " + (d.data.gender === "P" ? "perempuan" : "laki"))
                     .attr("transform", d => `translate(${d.x},${d.y})`)
@@ -418,7 +433,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         event.stopPropagation();
                         activeSelectedNode = d.data;
                         
-                        // Munculkan Pop-up Menu Ala Geni Tepat di atas node yang diklik
                         const menu = $("geni-popup-menu");
                         $("popup-target-name").textContent = d.data.nama;
                         menu.style.left = `${event.pageX - container.getBoundingClientRect().left - 100}px`;
@@ -430,7 +444,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 node.append("text").attr("dy", -28).attr("text-anchor", "middle").text(d => d.data.nama.length > 20 ? d.data.nama.slice(0, 18) + "…" : d.data.nama);
                 node.append("text").attr("class", "status").attr("dy", 30).attr("text-anchor", "middle").text(d => `Dusun ${d.data.dusun || 'Cilaja'}`);
 
-                // Tutup menu popup saat klik di luar
                 svg.on("click", () => { $("geni-popup-menu").classList.add("hidden"); });
 
                 let validNodes = drawNodes.filter(d => !isNaN(d.x) && !isNaN(d.y));
@@ -443,7 +456,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             } catch (err) { console.error("D3 Render Error:", err); }
         }
 
-        // --- QUICK ACTIONS ALA GENI ---
         window.quickAction = function(action) {
             $("geni-popup-menu").classList.add("hidden");
             if (!activeSelectedNode) return;
@@ -459,6 +471,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             }
 
             if (action === 'EDIT') {
+                // Developer bisa edit siapa saja, warga biasa idealnya edit datanya sendiri
                 $("action-type").value = "EDIT";
                 $("action-target-key").value = targetKey;
                 $("form-modal-title").innerHTML = `<i class="fas fa-cog text-amber-500 mr-2"></i>Edit Data ${escapeHtml(targetName)}`;
@@ -471,7 +484,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 return;
             }
 
-            // Buka Modal Input untuk Tambah Relasi
             $("action-type").value = action;
             $("action-target-key").value = targetKey;
             $("form-action").reset();
@@ -513,7 +525,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             let newRecord = { nama, gender, dusun, rt, rw, parentId: "", spouseIds: [], ...randomCoords() };
 
             if (type === 'ADD_PARENT_FATHER' || type === 'ADD_PARENT_MOTHER') {
-                // Buat ortu baru, lalu set targetKey parentId-nya ke orang baru ini
                 await set(newRef, newRecord);
                 await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: newRef.key });
             } else if (type === 'ADD_SPOUSE') {
