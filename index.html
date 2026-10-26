@@ -29,11 +29,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
 .modal.open{display:flex !important}
 .modal-card{background:white;border-radius:24px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);}
 
-/* Drop Zone Styles untuk Drag & Drop */
-.drop-zone { fill: rgba(255,255,255,0.9); stroke: #94a3b8; stroke-dasharray: 4,4; stroke-width: 2px; transition: all 0.2s; }
+/* Drop Zone: Hanya muncul saat node ditarik mendekat */
+.drop-zone { fill: rgba(255,255,255,0.95); stroke: #94a3b8; stroke-dasharray: 4,4; stroke-width: 2px; transition: all 0.2s; cursor: crosshair;}
 .drop-zone.active-parent { fill: #dbeafe; stroke: #3b82f6; stroke-width: 3px; }
 .drop-zone.active-child { fill: #d1fae5; stroke: #10b981; stroke-width: 3px; }
-.drop-text { font-size: 9px; font-weight: bold; fill: #64748b; pointer-events: none; text-anchor: middle; }
+.drop-text { font-size: 10px; font-weight: bold; fill: #64748b; pointer-events: none; text-anchor: middle; }
 </style>
 </head>
 
@@ -99,7 +99,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
         </section>
     </main>
 
-    <!-- MODAL TAMBAH DATA (KONTEKSTUAL) -->
+    <!-- MODAL TAMBAH DATA -->
     <div id="modal-tambah" class="modal">
         <div class="modal-card relative border-t-4 border-emerald-500">
             <button id="btn-close-modal-tambah" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
@@ -110,7 +110,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 <input type="hidden" id="tambah-target" value="">
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap</label>
+                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap Orang Baru Ini</label>
                     <input id="input-nama" required placeholder="Ketik nama..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
@@ -122,9 +122,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     </select>
                 </div>
 
-                <!-- Bagian ini HANYA MUNCUL kalau nambah dari tombol ungu "Tambah Orang Asing" -->
                 <div id="wrapper-manual-tambah" class="hidden border-t border-slate-100 pt-3">
-                    <p class="text-[10px] text-amber-600 font-semibold mb-2"><i class="fas fa-info-circle"></i> Ini akan membuat garis keturunan baru yang belum terhubung ke siapapun.</p>
+                    <p class="text-[10px] text-amber-600 font-semibold mb-2"><i class="fas fa-info-circle"></i> Mode Orang Asing: Ini akan membuat garis keturunan baru.</p>
                 </div>
 
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl p-3 font-bold text-sm transition-colors mt-2 shadow-md">
@@ -134,13 +133,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
         </div>
     </div>
 
-    <!-- MODAL KELOLA (EDIT) DATA -->
+    <!-- MODAL KELOLA (EDIT) -->
     <div id="modal-edit" class="modal">
         <div class="modal-card relative border-t-4 border-amber-500">
             <button id="btn-close-modal-edit" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
             <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-cog text-amber-500 mr-2"></i>Kelola Individu</h3>
 
-            <!-- HANYA NAMA & GENDER -->
             <form id="form-edit" class="space-y-4">
                 <input type="hidden" id="edit-dbkey">
 
@@ -169,7 +167,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
 
             <hr class="my-5 border-slate-100">
 
-            <!-- TOMBOL RELASI OTOMATIS -->
             <div class="flex flex-col gap-3">
                 <button id="btn-tambah-ortu" type="button" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl p-3 font-bold text-sm shadow-sm transition-colors text-left pl-4">
                     <i class="fas fa-arrow-up w-6 text-center"></i> Tambah Orang Tua Ke Atas
@@ -211,7 +208,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
         let zoomBehavior = null;
         let treeReady = false;
         
-        // GLOBAL STATUS DRAG & DROP
         let isDragMode = false;
         let draggedNode = null;
         let dropTarget = null;
@@ -254,7 +250,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             setTimeout(() => $("input-nama").focus(), 100);
         }
 
-        // FUNGSI NORMALISASI DINAMIS (TIDAK ADA LAGI PAKSAAN AKAR_UTAMA)
         function normalizeData(raw) {
             const result = {};
             Object.entries(raw || {}).forEach(([key, v]) => {
@@ -271,14 +266,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     manualY: v.manualY !== undefined ? Number(v.manualY) : undefined
                 };
             });
-            
-            // Bersihkan yatim piatu (jika parentId ada tapi datanya sdh dihapus)
+            // Hapus parentId jika ortunya udah didelete
             Object.values(result).forEach(p => {
-                if (p.parentId && !result[p.parentId]) {
-                    p.parentId = ""; // Otomatis jadi akar baru
-                }
+                if (p.parentId && !result[p.parentId]) { p.parentId = ""; }
             });
-
             return result;
         }
 
@@ -306,8 +297,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             layerGroup.clearLayers();
             dataGlobal.forEach(p => {
                 if (Number.isFinite(p.lat) && Number.isFinite(p.lng)) {
-                    L.marker([p.lat, p.lng]).addTo(layerGroup)
-                     .bindPopup(`<b>${escapeHtml(p.name)}</b><br><span style="font-size:10px">${p.gender === "L" ? "Laki-laki" : "Perempuan"}</span>`);
+                    L.marker([p.lat, p.lng]).addTo(layerGroup).bindPopup(`<b>${escapeHtml(p.name)}</b><br><span style="font-size:10px">${p.gender === "L" ? "Laki-laki" : "Perempuan"}</span>`);
                 }
             });
         }
@@ -316,7 +306,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             if (!window.d3) return;
             const container = $("tree-container");
             const width = Math.max(container.clientWidth, 320);
-            const height = Math.max(container.clientHeight, 300);
+            const height = Math.max(container.clientHeight, 400);
 
             const svg = d3.select(container).selectAll("svg").data([null]).join("svg")
                 .attr("width", "100%").attr("height", "100%").attr("viewBox", `0 0 ${width} ${height}`);
@@ -329,84 +319,99 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             try {
                 let safeDataGlobal = dataGlobal.map(d => ({...d}));
                 
-                // Cari Akar & Atasi Multiple Roots buat D3
-                let roots = safeDataGlobal.filter(d => !d.parentId);
-                if(roots.length > 0) {
+                // --- PENYARINGAN PASANGAN DARI ALUR VERTICAL ---
+                const isSpouseNode = new Set();
+                const renderedPairs = new Set();
+                
+                safeDataGlobal.forEach(p => {
+                    if (!p.spouseId) return;
+                    const pairKey = [p.dbKey, p.spouseId].sort().join("::");
+                    if (renderedPairs.has(pairKey)) return;
+                    renderedPairs.add(pairKey);
+                    
+                    const p1 = safeDataGlobal.find(x => x.dbKey === p.dbKey);
+                    const p2 = safeDataGlobal.find(x => x.dbKey === p.spouseId);
+                    
+                    if (p1 && p2) {
+                        // Kalo P1 punya bapak dan P2 gak punya bapak, P2 adalah istri sambung (kesamping)
+                        if (p1.parentId && !p2.parentId) isSpouseNode.add(p2.dbKey);
+                        else if (p2.parentId && !p1.parentId) isSpouseNode.add(p1.dbKey);
+                        else isSpouseNode.add(p2.dbKey); // default P2 ke samping
+                    }
+                });
+
+                // Hirarki murni tanpa spouse nyangkut di tengah jalan
+                const primary = safeDataGlobal.filter(p => !isSpouseNode.has(p.dbKey));
+                
+                // Arahkan anak yang salah sambung ke spouse, dipindah ke primary node
+                primary.forEach(p => {
+                    if (p.parentId && isSpouseNode.has(p.parentId)) {
+                        const spouseRecord = safeDataGlobal.find(x => x.dbKey === p.parentId);
+                        if (spouseRecord && spouseRecord.spouseId) p.parentId = spouseRecord.spouseId;
+                    }
+                });
+
+                // Cari root(s) & satukan jika multiple roots
+                let roots = primary.filter(d => !d.parentId || d.parentId === "");
+                if (roots.length > 0) {
                     let mainRoot = roots[0];
-                    for(let i=1; i<roots.length; i++){
-                        roots[i].parentId = mainRoot.dbKey; // Gabungkan akar asing ke akar utama khusus buat grafis
+                    for (let i = 1; i < roots.length; i++) {
+                        roots[i].parentId = mainRoot.dbKey;
                     }
                 }
 
-                // Putus Siklus 
-                safeDataGlobal.forEach(d => {
+                // Putus Rantai Melingkar (Cycle Prevention)
+                primary.forEach(d => {
                     let currentId = d.parentId;
                     let visited = new Set([d.dbKey]);
                     let isCycle = false;
-                    while (currentId && dataMap[currentId]) {
+                    while (currentId) {
                         if (visited.has(currentId)) { isCycle = true; break; }
                         visited.add(currentId);
-                        currentId = dataMap[currentId].parentId;
+                        let parentNode = primary.find(p => p.dbKey === currentId);
+                        currentId = parentNode ? parentNode.parentId : null;
                     }
-                    if (isCycle) {
-                        d.parentId = roots.length > 0 ? roots[0].dbKey : "";
-                    }
+                    if (isCycle) d.parentId = roots.length > 0 ? roots[0].dbKey : "";
                 });
 
-                const byId = new Map(safeDataGlobal.map(p => [p.dbKey, p]));
-                const spouseOf = new Map();
-                function linkSpouse(a, b) {
-                    if (!a || !b || a === b || !byId.has(a) || !byId.has(b)) return;
-                    if (!spouseOf.has(a)) spouseOf.set(a, []);
-                    if (!spouseOf.has(b)) spouseOf.set(b, []);
-                    if (!spouseOf.get(a).includes(b)) spouseOf.get(a).push(b);
-                    if (!spouseOf.get(b).includes(a)) spouseOf.get(b).push(a);
-                }
-                safeDataGlobal.forEach(p => linkSpouse(p.dbKey, p.spouseId));
-
-                const spouseIds = new Set();
-                spouseOf.forEach(ids => ids.forEach(id => spouseIds.add(id)));
-                
-                const primary = safeDataGlobal.filter(p => !p.parentId || !spouseIds.has(p.dbKey));
-                const primaryIds = new Set(primary.map(p => p.dbKey));
-
-                const records = primary.map(p => {
-                    let parent = p.parentId;
-                    if (parent && !primaryIds.has(parent)) {
-                        const alternatives = spouseOf.get(parent) || [];
-                        parent = alternatives.find(id => primaryIds.has(id)) || (roots.length > 0 ? roots[0].dbKey : "");
-                    }
-                    return { ...p, parentId: parent };
-                });
-
-                // Bangun Pohon
-                const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(records);
-                d3.tree().nodeSize([210, 155])(root);
+                // Generate Hirarki D3
+                const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(primary);
+                d3.tree().nodeSize([220, 160])(root);
                 const nodes = root.descendants();
                 
-                // Set Manual Posisi 
+                // Terapkan Posisi Geser Manual
                 nodes.forEach(n => {
-                    if (n.data.manualX !== undefined) n.x = n.data.manualX;
-                    if (n.data.manualY !== undefined) n.y = n.data.manualY;
+                    if (n.data.manualX !== undefined && n.data.manualX !== null) n.x = n.data.manualX;
+                    if (n.data.manualY !== undefined && n.data.manualY !== null) n.y = n.data.manualY;
                 });
 
+                // Posisi Pasangan (Kesamping)
                 const spousePositions = [];
-                const renderedPairs = new Set();
+                const spouseOf = new Map();
+                safeDataGlobal.forEach(p => {
+                    if(p.spouseId) {
+                        if(!spouseOf.has(p.dbKey)) spouseOf.set(p.dbKey, []);
+                        if(!spouseOf.has(p.spouseId)) spouseOf.set(p.spouseId, []);
+                        spouseOf.get(p.dbKey).push(p.spouseId);
+                        spouseOf.get(p.spouseId).push(p.dbKey);
+                    }
+                });
+                
+                const pairsRendered = new Set();
                 nodes.forEach(n => {
-                    const ids = spouseOf.get(n.data.dbKey) || [];
-                    if (!ids.length) return;
-                    const spouses = ids.filter(id => byId.has(id));
-                    const owner = n.data.dbKey;
-
-                    spouses.forEach((id, index) => {
-                        const pairKey = [owner, id].sort().join("::");
-                        if (renderedPairs.has(pairKey)) return;
-                        renderedPairs.add(pairKey);
-                        const person = byId.get(id);
-                        let sx = n.x + 140, sy = n.y;
-                        if (person.manualX !== undefined) sx = person.manualX;
-                        if (person.manualY !== undefined) sy = person.manualY;
-                        spousePositions.push({ data: { ...person, status: "Pasangan" }, source: n, x: sx, y: sy, isSpouse: true });
+                    const spIds = spouseOf.get(n.data.dbKey) || [];
+                    spIds.forEach((id, idx) => {
+                        const pairKey = [n.data.dbKey, id].sort().join("::");
+                        if (pairsRendered.has(pairKey)) return;
+                        pairsRendered.add(pairKey);
+                        
+                        const person = safeDataGlobal.find(x => x.dbKey === id);
+                        if(person) {
+                            let sx = n.x + 140, sy = n.y;
+                            if (person.manualX !== undefined && person.manualX !== null) sx = person.manualX;
+                            if (person.manualY !== undefined && person.manualY !== null) sy = person.manualY;
+                            spousePositions.push({ data: { ...person, status: "Pasangan" }, source: n, x: sx, y: sy, isSpouse: true });
+                        }
                     });
                 });
 
@@ -414,6 +419,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 nodes.forEach(n => { n.data.status = statusFor(n.data.dbKey); drawNodes.push(n); });
                 spousePositions.forEach(s => { drawNodes.push(s); });
 
+                // FUNGSI UPDATE POSISI GARIS (Dinamis saat di drag)
                 function updateLinks() {
                     g.selectAll(".link").attr("d", l => {
                         let startX = l.source.x, startY = l.source.y;
@@ -430,7 +436,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 g.selectAll(".link").data(links).join("path").attr("class", "link");
                 g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link");
 
-                // Tombol Plus (+)
+                // Tombol Plus Anak
                 const addChildBtn = g.selectAll(".add-child-btn").data(spousePositions).join("g")
                     .attr("class", "add-child-btn")
                     .style("cursor", "pointer")
@@ -447,81 +453,83 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     .on("mouseout", function() { d3.select(this).style("transform", "scale(1)"); });
                 addChildBtn.append("text").attr("dy", 4).attr("x", 0).attr("text-anchor", "middle").style("fill", "#ffffff").style("font-size", "14px").style("font-weight", "bold").style("pointer-events", "none").text("+");
 
-                // ===============================================
-                // RENDER DROP ZONES UNTUK DRAG & DROP 
-                // ===============================================
+                // RENDER ORANG
                 nodeSelection = g.selectAll(".node").data(drawNodes).join("g")
                     .attr("class", d => "node " + (d.data.gender === "P" ? "perempuan" : "laki"))
                     .attr("transform", d => `translate(${d.x},${d.y})`);
 
+                // ===============================================
+                // DROP ZONES (HANYA MUNCUL KETIKA DRAG MENDEKAT)
+                // ===============================================
                 const dropZones = nodeSelection.append("g")
                     .attr("class", "drop-zones-group")
                     .style("opacity", 0)
                     .style("pointer-events", "none");
 
                 // Frame Atas (Jadikan Orang Tua)
-                dropZones.append("rect")
-                    .attr("class", "drop-zone zone-parent")
-                    .attr("x", -40).attr("y", -70).attr("width", 80).attr("height", 30).attr("rx", 6)
-                    .on("mouseenter", (event, d) => {
-                        if(isDragMode && draggedNode && draggedNode.data.dbKey !== d.data.dbKey) {
-                            dropTarget = { node: d, type: 'parent' };
-                            d3.select(event.currentTarget).classed("active-parent", true);
-                        }
-                    })
-                    .on("mouseleave", (event, d) => {
-                        if(isDragMode) {
-                            dropTarget = null;
-                            d3.select(event.currentTarget).classed("active-parent", false);
-                        }
-                    });
-                dropZones.append("text").attr("class", "drop-text").attr("x", 0).attr("y", -50).text("+ Jd Orang Tua");
+                dropZones.append("rect").attr("class", "drop-zone zone-parent")
+                    .attr("x", -45).attr("y", -60).attr("width", 90).attr("height", 30).attr("rx", 6);
+                dropZones.append("text").attr("class", "drop-text").attr("x", 0).attr("y", -40).text("⬆️ Jd Orang Tua");
 
                 // Frame Bawah (Jadikan Anak)
-                dropZones.append("rect")
-                    .attr("class", "drop-zone zone-child")
-                    .attr("x", -40).attr("y", 40).attr("width", 80).attr("height", 30).attr("rx", 6)
-                    .on("mouseenter", (event, d) => {
-                        if(isDragMode && draggedNode && draggedNode.data.dbKey !== d.data.dbKey) {
-                            dropTarget = { node: d, type: 'child' };
-                            d3.select(event.currentTarget).classed("active-child", true);
-                        }
-                    })
-                    .on("mouseleave", (event, d) => {
-                        if(isDragMode) {
-                            dropTarget = null;
-                            d3.select(event.currentTarget).classed("active-child", false);
-                        }
-                    });
-                dropZones.append("text").attr("class", "drop-text").attr("x", 0).attr("y", 59).text("+ Jd Anak");
+                dropZones.append("rect").attr("class", "drop-zone zone-child")
+                    .attr("x", -40).attr("y", 35).attr("width", 80).attr("height", 30).attr("rx", 6);
+                dropZones.append("text").attr("class", "drop-text").attr("x", 0).attr("y", 54).text("⬇️ Jd Anak");
 
-                // BEHAVIOR DRAG & DROP LOGIC
+                // BEHAVIOR DRAG & DROP
                 const dragBehavior = d3.drag()
                     .filter(() => isDragMode)
                     .on("start", function(event, d) {
                         draggedNode = d;
                         d3.select(this).raise().select("circle").attr("stroke", "#ef4444").attr("stroke-width", 4).style("transform", "scale(1.2)");
-                        // Tampilkan semua drop zone KECUALI milik node yang ditarik
-                        g.selectAll(".drop-zones-group").style("opacity", 1).style("pointer-events", "all");
-                        d3.select(this).select(".drop-zones-group").style("opacity", 0).style("pointer-events", "none");
-                        // Tembus event pada node yg ditarik biar bisa masuk dropzone di bawahnya
-                        d3.select(this).style("pointer-events", "none");
+                        d3.select(this).style("pointer-events", "none"); // Biar pointer tembus ke kotak di bawahnya
                     })
                     .on("drag", function(event, d) {
                         d.x += event.dx; d.y += event.dy;
                         d3.select(this).attr("transform", `translate(${d.x},${d.y})`);
                         updateLinks();
+
+                        // Logika Magnetik: Munculkan frame drop pada node terdekat (Radius 120px)
+                        let closestNode = null;
+                        let minDist = 120; 
+
+                        nodeSelection.each(function(targetData) {
+                            if (targetData.data.dbKey === d.data.dbKey) return;
+                            let dist = Math.hypot(targetData.x - d.x, targetData.y - d.y);
+                            if (dist < minDist) { minDist = dist; closestNode = this; }
+                        });
+
+                        g.selectAll(".drop-zones-group").style("opacity", 0).style("pointer-events", "none");
+                        g.selectAll(".drop-zone").classed("active-parent active-child", false);
+                        dropTarget = null;
+
+                        if (closestNode) {
+                            const dz = d3.select(closestNode).select(".drop-zones-group");
+                            dz.style("opacity", 1);
+                            
+                            const tData = d3.select(closestNode).datum();
+                            
+                            // Hitung apakah pointer di atas atau di bawah target node
+                            const dy = d.y - tData.y;
+                            if (dy < -20) {
+                                dropTarget = { node: tData, type: 'parent' }; // Dragged ada di atas target
+                                dz.select(".zone-parent").classed("active-parent", true);
+                            } else if (dy > 20) {
+                                dropTarget = { node: tData, type: 'child' }; // Dragged ada di bawah target
+                                dz.select(".zone-child").classed("active-child", true);
+                            }
+                        }
                     })
                     .on("end", async function(event, d) {
                         d3.select(this).style("pointer-events", "all");
                         d3.select(this).select("circle").attr("stroke", "#fff").attr("stroke-width", 2).style("transform", "scale(1)");
-                        g.selectAll(".drop-zones-group").style("opacity", 0).style("pointer-events", "none");
+                        g.selectAll(".drop-zones-group").style("opacity", 0);
                         
                         if (dropTarget) {
                             const targetKey = dropTarget.node.data.dbKey;
                             const draggedKey = d.data.dbKey;
                             
-                            // Cek Cycle Error
+                            // Cegah Loop Rantai
                             let curr = dropTarget.node;
                             let cycle = false;
                             while(curr) {
@@ -530,7 +538,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                             }
                             
                             if (cycle) {
-                                alert(`❌ Gagal! ${dropTarget.node.data.name} adalah keturunan dari ${d.data.name}. Tidak bisa memutar silsilah!`);
+                                alert(`❌ Gagal! ${dropTarget.node.data.name} adalah keturunan dari ${d.data.name}.`);
                                 renderTree();
                             } else {
                                 let msg = dropTarget.type === 'parent' 
@@ -539,27 +547,25 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                                 
                                 if (confirm(msg)) {
                                     try {
+                                        // PENTING: Set manualX/manualY jadi NULL supaya posisi otomatis ter-refresh (garis nggak kusut)
                                         if (dropTarget.type === 'parent') {
-                                            await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: draggedKey });
+                                            await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: draggedKey, manualX: null, manualY: null });
+                                            await update(ref(db, `${DB_PATH}/${draggedKey}`), { manualX: null, manualY: null });
                                         } else {
-                                            await update(ref(db, `${DB_PATH}/${draggedKey}`), { parentId: targetKey });
+                                            await update(ref(db, `${DB_PATH}/${draggedKey}`), { parentId: targetKey, manualX: null, manualY: null });
                                         }
                                     } catch(e) { alert("Gagal update data!"); renderTree(); }
-                                } else {
-                                    renderTree(); // Snap back jika dibatalkan
-                                }
+                                } else { renderTree(); }
                             }
                         } else {
-                            // Simpan manual posisi jika cuma digeser biasa
+                            // Cuma geser santai, simpan posisi
                             await update(ref(db, `${DB_PATH}/${d.data.dbKey}`), { manualX: d.x, manualY: d.y });
-                            renderTree();
                         }
                         
                         draggedNode = null;
                         dropTarget = null;
                     });
 
-                // Attach Events & Drag ke Node
                 nodeSelection.on("click", (event, d) => {
                     if (event.defaultPrevented || isDragMode) return; 
                     event.stopPropagation();
@@ -616,22 +622,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 let parentId = "";
                 let spouseId = "";
 
-                if (ctx === 'ADD_CHILD') {
-                    parentId = targetKey; 
-                } else if (ctx === 'ADD_SPOUSE') {
-                    spouseId = targetKey; 
-                } else if (ctx === 'ADD_PARENT') {
-                    parentId = ""; // Root baru
-                } else {
-                    parentId = ""; // Orang Asing baru (akar baru)
-                }
-
+                if (ctx === 'ADD_CHILD') { parentId = targetKey; } 
+                else if (ctx === 'ADD_SPOUSE') { spouseId = targetKey; } 
+                
                 const newRef = push(wargaRef);
                 await set(newRef, { name, gender, parentId, spouseId, ...randomCoords() });
                 
                 // BACK-BINDING JIKA DIA ORANG TUA / PASANGAN
                 if (ctx === 'ADD_PARENT' && targetKey) {
-                    await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: newRef.key });
+                    await update(ref(db, `${DB_PATH}/${targetKey}`), { parentId: newRef.key, manualX: null, manualY: null });
                 }
                 if (ctx === 'ADD_SPOUSE' && targetKey) {
                     await update(ref(db, `${DB_PATH}/${targetKey}`), { spouseId: newRef.key });
@@ -665,9 +664,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             if (!confirm("Hapus individu ini? Anak-anak akan diputuskan dari orang tua ini.")) return;
             try {
                 const updates = {};
-                // Anak-anaknya dijadikan yatim
-                dataGlobal.filter(p => p.parentId === key).forEach(p => { updates[`${DB_PATH}/${p.dbKey}/parentId`] = ""; });
-                // Pasangannya diputus
+                dataGlobal.filter(p => p.parentId === key).forEach(p => { updates[`${DB_PATH}/${p.dbKey}/parentId`] = ""; updates[`${DB_PATH}/${p.dbKey}/manualX`] = null; updates[`${DB_PATH}/${p.dbKey}/manualY`] = null;});
                 const person = dataMap[key];
                 if (person?.spouseId && dataMap[person.spouseId]) updates[`${DB_PATH}/${person.spouseId}/spouseId`] = "";
                 
@@ -678,7 +675,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
         }
 
         function wireEvents() {
-            // DRAG MODE TOGGLE
             $("btn-toggle-drag").addEventListener("click", () => {
                 isDragMode = !isDragMode;
                 const btn = $("btn-toggle-drag");
@@ -686,7 +682,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 if (isDragMode) {
                     btn.className = "text-[9px] text-white bg-amber-500 px-3 py-1.5 rounded-full font-bold shadow-md transition-colors";
                     btn.innerHTML = '<i class="fas fa-arrows-alt"></i> Silsilah Bisa Digeser';
-                    hint.innerHTML = '<i class="fas fa-info-circle"></i> Tarik & Jatuhkan ke Frame Kosong (Atas=Jadi Ortu, Bawah=Jadi Anak).';
+                    hint.innerHTML = '<i class="fas fa-info-circle"></i> Tarik profil & dekatkan ke profil lain untuk memindahkan Posisi Relasinya.';
                     hint.className = "text-[10px] text-center text-amber-600 mt-3 font-bold";
                 } else {
                     btn.className = "text-[9px] text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full font-bold border border-slate-200 transition-colors";
@@ -712,7 +708,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             formEdit.addEventListener("submit", saveEdit);
             $("btn-hapus-data").addEventListener("click", deletePerson);
 
-            // BUTTONS DI MODAL EDIT
             $("btn-tambah-ortu").addEventListener("click", () => {
                 const key = $("edit-dbkey").value;
                 const name = $("edit-nama").value;
