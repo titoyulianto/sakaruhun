@@ -110,18 +110,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         </section>
     </main>
 
-    <!-- MODAL TAMBAH DATA (KONTEKSTUAL) -->
+    <!-- MODAL TAMBAH DATA (BIKIN DATA BARU) -->
     <div id="modal-tambah" class="modal">
         <div class="modal-card relative border-t-4 border-emerald-500">
             <button id="btn-close-modal-tambah" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
-            <h3 id="modal-tambah-title" class="font-bold text-lg mb-4 text-slate-800">Tambah Individu</h3>
+            <h3 id="modal-tambah-title" class="font-bold text-lg mb-4 text-slate-800">Tambah Data Baru</h3>
 
             <form id="form-tambah" class="space-y-4">
                 <input type="hidden" id="tambah-context" value="MAIN">
                 <input type="hidden" id="tambah-target" value="">
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap</label>
+                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap Orang Baru</label>
                     <input id="input-nama" required placeholder="Ketik nama lengkap..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
@@ -134,13 +134,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 </div>
 
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl p-3.5 font-bold text-sm transition-colors mt-2 shadow-md">
-                    <i class="fas fa-check mr-2"></i>Simpan Data
+                    <i class="fas fa-check mr-2"></i>Simpan Data Baru
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL KELOLA (EDIT) DATA -->
+    <!-- MODAL KELOLA (EDIT & PAUTKAN DATA) -->
     <div id="modal-edit" class="modal">
         <div class="modal-card relative border-t-4 border-amber-500">
             <button id="btn-close-modal-edit" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
@@ -162,11 +162,22 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     </select>
                 </div>
 
+                <!-- DROPDOWN UNTUK MENAUTKAN KE ORANG YANG SUDAH ADA (TIDAK BIKIN DATA BARU) -->
+                <div class="border-t border-slate-100 pt-3 mt-2">
+                    <label class="block text-xs font-bold text-slate-600"><i class="fas fa-link text-blue-500 mr-1"></i> Pautkan ke Orang Tua (Jika Sudah Ada)</label>
+                    <select id="edit-parent" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"></select>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-600"><i class="fas fa-link text-pink-500 mr-1"></i> Pautkan ke Pasangan (Jika Sudah Ada)</label>
+                    <select id="edit-spouse" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"></select>
+                </div>
+
                 <div class="flex gap-2 pt-2">
                     <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl p-3 font-bold text-sm shadow-md transition-colors">
-                        <i class="fas fa-save mr-1"></i> Update
+                        <i class="fas fa-save mr-1"></i> Update Data
                     </button>
-                    <button id="btn-hapus-data" type="button" class="bg-red-100 hover:bg-red-200 text-red-600 rounded-xl px-5 transition-colors font-bold" title="Hapus Permanen">
+                    <button id="btn-hapus-data" type="button" class="bg-red-100 hover:bg-red-200 text-red-600 rounded-xl px-4 transition-colors font-bold" title="Hapus Permanen">
                         <i class="fas fa-trash-alt"></i> Hapus
                     </button>
                 </div>
@@ -174,19 +185,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
             <div class="my-5 flex items-center gap-3">
                 <div class="h-px bg-slate-200 flex-1"></div>
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tambah Relasi</span>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Atau Bikin Orang Baru</span>
                 <div class="h-px bg-slate-200 flex-1"></div>
             </div>
 
-            <div class="grid grid-cols-1 gap-3">
-                <button id="btn-tambah-ortu" type="button" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl p-3 font-bold text-sm shadow-sm transition-colors text-left flex items-center">
-                    <div class="bg-blue-200 w-8 h-8 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-arrow-up"></i></div> Jadikan Anak dari (Tambah Ortu)
+            <!-- TOMBOL INI KHUSUS UNTUK BIKIN ORANG BARU DARI NOL -->
+            <div class="grid grid-cols-1 gap-2">
+                <button id="btn-tambah-ortu" type="button" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl p-2.5 font-bold text-xs shadow-sm transition-colors text-left flex items-center">
+                    <div class="bg-blue-200 w-7 h-7 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-arrow-up"></i></div> Bikin Data Bapak/Ibu Baru
                 </button>
-                <button id="btn-tambah-pasangan" type="button" class="w-full bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 rounded-xl p-3 font-bold text-sm shadow-sm transition-colors text-left flex items-center">
-                    <div class="bg-pink-200 w-8 h-8 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-heart"></i></div> Tambah Suami / Istri Baru
+                <button id="btn-tambah-pasangan" type="button" class="w-full bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 rounded-xl p-2.5 font-bold text-xs shadow-sm transition-colors text-left flex items-center">
+                    <div class="bg-pink-200 w-7 h-7 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-heart"></i></div> Bikin Data Suami/Istri Baru
                 </button>
-                <button id="btn-tambah-cabang" type="button" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl p-3 font-bold text-sm shadow-sm transition-colors text-left flex items-center">
-                    <div class="bg-emerald-200 w-8 h-8 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-child"></i></div> Tambah Anak Langsung
+                <button id="btn-tambah-cabang" type="button" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl p-2.5 font-bold text-xs shadow-sm transition-colors text-left flex items-center">
+                    <div class="bg-emerald-200 w-7 h-7 rounded-lg flex items-center justify-center mr-3"><i class="fas fa-child"></i></div> Bikin Data Anak Baru
                 </button>
             </div>
         </div>
@@ -241,14 +253,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             const title = $("modal-tambah-title");
 
             if (context === 'ADD_CHILD') {
-                title.innerHTML = `<i class="fas fa-child text-emerald-600 mr-2"></i>Anak dari ${escapeHtml(targetName)}`;
+                title.innerHTML = `<i class="fas fa-child text-emerald-600 mr-2"></i>Bikin Anak Baru dari ${escapeHtml(targetName)}`;
             } else if (context === 'ADD_SPOUSE') {
-                title.innerHTML = `<i class="fas fa-heart text-pink-500 mr-2"></i>Pasangan untuk ${escapeHtml(targetName)}`;
+                title.innerHTML = `<i class="fas fa-heart text-pink-500 mr-2"></i>Bikin Pasangan Baru untuk ${escapeHtml(targetName)}`;
                 $("select-gender").value = targetGender === 'L' ? 'P' : 'L';
             } else if (context === 'ADD_PARENT') {
-                title.innerHTML = `<i class="fas fa-arrow-up text-blue-600 mr-2"></i>Orang Tua dari ${escapeHtml(targetName)}`;
+                title.innerHTML = `<i class="fas fa-arrow-up text-blue-600 mr-2"></i>Bikin Ortu Baru untuk ${escapeHtml(targetName)}`;
             } else {
-                title.innerHTML = `<i class="fas fa-user-secret text-purple-600 mr-2"></i>Garis Keturunan Baru`;
+                title.innerHTML = `<i class="fas fa-user-secret text-purple-600 mr-2"></i>Bikin Garis Keturunan Baru`;
             }
             showModal(modalTambah);
             setTimeout(() => $("input-nama").focus(), 100);
@@ -376,9 +388,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     if (cycle) p.parentId = "";
                 });
 
-                // ==========================================
-                // SOLUSI CERDAS: AKAR GAIB (DUMMY ROOT)
-                // ==========================================
                 let roots = primary.filter(p => !p.parentId || p.parentId === "");
                 const DUMMY_ROOT = "DUMMY_INVISIBLE_ROOT";
                 
@@ -401,7 +410,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const spousePositions = [];
                 const pairsRendered = new Set();
                 nodes.forEach(n => {
-                    if(n.data.isDummy) return; // Lewati dummy saat cari pasangan
+                    if(n.data.isDummy) return;
                     const spIds = spouseOf.get(n.data.dbKey) || [];
                     spIds.forEach(id => {
                         const pairKey = [n.data.dbKey, id].sort().join("::");
@@ -443,11 +452,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     g.selectAll(".add-child-btn").attr("transform", sp => `translate(${(sp.source.x + sp.x) / 2}, ${(sp.source.y + sp.y) / 2})`);
                 }
 
-                // FILTER LINK: Jangan gambar garis yang asalnya dari akar gaib
                 const validLinks = root.links().filter(l => !l.source.data.isDummy);
                 g.selectAll(".link").data(validLinks).join("path").attr("class", "link");
                 
-                // EXTRA LINKS (Untuk Pasangan yang punya Orang Tua)
                 const extraLinks = [];
                 spousePositions.forEach(sp => {
                     if (sp.data.parentId && sp.data.parentId !== "") {
@@ -575,7 +582,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 nodeSelection.on("click", (event, d) => {
                     if (event.defaultPrevented || isDragMode) return; 
                     event.stopPropagation();
-                    openEdit(d.data);
+                    
+                    // PENGISIAN DROPDOWN EDIT SAAT PROFIL DIKLIK
+                    $("edit-dbkey").value = d.data.dbKey;
+                    $("edit-nama").value = d.data.name;
+                    $("edit-gender").value = d.data.gender;
+                    
+                    fillSelectEdit($("edit-parent"), d.data.parentId);
+                    fillSelectEdit($("edit-spouse"), d.data.spouseId);
+                    
+                    showModal(modalEdit);
                 }).call(dragBehavior);
 
                 nodeSelection.append("circle").attr("r", 18);
@@ -599,11 +615,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             }
         }
 
-        function openEdit(person) {
-            $("edit-dbkey").value = person.dbKey;
-            $("edit-nama").value = person.name;
-            $("edit-gender").value = person.gender;
-            showModal(modalEdit);
+        // FUNGSI ISI DROPDOWN ORANG YANG SUDAH ADA
+        function fillSelectEdit(sel, selectedKey) {
+            const currentKey = $("edit-dbkey").value;
+            let options = '<option value="">-- Kosong / Belum Ada --</option>';
+            dataGlobal.forEach(p => {
+                if (p.dbKey !== currentKey) {
+                    options += `<option value="${escapeHtml(p.dbKey)}">${escapeHtml(p.name)} (${p.gender === 'L' ? 'L' : 'P'})</option>`;
+                }
+            });
+            sel.innerHTML = options;
+            if (selectedKey) sel.value = selectedKey;
         }
 
         function refreshSearch() {
@@ -655,9 +677,41 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const key = $("edit-dbkey").value;
                 const name = $("edit-nama").value.trim();
                 const gender = $("edit-gender").value;
+                const parentId = $("edit-parent").value;
+                const spouseId = $("edit-spouse").value;
+                
                 if (!key || !name) throw new Error("Nama wajib diisi.");
 
-                await update(ref(db, `${DB_PATH}/${key}`), { name, gender });
+                // CEK ANTI-SIKLUS UNTUK PARENT
+                if (parentId) {
+                    let curr = dataGlobal.find(p => p.dbKey === parentId);
+                    let cycle = false;
+                    while (curr) {
+                        if (curr.dbKey === key) { cycle = true; break; }
+                        curr = dataGlobal.find(p => p.dbKey === curr.parentId);
+                    }
+                    if (cycle) throw new Error("Gagal! Orang ini tidak bisa diset sebagai anak dari keturunannya sendiri.");
+                }
+
+                const old = dataMap[key];
+                const updates = { name, gender, parentId, spouseId };
+
+                // Kalau relasi berubah, reset koordinat manual biar rapi otomatis
+                if (old.parentId !== parentId || old.spouseId !== spouseId) {
+                    updates.manualX = null;
+                    updates.manualY = null;
+                }
+
+                await update(ref(db, `${DB_PATH}/${key}`), updates);
+
+                // Sinkronisasi Istri/Suami dua arah
+                if (old?.spouseId && old.spouseId !== spouseId && dataMap[old.spouseId]) {
+                    await update(ref(db, `${DB_PATH}/${old.spouseId}`), { spouseId: "" });
+                }
+                if (spouseId && dataMap[spouseId]) {
+                    await update(ref(db, `${DB_PATH}/${spouseId}`), { spouseId: key });
+                }
+
                 hideModal(modalEdit);
             } catch (err) { notify("Gagal memperbarui: " + err.message); } 
             finally { button.disabled = false; }
