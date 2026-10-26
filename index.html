@@ -107,7 +107,7 @@
             <form id="form-tambah" class="space-y-4">
                 <div>
                     <label class="text-xs font-bold text-slate-600">Nama Lengkap</label>
-                    <input type="text" id="input-nama" required placeholder="Contoh: Nyimas Lampeg" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <input type="text" id="input-nama" required placeholder="Contoh: Pangeran Kertadiningrat" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-slate-600">Jenis Kelamin</label>
@@ -377,20 +377,50 @@
                 }
             });
 
-            // 🌳 RENDER D3.JS VERTIKAL (Individu Mandiri + Garis Pasangan Putus-Putus)
+            // 🌳 RENDER D3.JS VERTIKAL (COUPLE LAYOUT: Suami-Istri Sejajar & Garis Anak dari Titik Tengah)
             g.selectAll("*").remove(); 
             try {
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(dataGlobal);
                 
-                const treeLayout = d3.tree().nodeSize([220, 150]); 
+                const treeLayout = d3.tree().nodeSize([240, 160]); 
                 treeLayout(root);
-                
-                g.selectAll(".link").data(root.links()).enter().append("path").attr("class", "link")
-                    .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y));
 
                 let nodeMap = {};
                 root.descendants().forEach(d => { nodeMap[d.data.dbKey] = d; });
 
+                // POST-PROCESSING: Sejajarkan posisi X dan Y suami-istri
+                root.descendants().forEach(d => {
+                    if (d.data.spouseId && nodeMap[d.data.spouseId]) {
+                        let spouseNode = nodeMap[d.data.spouseId];
+                        spouseNode.y = d.y; // Pastikan satu generasi/level vertikal
+                        if (d.data.dbKey < spouseNode.data.dbKey) {
+                            spouseNode.x = d.x + 130; // Jarak horizontal berdampingan
+                        }
+                    }
+                });
+                
+                // Render Links (Keturunan): Berasal dari titik tengah pasangan jika memiliki spouse
+                g.selectAll(".link").data(root.links()).enter().append("path").attr("class", "link")
+                    .attr("d", d => {
+                        let sourceNode = d.source;
+                        let targetNode = d.target;
+                        
+                        let startX = sourceNode.x;
+                        let startY = sourceNode.y;
+                        
+                        // Jika punya pasangan, titik awal garis anak ditarik dari tengah-tengah (midpoint)
+                        if (sourceNode.data.spouseId && nodeMap[sourceNode.data.spouseId]) {
+                            let spouseNode = nodeMap[sourceNode.data.spouseId];
+                            startX = (sourceNode.x + spouseNode.x) / 2;
+                        }
+                        
+                        return `M ${startX} ${startY}
+                                V ${(startY + targetNode.y) / 2}
+                                H ${targetNode.x}
+                                V ${targetNode.y}`;
+                    });
+
+                // Render Spouse Links (Garis Putus-Putus Horisontal antara Suami & Istri)
                 let spouseLinks = [];
                 root.descendants().forEach(d => {
                     if (d.data.spouseId && nodeMap[d.data.spouseId]) {
@@ -408,7 +438,7 @@
                     .attr("d", d => {
                         let x1 = d.source.x, y1 = d.source.y;
                         let x2 = d.target.x, y2 = d.target.y;
-                        return `M ${x1} ${y1} Q ${(x1+x2)/2} ${Math.min(y1,y2) - 15} ${x2} ${y2}`;
+                        return `M ${x1} ${y1} L ${x2} ${y2}`;
                     });
 
                 const node = g.selectAll(".node").data(root.descendants()).enter().append("g")
