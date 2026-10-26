@@ -113,9 +113,29 @@
                     <input type="text" id="input-nama" required placeholder="Contoh: Mang Ujang" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-600">Status Kekerabatan</label>
-                    <input type="text" id="input-status" required placeholder="Contoh: Anak, Cucu, Buyut" class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                </div>
+    <label class="text-xs font-bold text-slate-600">Status Kekerabatan (Pancakaki)</label>
+    <select id="select-status" required class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+        <option value="">-- Pilih Status --</option>
+        <optgroup label="Keturunan (Ke Bawah)">
+            <option value="Anak">Anak (Keturunan ke-1)</option>
+            <option value="Incu">Incu (Cucu / Anak dari anak)</option>
+            <option value="Buyut">Buyut (Cicit / Anak dari incu)</option>
+            <option value="Bao">Bao (Anak dari buyut)</option>
+            <option value="Janggawaréng">Janggawaréng (Anak dari bao)</option>
+            <option value="Udeg-udeg">Udeg-udeg (Anak dari janggawaréng)</option>
+        </optgroup>
+        <optgroup label="Leluhur & Samping">
+            <option value="Bapak/Indung">Bapak / Indung (Orang Tua)</option>
+            <option value="Aki/Nini">Aki / Nini (Kakek / Nenek)</option>
+            <option value="Dulur">Dulur (Saudara Kandung / Kakak Adik)</option>
+            <option value="Dulur Sabrayna">Dulur Sabrayna (Sepupu)</option>
+            <option value="Lainnya">✍️ Lainnya (Tulis Sendiri...)</option>
+        </optgroup>
+    </select>
+    
+    <!-- Input Teks Muncul Kalau Pilih "Lainnya" -->
+    <input type="text" id="input-status-custom" placeholder="Ketik status (misal: Uwa, Mamang, Alo)" class="hidden w-full mt-2 bg-white border border-emerald-300 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all shadow-inner">
+</div>
                 <div>
                     <label class="text-xs font-bold text-slate-600">Siapa Orang Tuanya? (Induk)</label>
                     <select id="select-parent" required class="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
