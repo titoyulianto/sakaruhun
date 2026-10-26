@@ -22,7 +22,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 .node text{font-size:12px;font-weight:800;fill:#1e293b;pointer-events:none; user-select:none;}
 .node text.status{font-size:10px;font-weight:600;fill:#64748b}
 .link{fill:none;stroke:#cbd5e1;stroke-width:2;pointer-events:none}
-.spouse-link{fill:none;stroke:#94a3b8;stroke-width:2;stroke-dasharray:4 4;pointer-events:none}
+.spouse-link{fill:none;stroke:#f472b6;stroke-width:2;stroke-dasharray:6 6;pointer-events:none}
 #map{height:300px; z-index: 10; width:100%;}
 .leaflet-container { z-index: 10 !important; }
 .modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter: blur(4px);}
@@ -43,11 +43,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 .action-badge.yellow rect { fill: #fffbeb; stroke: #fcd34d; }
 .action-badge.yellow text { fill: #b45309; font-weight: bold; font-size: 10px; text-anchor: middle; pointer-events: none;}
 .action-badge:hover rect { filter: brightness(0.95); stroke-width: 2px; }
-
-/* Selection Outline */
 .node.selected circle { stroke: #f59e0b; stroke-width: 4px; filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6)); }
-
-/* Custom Scrollbar */
 .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
 .custom-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
 </style>
@@ -66,12 +62,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     <p class="text-emerald-100 text-xs tracking-widest uppercase font-semibold">Sadulur Sadesa</p>
                 </div>
             </div>
-            
             <div class="flex-1 max-w-md relative">
                 <input id="input-pencarian" type="search" placeholder="Cari nama di silsilah..." class="w-full bg-white py-3 pl-12 pr-5 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
                 <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
             </div>
-            
             <div class="text-sm text-emerald-100 bg-black/20 px-4 py-2 rounded-xl border border-white/10 shadow-inner flex gap-3 items-center">
                 <div><i class="fas fa-users mr-2"></i><strong id="stats-warga">Memuat...</strong></div>
                 <button id="btn-logout" class="bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition" title="Keluar"><i class="fas fa-sign-out-alt"></i></button>
@@ -120,7 +114,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     </button>
                 </div>
             </div>
-
             <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex-1 flex flex-col">
                 <h2 class="text-sm font-bold mb-3 text-slate-800"><i class="fas fa-map-pin text-amber-600 mr-2"></i>Radar Sebaran</h2>
                 <div id="map" class="rounded-2xl border border-slate-200 flex-1 min-h-[250px]"></div>
@@ -259,9 +252,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                             <th class="p-3 font-bold border-b border-slate-200 text-center">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody id="tbody-direktori" class="bg-white">
-                        <!-- Diisi via JS -->
-                    </tbody>
+                    <tbody id="tbody-direktori" class="bg-white"></tbody>
                 </table>
             </div>
         </div>
@@ -299,7 +290,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     </div>
                 </div>
                 
-                <!-- KOLOM TAMBAHAN UNTUK URUTAN ANAK -->
                 <div class="grid grid-cols-2 gap-2 bg-blue-50 p-2 rounded-xl border border-blue-100">
                     <div>
                         <label class="block text-xs font-bold text-blue-800">Tahun Lahir</label>
@@ -350,9 +340,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 <button id="tab-btn-edit" class="flex-1 py-2 px-4 text-sm font-bold text-slate-500 hover:text-slate-700 transition" onclick="window.switchTab('edit')">📝 Edit Data Profile</button>
             </div>
 
-            <div id="tab-content-uraian" class="block min-h-[150px]">
-                <!-- Dihasilkan otomatis oleh JavaScript -->
-            </div>
+            <div id="tab-content-uraian" class="block min-h-[150px]"></div>
 
             <div id="tab-content-edit" class="hidden">
                 <form id="form-edit" class="space-y-4">
@@ -558,7 +546,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
             let anakList = dataGlobal.filter(a => a.fatherId === key || a.motherId === key);
             if (anakList.length > 0) {
-                // Urutkan anak di teks uraian juga
                 anakList.sort((a, b) => {
                     let aVal = a.urutan ? parseInt(a.urutan) : (parseInt(a.tahun) || 9999);
                     let bVal = b.urutan ? parseInt(b.urutan) : (parseInt(b.tahun) || 9999);
@@ -649,7 +636,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     gender: v.gender === "P" ? "P" : "L",
                     statusHidup: v.statusHidup || "Hidup",
                     tahun: v.tahun || "",
-                    urutan: (v.urutan != null && v.urutan !== "") ? parseInt(v.urutan) : null, // DATA URUTAN ANAK
+                    urutan: (v.urutan != null && v.urutan !== "") ? parseInt(v.urutan) : null,
                     fatherId: v.fatherId || "", 
                     motherId: v.motherId || "",
                     spouseIds: sIds,
@@ -687,6 +674,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             });
         }
 
+        // ==========================================
+        // TABEL DIREKTORI (LIST VIEW)
+        // ==========================================
         window.renderDirektori = function() {
             const tbody = window.$("tbody-direktori");
             if(!tbody) return;
@@ -735,7 +725,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         };
 
         // ==========================================
-        // D3.JS ENGINE: TREE HIERARKI + NON-JUMPING UI
+        // D3.JS ENGINE: TREE HIERARKI + NON-JUMPING UI + MULTIPLE SPOUSES ROUTING
         // ==========================================
         function renderTree() {
             if (!window.d3) return;
@@ -795,6 +785,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                             let main = p.dbKey;
                             let spouse = sId;
                             
+                            // Yang punya ortu jadi main line
                             if (p2 && (p2.fatherId || p2.motherId || p2.parentId)) {
                                 main = sId;
                                 spouse = p.dbKey;
@@ -809,6 +800,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     });
                 });
 
+                // Mapping Parent yang benar
                 primary.forEach(p => {
                     let rawParent = p.fatherId || p.motherId;
                     if (rawParent && isSpouseNode.has(rawParent)) { p.parentId = primaryOf[rawParent]; } 
@@ -819,6 +811,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const treeNodeIds = new Set(treeNodes.map(p => p.dbKey));
                 treeNodes.forEach(p => { if (p.parentId && !treeNodeIds.has(p.parentId)) p.parentId = ""; });
 
+                // Anti Loop
                 treeNodes.forEach(p => {
                     let curr = p.parentId;
                     let visited = new Set([p.dbKey]);
@@ -843,9 +836,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(treeNodes);
 
-                // =========================================================================
-                // URUTKAN ANAK DARI KIRI KE KANAN BERDASARKAN URUTAN ANAK ATAU TAHUN LAHIR
-                // =========================================================================
+                // SORTING URUTAN ANAK DARI KIRI KE KANAN
                 root.sort((a, b) => {
                     let aVal = a.data.urutan ? parseInt(a.data.urutan) : (parseInt(a.data.tahun) || 9999);
                     let bVal = b.data.urutan ? parseInt(b.data.urutan) : (parseInt(b.data.tahun) || 9999);
@@ -860,6 +851,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     if (n.data.manualY !== null && n.data.manualY !== undefined) n.y = n.data.manualY;
                 });
 
+                // PENYEBARAN ISTRI (STAGGERED)
                 const spousePositions = [];
                 nodes.forEach(n => {
                     if(n.data.isDummy) return;
@@ -867,7 +859,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     spIds.forEach((id, idx) => {
                         const person = byIdGlobal.get(id);
                         if(person) {
-                            let sx = n.x + 180, sy = n.y + (idx * 60); 
+                            // Istri ke-1 ke Kanan, Istri ke-2 ke Kiri (Staggered X)
+                            let offsetX = (idx % 2 === 0) ? 200 + (idx * 50) : -200 - (idx * 50);
+                            let sx = n.x + offsetX;
+                            let sy = n.y; 
+                            
                             if (person.manualX !== null && person.manualX !== undefined) sx = person.manualX;
                             if (person.manualY !== null && person.manualY !== undefined) sy = person.manualY;
                             spousePositions.push({ data: person, source: n, x: sx, y: sy, isSpouse: true });
@@ -879,15 +875,32 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 nodes.forEach(n => { if(!n.data.isDummy) drawNodes.push(n); });
                 spousePositions.forEach(s => { drawNodes.push(s); });
 
+                // GARIS ANAK DARI MIDPOINT
                 const validLinks = root.links().filter(l => !l.source.data.isDummy);
                 gSVG.selectAll(".link").data(validLinks).join("path").attr("class", "link")
                     .attr("d", d => {
-                        let startX = d.source.x, startY = d.source.y;
-                        const spData = spousePositions.find(sp => sp.source.data.dbKey === d.source.data.dbKey);
-                        if (spData) { startX = (spData.source.x + spData.x) / 2; startY = (spData.source.y + spData.y) / 2; }
+                        const child = d.target.data;
+                        let startX = d.source.x;
+                        let startY = d.source.y;
+                        
+                        // Cari posisi akurat Bapak dan Ibu di drawNodes
+                        const fNode = drawNodes.find(n => n.data.dbKey === child.fatherId);
+                        const mNode = drawNodes.find(n => n.data.dbKey === child.motherId);
+                        
+                        // Jika Punya Bapak dan Ibu, ambil MIDPOINT (Tengah)
+                        if (fNode && mNode) {
+                            startX = (fNode.x + mNode.x) / 2;
+                            startY = (fNode.y + mNode.y) / 2;
+                        } else if (fNode) {
+                            startX = fNode.x; startY = fNode.y;
+                        } else if (mNode) {
+                            startX = mNode.x; startY = mNode.y;
+                        }
+                        
                         return `M${startX},${startY} V${(startY + d.target.y) / 2} H${d.target.x} V${d.target.y}`;
                     });
                 
+                // GARIS EXTRA KE ORTU
                 const extraLinks = [];
                 spousePositions.forEach(sp => {
                     let pId = sp.data.fatherId || sp.data.motherId;
@@ -899,9 +912,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 gSVG.selectAll(".extra-link").data(extraLinks).join("path").attr("class", "link extra-link")
                     .attr("d", l => `M${l.source.x},${l.source.y} V${(l.source.y + l.target.y) / 2} H${l.target.x} V${l.target.y}`);
 
+                // GARIS PASANGAN (PUTUS-PUTUS)
                 gSVG.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link")
-                    .attr("d", sp => `M${sp.source.x+17},${sp.source.y} L${sp.x-17},${sp.y}`);
+                    .attr("d", sp => `M${sp.source.x},${sp.source.y} L${sp.x},${sp.y}`);
 
+                // RENDER LINGKARAN ORANG
                 let nodeSelection = gSVG.selectAll(".node").data(drawNodes).join("g")
                     .attr("class", d => `node ${d.data.gender === "P" ? "perempuan" : "laki"} ${d.data.dbKey === selectedNodeId ? "selected" : ""}`)
                     .attr("transform", d => `translate(${d.x},${d.y})`);
@@ -950,7 +965,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     return detailText;
                 });
 
-                // UI GENI-STYLE: BADGE ACTION
+                // UI GENI-STYLE: BADGE ACTION (DIGAMBAR SEMUA TAPI DISEMBUNYIKAN)
                 nodeSelection.each(function(d) {
                     const nodeGroup = d3.select(this);
                     const badgeGroup = nodeGroup.append("g").attr("class", "geni-badges")
@@ -1004,8 +1019,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
                     const btnEdit = badgeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(-90, 30)")
                         .on("click", (e) => { e.stopPropagation(); window.bukaProfilGeni(dbKey); });
-                    btnEdit.append("rect").attr("width", 65).attr("height", 22);
-                    btnEdit.append("text").attr("x", 32.5).attr("y", 15).text("👁️ Profil");
+                    btnEdit.append("rect").attr("width", 50).attr("height", 22);
+                    btnEdit.append("text").attr("x", 25).attr("y", 15).text("👁️ Profil");
                 });
 
                 if(drawNodes.length > 0 && !hasCenteredInitially) {
@@ -1026,6 +1041,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             } catch (err) { console.error("Gagal merender pohon:", err); }
         }
 
+        // =========================================================================
+        // SAFE EVENT BINDINGS
+        // =========================================================================
         window.attachSafeListener = function(id, event, callback) {
             const el = window.$(id);
             if (el) el.addEventListener(event, callback);
@@ -1071,7 +1089,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     else if (ctx === 'ADD_CHILD') {
                         initCoord.manualY = (targetNode.manualY || 0) + 180; 
                         initCoord.manualX = targetNode.manualX || 0;
-                        if(targetNode.gender === 'L') fId = targetKey; else mId = targetKey;
+                        
+                        // LOGIKA CERDAS: AUTO ASSIGN SUAMI/ISTRI SAAT NAMBAH ANAK DARI PASANGAN TERTENTU
+                        if(targetNode.gender === 'L') {
+                            fId = targetKey;
+                            if (targetNode.spouseIds && targetNode.spouseIds.length === 1) mId = targetNode.spouseIds[0];
+                        } else {
+                            mId = targetKey;
+                            if (targetNode.spouseIds && targetNode.spouseIds.length > 0) fId = targetNode.spouseIds[0]; // Ambil suami pertama
+                        }
                     }
                     else if (ctx === 'ADD_SIBLING_KAKAK' || ctx === 'ADD_SIBLING_ADIK') {
                         fId = targetNode.fatherId || "";
