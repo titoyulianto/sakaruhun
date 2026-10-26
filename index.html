@@ -47,7 +47,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 /* Selection Outline */
 .node.selected circle { stroke: #f59e0b; stroke-width: 4px; filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6)); }
 
-/* Custom Scrollbar for Directory */
+/* Custom Scrollbar */
 .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
 .custom-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
 </style>
@@ -131,7 +131,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-3xl z-10">
                 <h2 class="text-base font-bold text-slate-800"><i class="fas fa-project-diagram text-emerald-600 mr-2"></i>Pohon Genealogi</h2>
                 <p id="tree-instruction" class="text-xs text-emerald-600 font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-                    <i class="fas fa-hand-pointer mr-1"></i> Klik profil/lingkaran untuk memunculkan tombol Relasi.
+                    <i class="fas fa-hand-pointer mr-1"></i> Klik profil/lingkaran untuk memunculkan tombol Relasi & Profil.
                 </p>
             </div>
             
@@ -327,67 +327,80 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         </div>
     </div>
 
-    <!-- MODAL EDIT -->
-    <div id="modal-edit" class="modal">
-        <div class="modal-card relative border-t-4 border-amber-500">
-            <button onclick="window.hideModal('modal-edit')" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
-            <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-cog text-amber-500 mr-2"></i>Kelola Profil</h3>
+    <!-- MODAL PROFIL & EDIT DATA -->
+    <div id="modal-profil" class="modal">
+        <div class="modal-card relative border-t-4 border-amber-500 !max-w-xl">
+            <button onclick="window.hideModal('modal-profil')" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
+            <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-user-circle text-amber-500 mr-2"></i>Profil & Silsilah Warga</h3>
 
-            <form id="form-edit" class="space-y-4">
-                <input type="hidden" id="edit-dbkey">
+            <div class="flex border-b border-slate-200 mb-4">
+                <button id="tab-btn-uraian" class="flex-1 py-2 px-4 text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition" onclick="window.switchTab('uraian')">📜 Uraian Kekerabatan</button>
+                <button id="tab-btn-edit" class="flex-1 py-2 px-4 text-sm font-bold text-slate-500 hover:text-slate-700 transition" onclick="window.switchTab('edit')">📝 Edit Data Profile</button>
+            </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap</label>
-                    <input id="edit-nama" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                </div>
+            <!-- KONTEN TAB URAIAN SUNDA -->
+            <div id="tab-content-uraian" class="block min-h-[150px]">
+                <!-- Dihasilkan otomatis oleh JavaScript -->
+            </div>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600">Jenis Kelamin</label>
-                        <select id="edit-gender" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                            <option value="L">Laki-laki</option>
-                            <option value="P">Perempuan</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600">Status Kehidupan</label>
-                        <select id="edit-status" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                            <option value="Hidup">Masih Hidup</option>
-                            <option value="Meninggal">Sudah Meninggal</option>
-                        </select>
-                    </div>
-                </div>
+            <!-- KONTEN TAB EDIT -->
+            <div id="tab-content-edit" class="hidden">
+                <form id="form-edit" class="space-y-4">
+                    <input type="hidden" id="edit-dbkey">
 
-                <div class="grid grid-cols-3 gap-2">
                     <div>
-                        <label class="block text-xs font-bold text-slate-600">Dusun</label>
-                        <select id="edit-dusun" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                            <option value="Manis">Manis</option>
-                            <option value="Pahing">Pahing</option>
-                            <option value="Puhun">Puhun</option>
-                            <option value="Wage">Wage</option>
-                            <option value="Kaliwon">Kaliwon</option>
-                        </select>
+                        <label class="block text-xs font-bold text-slate-600">Nama Lengkap</label>
+                        <input id="edit-nama" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600">RT</label>
-                        <input type="text" id="edit-rt" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600">RW</label>
-                        <input type="text" id="edit-rw" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                    </div>
-                </div>
 
-                <div class="flex gap-2 pt-2 border-t border-slate-200 mt-2">
-                    <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl p-3 font-bold text-sm shadow-md transition-colors">
-                        <i class="fas fa-save mr-1"></i> Update Data
-                    </button>
-                    <button id="btn-hapus-data" type="button" class="bg-red-100 hover:bg-red-200 text-red-600 rounded-xl px-5 transition-colors font-bold" title="Hapus Permanen">
-                        <i class="fas fa-trash-alt"></i> Hapus
-                    </button>
-                </div>
-            </form>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600">Jenis Kelamin</label>
+                            <select id="edit-gender" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                <option value="L">Laki-laki</option>
+                                <option value="P">Perempuan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600">Status Kehidupan</label>
+                            <select id="edit-status" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                <option value="Hidup">Masih Hidup</option>
+                                <option value="Meninggal">Sudah Meninggal</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600">Dusun</label>
+                            <select id="edit-dusun" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                <option value="Manis">Manis</option>
+                                <option value="Pahing">Pahing</option>
+                                <option value="Puhun">Puhun</option>
+                                <option value="Wage">Wage</option>
+                                <option value="Kaliwon">Kaliwon</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600">RT</label>
+                            <input type="text" id="edit-rt" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600">RW</label>
+                            <input type="text" id="edit-rw" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 pt-2 border-t border-slate-200 mt-2">
+                        <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl p-3 font-bold text-sm shadow-md transition-colors">
+                            <i class="fas fa-save mr-1"></i> Update Data
+                        </button>
+                        <button id="btn-hapus-data" type="button" class="bg-red-100 hover:bg-red-200 text-red-600 rounded-xl px-5 transition-colors font-bold" title="Hapus Permanen">
+                            <i class="fas fa-trash-alt"></i> Hapus
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -406,6 +419,25 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         window.hideModal = function(id) { window.$(id)?.classList.remove("open"); };
         window.notify = function(msg) { alert(msg); };
         window.escapeHtml = function(v) { return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); };
+
+        window.switchTab = function(tabName) {
+            const btnUraian = window.$("tab-btn-uraian");
+            const btnEdit = window.$("tab-btn-edit");
+            const contUraian = window.$("tab-content-uraian");
+            const contEdit = window.$("tab-content-edit");
+            
+            if(tabName === 'uraian') {
+                btnUraian.className = "flex-1 py-2 px-4 text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 transition";
+                btnEdit.className = "flex-1 py-2 px-4 text-sm font-bold text-slate-500 hover:text-slate-700 transition";
+                contUraian.classList.remove("hidden");
+                contEdit.classList.add("hidden");
+            } else {
+                btnEdit.className = "flex-1 py-2 px-4 text-sm font-bold text-amber-600 border-b-2 border-amber-600 transition";
+                btnUraian.className = "flex-1 py-2 px-4 text-sm font-bold text-slate-500 hover:text-slate-700 transition";
+                contEdit.classList.remove("hidden");
+                contUraian.classList.add("hidden");
+            }
+        };
 
         window.randomCoords = function() { 
             const CILAJA_CENTER = { lat: -6.9535, lng: 108.4905 }; 
@@ -448,15 +480,89 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             setTimeout(() => window.$("input-nama")?.focus(), 100);
         };
 
-        window.bukaModalEditGeni = function(key, nama, gender, statusHidup, dusun, rt, rw) {
+        // ==========================================
+        // PROFIL & GENERATOR URAIAN SUNDA
+        // ==========================================
+        window.bukaProfilGeni = function(key) {
+            const nodeData = dataMap[key];
+            if(!nodeData) return;
+
+            // 1. Isi Form Edit
             if(window.$("edit-dbkey")) window.$("edit-dbkey").value = key;
-            if(window.$("edit-nama")) window.$("edit-nama").value = nama;
-            if(window.$("edit-gender")) window.$("edit-gender").value = gender;
-            if(window.$("edit-status")) window.$("edit-status").value = statusHidup || "Hidup";
-            if(window.$("edit-dusun")) window.$("edit-dusun").value = dusun || "Manis";
-            if(window.$("edit-rt")) window.$("edit-rt").value = rt || "";
-            if(window.$("edit-rw")) window.$("edit-rw").value = rw || "";
-            window.showModal('modal-edit');
+            if(window.$("edit-nama")) window.$("edit-nama").value = nodeData.nama;
+            if(window.$("edit-gender")) window.$("edit-gender").value = nodeData.gender;
+            if(window.$("edit-status")) window.$("edit-status").value = nodeData.statusHidup || "Hidup";
+            if(window.$("edit-dusun")) window.$("edit-dusun").value = nodeData.dusun || "Manis";
+            if(window.$("edit-rt")) window.$("edit-rt").value = nodeData.rt || "";
+            if(window.$("edit-rw")) window.$("edit-rw").value = nodeData.rw || "";
+
+            // 2. Generate Uraian Silsilah Sunda
+            window.generateUraianSunda(key);
+
+            // Buka Modal, Set Default Tab Uraian
+            window.switchTab('uraian');
+            window.showModal('modal-profil');
+        };
+
+        window.generateUraianSunda = function(key) {
+            const p = dataMap[key];
+            if(!p) return;
+            
+            const cont = window.$("tab-content-uraian");
+            if(!cont) return;
+
+            let html = `<div class="space-y-3 text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">`;
+            
+            // Header Identitas Utama
+            html += `<p><b class="text-base text-slate-900">${escapeHtml(p.displayNama)}</b> mangrupikeun warga asal Dusun ${escapeHtml(p.dusun)} RT ${escapeHtml(p.rt)}/RW ${escapeHtml(p.rw)}.</p>`;
+
+            // Bapak & Ibu
+            const bapak = dataMap[p.fatherId];
+            const indung = dataMap[p.motherId];
+            if (bapak || indung) {
+                html += `<p class="border-l-4 border-blue-400 pl-3">Anjeunna téh putra ti `;
+                if(bapak) html += `<a href="#" onclick="window.focusToNode('${bapak.dbKey}')" class="text-blue-600 font-bold hover:underline cursor-pointer">${escapeHtml(bapak.displayNama)}</a> (Bapak)`;
+                if(bapak && indung) html += ` sareng `;
+                if(indung) html += `<a href="#" onclick="window.focusToNode('${indung.dbKey}')" class="text-pink-600 font-bold hover:underline cursor-pointer">${escapeHtml(indung.displayNama)}</a> (Indung)`;
+                html += `.</p>`;
+            }
+
+            // Pasangan (Suami/Istri)
+            if (p.spouseIds && p.spouseIds.length > 0) {
+                const spouses = p.spouseIds.map(sid => {
+                    const sp = dataMap[sid];
+                    return sp ? `<a href="#" onclick="window.focusToNode('${sp.dbKey}')" class="text-purple-600 font-bold hover:underline cursor-pointer">${escapeHtml(sp.displayNama)}</a>` : '';
+                }).filter(Boolean);
+                
+                if(spouses.length > 0) {
+                    html += `<p class="border-l-4 border-purple-400 pl-3">Pasangan hirupna nyaéta: ${spouses.join(", ")}.</p>`;
+                }
+            }
+
+            // Anak-anak
+            const anakList = dataGlobal.filter(a => a.fatherId === key || a.motherId === key);
+            if (anakList.length > 0) {
+                const anakLinks = anakList.map(a => `<a href="#" onclick="window.focusToNode('${a.dbKey}')" class="text-emerald-600 font-bold hover:underline cursor-pointer">${escapeHtml(a.displayNama)}</a>`);
+                html += `<p class="border-l-4 border-emerald-400 pl-3">Sareng gaduh putra/putri: ${anakLinks.join(", ")}.</p>`;
+            }
+
+            // Dulur (Saudara)
+            let dulurList = [];
+            if (p.fatherId || p.motherId) {
+                dulurList = dataGlobal.filter(a => a.dbKey !== key && 
+                    ((p.fatherId && a.fatherId === p.fatherId) || (p.motherId && a.motherId === p.motherId))
+                );
+            }
+            // Hapus duplikat saudara jika bapak/ibu sama
+            dulurList = [...new Map(dulurList.map(item => [item.dbKey, item])).values()];
+            
+            if (dulurList.length > 0) {
+                const dulurLinks = dulurList.map(a => `<a href="#" onclick="window.focusToNode('${a.dbKey}')" class="text-amber-600 font-bold hover:underline cursor-pointer">${escapeHtml(a.displayNama)}</a>`);
+                html += `<p class="border-l-4 border-amber-400 pl-3">Gaduh dulur sadarah: ${dulurLinks.join(", ")}.</p>`;
+            }
+
+            html += `</div>`;
+            cont.innerHTML = html;
         };
 
         // ==========================================
@@ -477,7 +583,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         let dataMap = {};
         let dataGlobal = [];
         let map, layerGroup;
-        let nodeSelection = null;
         
         window.svg = null;
         window.gSVG = null;
@@ -582,7 +687,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     <td class="p-3 text-xs ${p.statusHidup === 'Hidup' ? 'text-emerald-600' : 'text-slate-400'}">${p.statusHidup}</td>
                     <td class="p-3 text-xs">Ds. ${escapeHtml(p.dusun)} - RT ${escapeHtml(p.rt)}/RW ${escapeHtml(p.rw)}</td>
                     <td class="p-3 text-center">
-                        <button onclick="window.focusToNode('${p.dbKey}')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-lg text-xs font-bold transition">Lihat di Pohon</button>
+                        <button onclick="window.focusToNode('${p.dbKey}')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-lg text-xs font-bold transition">Lihat Silsilah</button>
                     </td>
                 </tr>`;
             });
@@ -591,6 +696,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
         window.focusToNode = function(dbKey) {
             window.hideModal('modal-direktori');
+            window.hideModal('modal-profil');
             selectedNodeId = dbKey;
             
             let focusNode = dataGlobal.find(d => d.dbKey === dbKey);
@@ -600,7 +706,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const height = container.clientHeight;
                 let tx = focusNode.manualX || 0;
                 let ty = focusNode.manualY || 0;
-                
                 window.svg.transition().duration(800).call(window.zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - tx, height / 2 - ty + 50));
             }
             renderTree();
@@ -660,7 +765,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     const sList = p.spouseIds || [];
                     sList.forEach(sId => {
                         if (!byIdGlobal.has(sId)) return;
-                        
                         const pairKey = [p.dbKey, sId].sort().join("::");
                         if (!renderedPairs.has(pairKey)) {
                             renderedPairs.add(pairKey);
@@ -765,7 +869,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 gSVG.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link")
                     .attr("d", sp => `M${sp.source.x+17},${sp.source.y} L${sp.x-17},${sp.y}`);
 
-                nodeSelection = gSVG.selectAll(".node").data(drawNodes).join("g")
+                let nodeSelection = gSVG.selectAll(".node").data(drawNodes).join("g")
                     .attr("class", d => `node ${d.data.gender === "P" ? "perempuan" : "laki"} ${d.data.dbKey === selectedNodeId ? "selected" : ""}`)
                     .attr("transform", d => `translate(${d.x},${d.y})`);
 
@@ -789,7 +893,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     event.stopPropagation();
                     
                     const isCurrentlySelected = (selectedNodeId === d.data.dbKey);
-                    
                     d3.selectAll(".geni-badges").style("display", "none");
                     d3.selectAll(".node").classed("selected", false);
                     
@@ -804,38 +907,29 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
                 nodeSelection.append("circle").attr("r", 20);
                 nodeSelection.append("text").attr("dy", -32).attr("text-anchor", "middle").text(d => {
-                    let dName = d.data.displayNama || d.data.nama;
+                    let dName = d.data.displayNama;
                     return dName.length > 25 ? dName.slice(0, 23) + "…" : dName;
                 });
-                
                 nodeSelection.append("text").attr("class", "status").attr("dy", 35).attr("text-anchor", "middle").text(d => {
                     let detailText = `Dusun ${d.data.dusun}`;
                     if(d.data.rt) detailText += ` RT ${d.data.rt}`;
                     return detailText;
                 });
 
-                // =========================================================================
-                // BUG FIX: PENGGUNAAN SAFE VARIABLE UNTUK EVENT ACTION BADGES
-                // =========================================================================
+                // UI GENI-STYLE (STATIS, HANYA SHOW/HIDE)
                 nodeSelection.each(function(d) {
                     const nodeGroup = d3.select(this);
                     const badgeGroup = nodeGroup.append("g").attr("class", "geni-badges")
                                                 .style("display", d.data.dbKey === selectedNodeId ? "block" : "none");
                     
-                    // Simpan variabel statis biar ga error ReferenceError 'd'
                     const dbKey = d.data.dbKey;
                     const nama = d.data.nama;
                     const gender = d.data.gender;
-                    const statusHidup = d.data.statusHidup;
-                    const dusun = d.data.dusun;
-                    const rt = d.data.rt;
-                    const rw = d.data.rw;
                     
                     const noFather = !d.data.fatherId || d.data.fatherId === "";
                     const noMother = !d.data.motherId || d.data.motherId === "";
                     const hasParent = !noFather || !noMother;
 
-                    // 1. TOMBOL ATAS: TAMBAH AYAH & IBU 
                     if (noFather) {
                         const btnAyah = badgeGroup.append("g").attr("class", "action-badge blue").attr("transform", "translate(-70, -80)")
                             .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT_FATHER', dbKey, nama, 'L'); });
@@ -851,20 +945,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         badgeGroup.append("path").attr("d", "M35,-58 V-20").attr("class", "link"); 
                     }
 
-                    // 2. TOMBOL KANAN: TAMBAH PASANGAN
                     const btnSpouse = badgeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(40, -10)")
                         .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SPOUSE', dbKey, nama, gender === 'L' ? 'P' : 'L'); });
                     btnSpouse.append("rect").attr("width", 75).attr("height", 22);
                     btnSpouse.append("text").attr("x", 37).attr("y", 15).text("+ Pasangan");
 
-                    // 3. TOMBOL BAWAH: TAMBAH ANAK
                     const btnAnak = badgeGroup.append("g").attr("class", "action-badge green").attr("transform", "translate(-35, 50)")
                         .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_CHILD', dbKey, nama, null); });
                     btnAnak.append("rect").attr("width", 70).attr("height", 22);
                     btnAnak.append("text").attr("x", 35).attr("y", 15).text("+ Anak");
                     badgeGroup.append("path").attr("d", "M0,20 V50").attr("class", "link");
 
-                    // 4. TOMBOL KIRI KELUARGA: TAMBAH KAKAK/ADIK (Hanya Muncul Jika Sudah Ada Orang Tua)
                     if (hasParent) {
                         const btnKakak = badgeGroup.append("g").attr("class", "action-badge yellow").attr("transform", "translate(-100, -25)")
                             .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SIBLING_KAKAK', dbKey, nama, null); });
@@ -877,11 +968,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         btnAdik.append("text").attr("x", 32.5).attr("y", 14).text("+ Adik");
                     }
 
-                    // 5. TOMBOL KIRI BAWAH: EDIT/KELOLA
+                    // TOMBOL PROFIL / EDIT (KUNCI RELASI SILANG)
                     const btnEdit = badgeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(-90, 30)")
-                        .on("click", (e) => { e.stopPropagation(); window.bukaModalEditGeni(dbKey, nama, gender, statusHidup, dusun, rt, rw); });
-                    btnEdit.append("rect").attr("width", 50).attr("height", 22);
-                    btnEdit.append("text").attr("x", 25).attr("y", 15).text("📝 Edit");
+                        .on("click", (e) => { e.stopPropagation(); window.bukaProfilGeni(dbKey); });
+                    btnEdit.append("rect").attr("width", 65).attr("height", 22);
+                    btnEdit.append("text").attr("x", 32.5).attr("y", 15).text("👁️ Profil");
                 });
 
                 if(drawNodes.length > 0 && !hasCenteredInitially) {
@@ -899,9 +990,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     hasCenteredInitially = true; 
                 }
 
-            } catch (err) {
-                console.error("Gagal merender pohon:", err);
-            }
+            } catch (err) { console.error("Gagal merender pohon:", err); }
         }
 
         // =========================================================================
@@ -999,9 +1088,35 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 if (!key || !nama) throw new Error("Nama wajib diisi.");
                 const updates = { nama: nama, gender, statusHidup, dusun, rt, rw };
                 await update(ref(db, `${DB_PATH}/${key}`), updates);
-                window.hideModal('modal-edit');
+                window.hideModal('modal-profil');
             } catch (err) { window.notify("Gagal memperbarui: " + err.message); } 
             finally { if(button) button.disabled = false; }
+        });
+
+        window.attachSafeListener("btn-hapus-data", "click", async () => {
+            const key = window.$("edit-dbkey")?.value;
+            if (!key) return;
+            if (!confirm("Hapus individu ini? Relasi anak dan pasangan akan diputuskan permanen.")) return;
+            try {
+                const updates = {};
+                // Hapus dari ortu anak-anak
+                dataGlobal.forEach(p => { 
+                    if(p.fatherId === key) updates[`${DB_PATH}/${p.dbKey}/fatherId`] = "";
+                    if(p.motherId === key) updates[`${DB_PATH}/${p.dbKey}/motherId`] = "";
+                });
+                // Hapus dari daftar spouse pasangannya
+                dataGlobal.forEach(p => {
+                    if (p.spouseIds && p.spouseIds.includes(key)) {
+                        let newList = p.spouseIds.filter(id => id !== key);
+                        updates[`${DB_PATH}/${p.dbKey}/spouseIds`] = newList;
+                    }
+                });
+
+                if (Object.keys(updates).length) await update(ref(db), updates);
+                await remove(ref(db, `${DB_PATH}/${key}`));
+                window.hideModal('modal-profil');
+                selectedNodeId = null;
+            } catch (err) { window.notify("Gagal menghapus: " + err.message); }
         });
 
         window.attachSafeListener("btn-toggle-drag", "click", () => {
