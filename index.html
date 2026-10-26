@@ -39,7 +39,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 
 <body class="text-slate-800 flex flex-col min-h-screen">
 
-    <!-- HEADER DESKTOP LEBAR -->
     <header class="bg-emerald-700 shadow-md py-6 px-8 bg-pattern relative z-20 shrink-0">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-4">
@@ -63,12 +62,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         </div>
     </header>
 
-    <!-- MAIN DESKTOP GRID -->
     <main class="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        
-        <!-- SIDEBAR KIRI (Kontrol & Peta) -->
         <aside class="col-span-1 flex flex-col gap-5">
-            <!-- Panel Kontrol Utama -->
             <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200">
                 <h2 class="text-sm font-bold mb-4 text-slate-800 uppercase tracking-wider"><i class="fas fa-sliders-h text-emerald-600 mr-2"></i>Kontrol Panel</h2>
                 
@@ -97,14 +92,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 </div>
             </div>
 
-            <!-- Panel Peta -->
             <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex-1 flex flex-col">
                 <h2 class="text-sm font-bold mb-3 text-slate-800"><i class="fas fa-map-pin text-amber-600 mr-2"></i>Radar Sebaran</h2>
                 <div id="map" class="rounded-2xl border border-slate-200 flex-1 min-h-[250px]"></div>
             </div>
         </aside>
 
-        <!-- KANVAS SILSILAH UTAMA (Kanan - Lebar) -->
         <section class="col-span-1 lg:col-span-3 bg-white rounded-3xl shadow-md border border-slate-200 flex flex-col relative">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-3xl">
                 <h2 class="text-base font-bold text-slate-800"><i class="fas fa-project-diagram text-emerald-600 mr-2"></i>Pohon Genealogi</h2>
@@ -265,7 +258,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             const result = {};
             Object.entries(raw || {}).forEach(([key, v]) => {
                 if (!v || typeof v !== "object") return;
-                
                 let mx = (v.manualX != null && v.manualX !== "" && !isNaN(v.manualX)) ? Number(v.manualX) : null;
                 let my = (v.manualY != null && v.manualY !== "" && !isNaN(v.manualY)) ? Number(v.manualY) : null;
 
@@ -281,7 +273,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     manualY: my
                 };
             });
-            
             Object.values(result).forEach(p => {
                 if (p.parentId && !result[p.parentId]) { p.parentId = ""; }
                 if (p.spouseId && !result[p.spouseId]) { p.spouseId = ""; }
@@ -385,13 +376,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     if (cycle) p.parentId = "";
                 });
 
+                // ==========================================
+                // SOLUSI CERDAS: AKAR GAIB (DUMMY ROOT)
+                // ==========================================
                 let roots = primary.filter(p => !p.parentId || p.parentId === "");
-                if (roots.length === 0 && primary.length > 0) { primary[0].parentId = ""; roots = [primary[0]]; }
+                const DUMMY_ROOT = "DUMMY_INVISIBLE_ROOT";
+                
                 if (roots.length > 1) {
-                    let mainRoot = roots[0];
-                    for (let i = 1; i < roots.length; i++) {
-                        roots[i].parentId = mainRoot.dbKey;
-                    }
+                    primary.push({ dbKey: DUMMY_ROOT, name: "", gender: "L", parentId: "", isDummy: true });
+                    roots.forEach(r => r.parentId = DUMMY_ROOT);
+                } else if (roots.length === 0 && primary.length > 0) {
+                    primary[0].parentId = "";
                 }
 
                 const root = d3.stratify().id(d => d.dbKey).parentId(d => d.parentId)(primary);
@@ -399,13 +394,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const nodes = root.descendants();
                 
                 nodes.forEach(n => {
-                    if (n.data.manualX !== null) n.x = n.data.manualX;
-                    if (n.data.manualY !== null) n.y = n.data.manualY;
+                    if (n.data.manualX !== null && n.data.manualX !== undefined) n.x = n.data.manualX;
+                    if (n.data.manualY !== null && n.data.manualY !== undefined) n.y = n.data.manualY;
                 });
 
                 const spousePositions = [];
                 const pairsRendered = new Set();
                 nodes.forEach(n => {
+                    if(n.data.isDummy) return; // Lewati dummy saat cari pasangan
                     const spIds = spouseOf.get(n.data.dbKey) || [];
                     spIds.forEach(id => {
                         const pairKey = [n.data.dbKey, id].sort().join("::");
@@ -415,15 +411,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         const person = byIdGlobal.get(id);
                         if(person) {
                             let sx = n.x + 150, sy = n.y; 
-                            if (person.manualX !== null) sx = person.manualX;
-                            if (person.manualY !== null) sy = person.manualY;
+                            if (person.manualX !== null && person.manualX !== undefined) sx = person.manualX;
+                            if (person.manualY !== null && person.manualY !== undefined) sy = person.manualY;
                             spousePositions.push({ data: { ...person, status: "Pasangan" }, source: n, x: sx, y: sy, isSpouse: true });
                         }
                     });
                 });
 
                 const drawNodes = [];
-                nodes.forEach(n => { n.data.status = statusFor(n.data.dbKey); drawNodes.push(n); });
+                nodes.forEach(n => { 
+                    if(!n.data.isDummy) {
+                        n.data.status = statusFor(n.data.dbKey); 
+                        drawNodes.push(n); 
+                    }
+                });
                 spousePositions.forEach(s => { drawNodes.push(s); });
 
                 function updateLinks() {
@@ -433,12 +434,29 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         if (spData) { startX = (spData.source.x + spData.x) / 2; startY = (spData.source.y + spData.y) / 2; }
                         return `M${startX},${startY} V${(startY + l.target.y) / 2} H${l.target.x} V${l.target.y}`;
                     });
+                    
+                    g.selectAll(".extra-link").attr("d", l => {
+                        return `M${l.source.x},${l.source.y} V${(l.source.y + l.target.y) / 2} H${l.target.x} V${l.target.y}`;
+                    });
+
                     g.selectAll(".spouse-link").attr("d", sp => `M${sp.source.x},${sp.source.y} L${sp.x},${sp.y}`);
                     g.selectAll(".add-child-btn").attr("transform", sp => `translate(${(sp.source.x + sp.x) / 2}, ${(sp.source.y + sp.y) / 2})`);
                 }
 
-                const links = root.links();
-                g.selectAll(".link").data(links).join("path").attr("class", "link");
+                // FILTER LINK: Jangan gambar garis yang asalnya dari akar gaib
+                const validLinks = root.links().filter(l => !l.source.data.isDummy);
+                g.selectAll(".link").data(validLinks).join("path").attr("class", "link");
+                
+                // EXTRA LINKS (Untuk Pasangan yang punya Orang Tua)
+                const extraLinks = [];
+                spousePositions.forEach(sp => {
+                    if (sp.data.parentId && sp.data.parentId !== "") {
+                        const pNode = drawNodes.find(n => n.data.dbKey === sp.data.parentId);
+                        if (pNode) extraLinks.push({ source: pNode, target: sp });
+                    }
+                });
+                g.selectAll(".extra-link").data(extraLinks).join("path").attr("class", "link extra-link");
+
                 g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link");
 
                 const addChildBtn = g.selectAll(".add-child-btn").data(spousePositions).join("g")
@@ -703,9 +721,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             $("btn-reset-layout").addEventListener("click", resetLayout);
             $("btn-tambah-data-main").addEventListener("click", () => openTambahModal('MAIN', '', '', null));
             
-            // TOMBOL YANG BIKIN ERROR (KARENA SUDAH DIHAPUS DI HTML) GUA CABUT DARI SINI:
-            // $("btn-lihat-pohon").addEventListener("click", () => { ... }); <-- INI PENYAKITNYA!
-
             $("btn-close-modal-tambah").addEventListener("click", () => hideModal(modalTambah));
             $("btn-close-modal-edit").addEventListener("click", () => hideModal(modalEdit));
             modalTambah.addEventListener("click", e => { if (e.target === modalTambah) hideModal(modalTambah); });
