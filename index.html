@@ -20,9 +20,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 .node.laki circle{fill:#3b82f6}
 .node.perempuan circle{fill:#ec4899}
 .node text{font-size:12px;font-weight:800;fill:#1e293b;pointer-events:none; user-select:none;}
-.node text.status{font-size:10px;font-weight:600;fill:#059669}
+.node text.status{font-size:10px;font-weight:600;fill:#64748b}
 .link{fill:none;stroke:#cbd5e1;stroke-width:2;pointer-events:none}
-.spouse-link{fill:none;stroke:#ec4899;stroke-width:2;stroke-dasharray:4 4;pointer-events:none}
+.spouse-link{fill:none;stroke:#94a3b8;stroke-width:2;stroke-dasharray:4 4;pointer-events:none}
 #map{height:300px; z-index: 10; width:100%;}
 .leaflet-container { z-index: 10 !important; }
 .modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter: blur(4px);}
@@ -44,8 +44,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
 .action-badge.yellow text { fill: #b45309; font-weight: bold; font-size: 10px; text-anchor: middle; pointer-events: none;}
 .action-badge:hover rect { filter: brightness(0.95); stroke-width: 2px; }
 
-/* Selection Outline */
 .node.selected circle { stroke: #f59e0b; stroke-width: 4px; filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6)); }
+
+/* Custom Scrollbar for Directory */
+.custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
 </style>
 </head>
 
@@ -64,7 +67,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             </div>
             
             <div class="flex-1 max-w-md relative">
-                <input id="input-pencarian" type="search" placeholder="Cari nama keluarga..." class="w-full bg-white py-3 pl-12 pr-5 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                <input id="input-pencarian" type="search" placeholder="Cari nama di silsilah..." class="w-full bg-white py-3 pl-12 pr-5 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400">
                 <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
             </div>
             
@@ -78,11 +81,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
     <main class="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
         <aside class="col-span-1 flex flex-col gap-5">
             <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200">
-                <h2 class="text-sm font-bold mb-4 text-slate-800 uppercase tracking-wider"><i class="fas fa-sliders-h text-emerald-600 mr-2"></i>Kontrol Panel</h2>
+                <h2 class="text-sm font-bold mb-4 text-slate-800 uppercase tracking-wider"><i class="fas fa-sliders-h text-emerald-600 mr-2"></i>Menu Pintar</h2>
                 
                 <div class="flex flex-col gap-3">
+                    <button onclick="window.showModal('modal-direktori')" class="w-full bg-emerald-50 text-emerald-700 border border-emerald-200 p-4 rounded-xl shadow-sm flex items-center gap-3 hover:bg-emerald-100 transition-colors">
+                        <i class="fas fa-address-book text-xl w-6 text-center"></i>
+                        <div class="text-left leading-tight">
+                            <strong class="block text-sm">Direktori Warga</strong>
+                            <span class="block text-[10px] text-emerald-600">Lihat & Filter Daftar Lengkap</span>
+                        </div>
+                    </button>
+
                     <button id="btn-tambah-data-main" type="button" class="w-full bg-purple-600 text-white p-4 rounded-xl shadow-md flex items-center justify-center gap-3 hover:bg-purple-700 transition-colors active:scale-95">
-                        <i class="fas fa-user-plus text-xl"></i>
+                        <i class="fas fa-user-plus text-xl w-6 text-center"></i>
                         <div class="text-left leading-tight">
                             <strong class="block text-sm">Bikin Garis Baru</strong>
                             <span class="block text-[10px] text-purple-200">Mulai dari orang asing</span>
@@ -104,7 +115,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     </button>
                     
                     <button id="btn-reset-all-data-main" type="button" class="w-full bg-red-50 text-red-600 border border-red-200 p-3 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:bg-red-100 transition-colors mt-2 hidden">
-                        <i class="fas fa-trash-alt"></i> <strong class="text-xs">Reset Semua Data</strong>
+                        <i class="fas fa-trash-alt"></i> <strong class="text-xs">Kosongkan Database</strong>
                     </button>
                 </div>
             </div>
@@ -151,14 +162,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl p-3.5 font-bold text-sm shadow-md transition-colors">
                     Masuk <i class="fas fa-arrow-right ml-2"></i>
                 </button>
-                <div class="relative flex py-2 items-center">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink mx-4 text-slate-400 text-[10px] uppercase font-bold">Atau Khusus Developer</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
-                </div>
-                <button type="button" id="btn-login-dev" class="w-full bg-slate-900 hover:bg-black text-white rounded-xl p-3 font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-2">
-                    <i class="fas fa-code text-emerald-400"></i> Login Master Developer
-                </button>
             </form>
 
             <form id="form-auth-biodata" class="space-y-3 hidden">
@@ -169,9 +172,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     <label class="block text-xs font-bold text-slate-700">Nama Lengkap Anda</label>
                     <input type="text" id="bio-nama" required placeholder="Contoh: Tito Yulianto" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-3 gap-2">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700">Jenis Kelamin</label>
+                        <label class="block text-xs font-bold text-slate-700">Gender</label>
                         <select id="bio-gender" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                             <option value="L">Laki-laki</option>
                             <option value="P">Perempuan</option>
@@ -180,9 +183,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     <div>
                         <label class="block text-xs font-bold text-slate-700">Status</label>
                         <select id="bio-status" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                            <option value="Hidup">Masih Hidup</option>
-                            <option value="Meninggal">Sudah Meninggal</option>
+                            <option value="Hidup">Hidup</option>
+                            <option value="Meninggal">Meninggal</option>
                         </select>
+                    </div>
+                    <div>
+                        <!-- BUG FIX: ELEMENT INI SUDAH DITAMBAHKAN KEMBALI AGAR TIDAK ERROR NULL -->
+                        <label class="block text-xs font-bold text-slate-700">Tahun Lahir</label>
+                        <input type="text" id="bio-tahun" placeholder="1985" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-3 gap-2">
@@ -209,6 +217,45 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     Mulai Bikin Silsilah <i class="fas fa-sitemap ml-2"></i>
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL DIREKTORI WARGA (TABEL) -->
+    <div id="modal-direktori" class="modal">
+        <div class="modal-card relative border-t-4 border-blue-500 !max-w-5xl">
+            <button onclick="hideModal('modal-direktori')" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
+            <h3 class="font-bold text-xl mb-4 text-slate-800"><i class="fas fa-address-book text-blue-500 mr-2"></i>Direktori Warga Desa</h3>
+
+            <div class="flex flex-col md:flex-row gap-3 mb-4">
+                <input type="text" id="filter-nama" placeholder="Cari Nama..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+                <select id="filter-dusun" class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500">
+                    <option value="">Semua Dusun</option>
+                    <option value="Manis">Manis</option>
+                    <option value="Pahing">Pahing</option>
+                    <option value="Puhun">Puhun</option>
+                    <option value="Wage">Wage</option>
+                    <option value="Kaliwon">Kaliwon</option>
+                </select>
+                <input type="text" id="filter-rt" placeholder="RT" class="w-20 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+                <input type="text" id="filter-rw" placeholder="RW" class="w-20 bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm">
+            </div>
+
+            <div class="overflow-x-auto custom-scroll border border-slate-200 rounded-xl max-h-[60vh]">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3 font-bold border-b border-slate-200">Nama Lengkap</th>
+                            <th class="p-3 font-bold border-b border-slate-200">L/P</th>
+                            <th class="p-3 font-bold border-b border-slate-200">Status</th>
+                            <th class="p-3 font-bold border-b border-slate-200">Dusun / RT / RW</th>
+                            <th class="p-3 font-bold border-b border-slate-200 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-direktori" class="bg-white">
+                        <!-- Diisi via JS -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -343,7 +390,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         // ==========================================
-        // WINDOW EXPORTS AGAR BISA DI PANGGIL OLEH KLIK HTML/D3
+        // WINDOW EXPORTS AGAR BISA DI PANGGIL OLEH HTML / D3
         // ==========================================
         window.$ = id => document.getElementById(id);
         const $ = window.$;
@@ -419,8 +466,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         let dataGlobal = [];
         let map, layerGroup;
         let nodeSelection = null;
-        let zoomBehavior = null;
         
+        window.svg = null;
+        window.gSVG = null;
+        window.zoomBehavior = null;
+
         let hasCenteredInitially = false; 
         let isDragMode = false;
         let selectedNodeId = null;
@@ -437,9 +487,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         }
 
         window.$("btn-login-dev").addEventListener("click", () => {
-            currentUser = { dbKey: "MASTER_DEV", nama: "Developer Sakaruhun", wa: "DEVELOPER_MASTER_KEY", isDev: true, dusun: "Manis", rt: "00", rw: "00" };
+            currentUser = { dbKey: "MASTER_DEV", nama: "Developer Sakaruhun", wa: "0000", isDev: true, dusun: "Manis", rt: "00", rw: "00" };
             localStorage.setItem("sakaruhun_user", JSON.stringify(currentUser));
-            if(currentUser.isDev) { window.$("btn-reset-all-data-main").classList.remove("hidden"); }
+            if(currentUser.isDev) window.$("btn-reset-all-data-main").classList.remove("hidden");
             checkAuth();
         });
 
@@ -451,7 +501,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             onValue(refWa, (snapshot) => {
                 const all = snapshot.val() || {};
                 let found = null;
-                Object.keys(all).forEach(k => { if(all[k].wa === wa) found = { dbKey: k, ...all[k] }; });
+                // Pastikan yang di-trim sama biar nemu
+                Object.keys(all).forEach(k => { 
+                    if(all[k].wa && String(all[k].wa).trim() === wa) found = { dbKey: k, ...all[k] }; 
+                });
 
                 if(found) {
                     currentUser = found;
@@ -522,6 +575,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     displayNama: displayNama,
                     gender: v.gender === "P" ? "P" : "L",
                     statusHidup: v.statusHidup || "Hidup",
+                    tahun: v.tahun || "",
                     fatherId: v.fatherId || "", 
                     motherId: v.motherId || "",
                     spouseIds: sIds,
@@ -560,6 +614,60 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
         }
 
         // ==========================================
+        // TABEL DIREKTORI (LIST VIEW)
+        // ==========================================
+        window.renderDirektori = function() {
+            const tbody = window.$("tbody-direktori");
+            const fdusun = window.$("filter-dusun").value.toLowerCase();
+            const frt = window.$("filter-rt").value.trim().toLowerCase();
+            const frw = window.$("filter-rw").value.trim().toLowerCase();
+            const fnama = window.$("filter-nama").value.trim().toLowerCase();
+
+            let html = "";
+            dataGlobal.forEach(p => {
+                if (fdusun && p.dusun.toLowerCase() !== fdusun) return;
+                if (frt && p.rt.toLowerCase() !== frt) return;
+                if (frw && p.rw.toLowerCase() !== frw) return;
+                if (fnama && !p.nama.toLowerCase().includes(fnama)) return;
+
+                html += `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                    <td class="p-3"><strong>${escapeHtml(p.displayNama)}</strong></td>
+                    <td class="p-3">${p.gender}</td>
+                    <td class="p-3 text-xs ${p.statusHidup === 'Hidup' ? 'text-emerald-600' : 'text-slate-400'}">${p.statusHidup}</td>
+                    <td class="p-3 text-xs">Ds. ${escapeHtml(p.dusun)} - RT ${escapeHtml(p.rt)}/RW ${escapeHtml(p.rw)}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="window.focusToNode('${p.dbKey}')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-lg text-xs font-bold transition">Lihat di Pohon</button>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        };
+
+        window.focusToNode = function(dbKey) {
+            window.hideModal('modal-direktori');
+            selectedNodeId = dbKey;
+            
+            let focusNode = dataGlobal.find(d => d.dbKey === dbKey);
+            if (focusNode && window.zoomBehavior && window.gSVG) {
+                const container = window.$("tree-container");
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                let tx = focusNode.manualX || 0;
+                let ty = focusNode.manualY || 0;
+                
+                window.svg.transition().duration(800).call(window.zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - tx, height / 2 - ty + 50));
+            }
+            renderTree();
+        };
+
+        // Filter listen
+        ["filter-nama", "filter-dusun", "filter-rt", "filter-rw"].forEach(id => {
+            window.$(id).addEventListener("input", window.renderDirektori);
+            window.$(id).addEventListener("change", window.renderDirektori);
+        });
+
+        // ==========================================
         // D3.JS ENGINE: TREE HIERARKI + NON-JUMPING UI
         // ==========================================
         function renderTree() {
@@ -568,10 +676,26 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
             const width = Math.max(container.clientWidth, 600);
             const height = Math.max(container.clientHeight, 500);
 
-            const svg = d3.select(container).selectAll("svg").data([null]).join("svg")
-                .attr("width", "100%").attr("height", "100%").attr("viewBox", `0 0 ${width} ${height}`);
+            if(!window.svg) {
+                window.svg = d3.select(container).selectAll("svg").data([null]).join("svg")
+                    .attr("width", "100%").attr("height", "100%").attr("viewBox", `0 0 ${width} ${height}`);
+                
+                window.gSVG = window.svg.append("g");
+                window.zoomBehavior = d3.zoom().scaleExtent([.1, 3]).on("zoom", e => window.gSVG.attr("transform", e.transform));
+                window.svg.call(window.zoomBehavior).on("dblclick.zoom", null);
+                
+                window.svg.on("click", () => {
+                    if(selectedNodeId) {
+                        selectedNodeId = null;
+                        d3.selectAll(".geni-badges").style("display", "none");
+                        d3.selectAll(".node").classed("selected", false);
+                    }
+                });
+            }
 
-            svg.selectAll("*").remove();
+            const svg = window.svg;
+            const gSVG = window.gSVG;
+            gSVG.selectAll("*").remove(); // Bersihkan isi grup
             
             if (dataGlobal.length === 0) {
                 window.$("empty-state-msg").classList.remove("hidden");
@@ -581,19 +705,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 window.$("empty-state-msg").classList.add("hidden");
                 window.$("empty-state-msg").classList.remove("flex");
             }
-            
-            // Klik background deselect 
-            svg.on("click", () => {
-                if(selectedNodeId) {
-                    selectedNodeId = null;
-                    d3.selectAll(".geni-badges").style("display", "none");
-                    d3.selectAll(".node").classed("selected", false);
-                }
-            });
-
-            const gSVG = svg.append("g");
-            zoomBehavior = d3.zoom().scaleExtent([.1, 3]).on("zoom", e => gSVG.attr("transform", e.transform));
-            svg.call(zoomBehavior).on("dblclick.zoom", null);
 
             try {
                 let primary = dataGlobal.map(d => ({...d}));
@@ -731,7 +842,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     .on("end", async function(event, d) {
                         d3.select(this).style("pointer-events", "all");
                         await update(ref(db, `${DB_PATH}/${d.data.dbKey}`), { manualX: d.x, manualY: d.y });
-                        renderTree(); 
+                        // Render tree will be called by onValue in Firebase
                     });
 
                 nodeSelection.on("click", function(event, d) {
@@ -739,8 +850,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     event.stopPropagation();
                     
                     const isCurrentlySelected = (selectedNodeId === d.data.dbKey);
-                    
-                    // Sembunyikan semua badge dulu (TIDAK ME-RENDER ULANG D3)
                     d3.selectAll(".geni-badges").style("display", "none");
                     d3.selectAll(".node").classed("selected", false);
                     
@@ -754,8 +863,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 }).call(dragBehavior);
 
                 nodeSelection.append("circle").attr("r", 20);
-                // Nama display (Otomatis ditambah Alm kalau meninggal)
                 nodeSelection.append("text").attr("dy", -32).attr("text-anchor", "middle").text(d => d.data.displayNama.length > 25 ? d.data.displayNama.slice(0, 23) + "…" : d.data.displayNama);
+                
+                let detailText = `Dusun ${d.data.dusun}`;
+                if(d.data.rt) detailText += ` RT ${d.data.rt}`;
+                nodeSelection.append("text").attr("class", "status").attr("dy", 35).attr("text-anchor", "middle").text(d => detailText);
 
                 // =========================================================================
                 // UI GENI-STYLE: BADGE ACTION (DIGAMBAR SEMUA TAPI DISEMBUNYIKAN)
@@ -769,7 +881,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     const noMother = !d.data.motherId || d.data.motherId === "";
                     const hasParent = !noFather || !noMother;
 
-                    // 1. TOMBOL ATAS: TAMBAH AYAH & IBU 
                     if (noFather) {
                         const btnAyah = badgeGroup.append("g").attr("class", "action-badge blue").attr("transform", "translate(-70, -80)")
                             .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_PARENT_FATHER', d.data.dbKey, d.data.nama, 'L'); });
@@ -785,20 +896,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         badgeGroup.append("path").attr("d", "M35,-58 V-20").attr("class", "link"); 
                     }
 
-                    // 2. TOMBOL KANAN: TAMBAH PASANGAN
                     const btnSpouse = badgeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(40, -10)")
                         .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SPOUSE', d.data.dbKey, d.data.nama, d.data.gender === 'L' ? 'P' : 'L'); });
                     btnSpouse.append("rect").attr("width", 75).attr("height", 22);
                     btnSpouse.append("text").attr("x", 37).attr("y", 15).text("+ Pasangan");
 
-                    // 3. TOMBOL BAWAH: TAMBAH ANAK
                     const btnAnak = badgeGroup.append("g").attr("class", "action-badge green").attr("transform", "translate(-35, 50)")
                         .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_CHILD', d.data.dbKey, d.data.nama, null); });
                     btnAnak.append("rect").attr("width", 70).attr("height", 22);
                     btnAnak.append("text").attr("x", 35).attr("y", 15).text("+ Anak");
                     badgeGroup.append("path").attr("d", "M0,20 V50").attr("class", "link");
 
-                    // 4. TOMBOL KIRI KELUARGA: TAMBAH KAKAK/ADIK (Hanya Muncul Jika Sudah Ada Orang Tua)
                     if (hasParent) {
                         const btnKakak = badgeGroup.append("g").attr("class", "action-badge yellow").attr("transform", "translate(-100, -25)")
                             .on("click", (e) => { e.stopPropagation(); window.openTambahModal('ADD_SIBLING_KAKAK', d.data.dbKey, d.data.nama, null); });
@@ -811,7 +919,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         btnAdik.append("text").attr("x", 32.5).attr("y", 14).text("+ Adik");
                     }
 
-                    // 5. TOMBOL KIRI BAWAH: EDIT/KELOLA
                     const btnEdit = badgeGroup.append("g").attr("class", "action-badge gray").attr("transform", "translate(-90, 30)")
                         .on("click", (e) => { e.stopPropagation(); window.bukaModalEditGeni(d.data.dbKey, d.data.nama, d.data.gender, d.data.statusHidup, d.data.dusun, d.data.rt, d.data.rw); });
                     btnEdit.append("rect").attr("width", 50).attr("height", 22);
@@ -822,14 +929,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 if(drawNodes.length > 0 && !hasCenteredInitially) {
                     let focusNode = drawNodes.find(d => d.data.wa === currentUser?.wa || d.data.dbKey === currentUser?.dbKey);
                     if(focusNode) {
-                        svg.transition().duration(800).call(zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - focusNode.x, height / 2 - focusNode.y + 50));
+                        svg.transition().duration(800).call(window.zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - focusNode.x, height / 2 - focusNode.y + 50));
                     } else {
                         const extent = d3.extent(drawNodes, d => d.x);
                         const extentY = d3.extent(drawNodes, d => d.y);
                         let cx = (extent[0] + extent[1]) / 2;
                         let cy = (extentY[0] + extentY[1]) / 2;
                         if(isNaN(cx)) cx = 0; if(isNaN(cy)) cy = 0;
-                        svg.transition().duration(500).call(zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - cx, height / 2 - cy + 20));
+                        svg.transition().duration(500).call(window.zoomBehavior.transform, d3.zoomIdentity.translate(width / 2 - cx, height / 2 - cy + 20));
                     }
                     hasCenteredInitially = true; 
                 }
@@ -866,7 +973,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 let fId = "";
                 let mId = "";
                 
-                // MENGATUR POSISI MANUAL & RELASI SAUDARA
                 if (targetNode) { 
                     if (ctx === 'ADD_PARENT_FATHER' || ctx === 'ADD_PARENT_MOTHER') {
                         initCoord.manualY = (targetNode.manualY || 0) - 180; 
@@ -883,7 +989,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                         if(targetNode.gender === 'L') fId = targetKey; else mId = targetKey;
                     }
                     else if (ctx === 'ADD_SIBLING_KAKAK' || ctx === 'ADD_SIBLING_ADIK') {
-                        // Saudara punya orang tua yang sama
                         fId = targetNode.fatherId || "";
                         mId = targetNode.motherId || "";
                         initCoord.manualY = targetNode.manualY || 0;
@@ -896,7 +1001,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 let newRecord = { nama: name, gender, statusHidup, dusun, rt, rw, fatherId: fId, motherId: mId, spouseIds: [], ...initCoord };
                 await set(newRef, newRecord);
                 
-                // MENYAMBUNGKAN RELASI
                 if (ctx === 'ADD_PARENT_FATHER') {
                     await update(ref(db, `${DB_PATH}/${targetKey}`), { fatherId: newRef.key });
                 } else if (ctx === 'ADD_PARENT_MOTHER') {
@@ -974,8 +1078,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                 const q = window.$("input-pencarian").value.trim().toLocaleLowerCase("id");
                 if (!nodeSelection) return;
                 nodeSelection.select("circle")
-                    .attr("stroke", d => q && d.data.nama.toLocaleLowerCase("id").includes(q) ? "#f59e0b" : (d.data.dbKey === selectedNodeId ? "#f59e0b" : "#fff"))
-                    .attr("stroke-width", d => q && d.data.nama.toLocaleLowerCase("id").includes(q) ? 5 : (d.data.dbKey === selectedNodeId ? 4 : 3));
+                    .attr("stroke", d => q && d.nama.toLocaleLowerCase("id").includes(q) ? "#f59e0b" : (d.dbKey === selectedNodeId ? "#f59e0b" : "#fff"))
+                    .attr("stroke-width", d => q && d.nama.toLocaleLowerCase("id").includes(q) ? 5 : (d.dbKey === selectedNodeId ? 4 : 3));
             });
 
             window.addEventListener("resize", () => { if (map) setTimeout(() => map.invalidateSize(), 100); });
@@ -989,12 +1093,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f1f5f9; overflow-x: 
                     if (!raw) {
                         dataGlobal = []; dataMap = {};
                         window.$("stats-warga").textContent = "0 Warga";
-                        renderTree(); drawMap(); return;
+                        renderTree(); drawMap(); window.renderDirektori(); return;
                     }
                     dataMap = normalizeData(raw);
                     dataGlobal = Object.values(dataMap);
                     window.$("stats-warga").textContent = `${dataGlobal.length} Warga Terdaftar`;
-                    renderTree(); drawMap();
+                    renderTree(); drawMap(); window.renderDirektori();
                 } catch (err) { window.notify("Data terbaca tetapi gagal ditampilkan: " + err.message); }
             });
         };
