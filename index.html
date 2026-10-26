@@ -61,7 +61,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 </div>
             </button>
 
-            <button id="btn-tambah-data" type="button" class="bg-purple-600 text-white p-4 rounded-2xl shadow-md border border-purple-500 flex flex-col items-center gap-3 hover:bg-purple-700 transition-colors active:scale-95">
+            <button id="btn-tambah-data-main" type="button" class="bg-purple-600 text-white p-4 rounded-2xl shadow-md border border-purple-500 flex flex-col items-center gap-3 hover:bg-purple-700 transition-colors active:scale-95">
                 <i class="fas fa-user-plus text-2xl"></i>
                 <div class="text-center">
                     <strong class="block text-xs">Tambah Data</strong>
@@ -76,7 +76,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             </h2>
             <div id="tree-container" class="rounded-2xl border border-slate-200 bg-slate-50"></div>
             <p class="text-[10px] text-center text-emerald-600 mt-3 font-bold">
-                <i class="fas fa-hand-pointer mr-1"></i> Sentuh nama untuk Edit/Hapus, atau sentuh (+) di tengah garis untuk tambah anak.
+                <i class="fas fa-hand-pointer mr-1"></i> Sentuh nama untuk kelola, sentuh (+) di tengah garis untuk tambah anak.
             </p>
         </section>
 
@@ -88,57 +88,62 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
         </section>
     </main>
 
-    <!-- MODAL TAMBAH DATA -->
+    <!-- MODAL TAMBAH DATA (KONTEKSTUAL) -->
     <div id="modal-tambah" class="modal">
-        <div class="modal-card relative">
-            <button id="btn-close-modal" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
-            <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-user-plus text-emerald-600 mr-2"></i>Tambah Individu</h3>
+        <div class="modal-card relative border-t-4 border-emerald-500">
+            <button id="btn-close-modal-tambah" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
+            <h3 id="modal-tambah-title" class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-user-plus text-emerald-600 mr-2"></i>Tambah Individu</h3>
 
             <form id="form-tambah" class="space-y-4">
+                <!-- Data Konteks Tersembunyi (Dikontrol JS) -->
+                <input type="hidden" id="tambah-context" value="MAIN">
+                <input type="hidden" id="tambah-target" value="">
+
                 <div>
-                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap Orang Ini</label>
-                    <input id="input-nama" required placeholder="Contoh: Pangeran Kertadiningrat" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap</label>
+                    <input id="input-nama" required placeholder="Ketik nama..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-600">Jenis Kelamin</label>
                     <select id="select-gender" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="L">Laki-laki (Ayah/Suami)</option>
-                        <option value="P">Perempuan (Ibu/Istri)</option>
+                        <option value="L">Laki-laki</option>
+                        <option value="P">Perempuan</option>
                     </select>
                 </div>
 
-                <!-- Bagian ini akan disembunyikan otomatis jika menambah dari tombol (+) -->
-                <div id="wrapper-parent-tambah">
-                    <label class="block text-xs font-bold text-slate-600">Orang Tua Kandung dari Orang Ini</label>
-                    <select id="select-parent" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
+                <!-- Bagian ini akan DISEMBUNYIKAN OTOMATIS jika context = Tambah Anak / Tambah Suami -->
+                <div id="wrapper-parent-tambah" class="hidden">
+                    <label class="block text-xs font-bold text-slate-600">Orang Tua Kandung (Opsional)</label>
+                    <select id="select-parent" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
                     <input id="input-parent-manual" placeholder="Ketik nama orang tuanya..." class="hidden w-full bg-white border border-emerald-300 rounded-xl p-3 mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Pasangan (Suami/Istri) Orang Ini</label>
+                <div id="wrapper-spouse-tambah" class="hidden">
+                    <label class="block text-xs font-bold text-slate-600">Pasangan (Opsional)</label>
                     <select id="select-spouse" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
                     <input id="input-spouse-manual" placeholder="Ketik nama pasangannya..." class="hidden w-full bg-white border border-emerald-300 rounded-xl p-3 mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl p-3 font-bold text-sm transition-colors mt-2 shadow-md">
-                    Simpan Individu
+                    Simpan Data
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL EDIT DATA -->
+    <!-- MODAL KELOLA (EDIT) DATA -->
     <div id="modal-edit" class="modal">
         <div class="modal-card relative border-t-4 border-amber-500">
-            <button id="btn-close-edit" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
+            <button id="btn-close-modal-edit" type="button" class="absolute top-4 right-5 text-slate-400 hover:text-red-500 text-2xl">&times;</button>
             <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fas fa-cog text-amber-500 mr-2"></i>Kelola Individu</h3>
 
+            <!-- Form Edit HANYA Berisi Nama & Gender -->
             <form id="form-edit" class="space-y-4">
                 <input type="hidden" id="edit-dbkey">
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap Orang Ini</label>
+                    <label class="block text-xs font-bold text-slate-600">Nama Lengkap</label>
                     <input id="edit-nama" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
                 </div>
 
@@ -150,23 +155,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     </select>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Orang Tua Kandung dari Orang Ini</label>
-                    <select id="edit-parent" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"></select>
-                    <input id="edit-parent-manual" placeholder="Ketik nama orang tuanya..." class="hidden w-full bg-white border border-amber-300 rounded-xl p-3 mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-600">Pasangan (Suami/Istri) Orang Ini</label>
-                    <select id="edit-spouse" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"></select>
-                    <input id="edit-spouse-manual" placeholder="Ketik nama pasangannya..." class="hidden w-full bg-white border border-amber-300 rounded-xl p-3 mt-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
-                </div>
-
                 <div class="flex gap-2 pt-2">
                     <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl p-3 font-bold text-sm shadow-md transition-colors">
                         <i class="fas fa-save mr-1"></i> Update Data
                     </button>
-                    <button id="btn-hapus-data" type="button" class="bg-red-100 hover:bg-red-200 text-red-600 rounded-xl px-4 transition-colors" title="Hapus Data">
+                    <button id="btn-hapus-data" type="button" class="bg-red-100 hover:bg-red-200 text-red-600 rounded-xl px-4 transition-colors" title="Hapus Individu Ini">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>
@@ -174,9 +167,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
 
             <hr class="my-5 border-slate-100">
 
-            <button id="btn-tambah-cabang" type="button" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl p-3 font-bold text-xs transition-colors">
-                <i class="fas fa-code-branch mr-2"></i>Tambah Anak Dari Orang Ini
-            </button>
+            <!-- Tombol Tambah Suami/Anak Cepat -->
+            <div class="flex flex-col gap-3">
+                <button id="btn-tambah-pasangan" type="button" class="w-full bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 rounded-xl p-3 font-bold text-sm shadow-sm transition-colors text-left pl-4">
+                    <i class="fas fa-heart w-6 text-center"></i> Tambah Suami / Istri Baru
+                </button>
+                <button id="btn-tambah-cabang" type="button" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl p-3 font-bold text-sm shadow-sm transition-colors text-left pl-4">
+                    <i class="fas fa-child w-6 text-center"></i> Tambah Anak
+                </button>
+            </div>
         </div>
     </div>
 
@@ -223,6 +222,41 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             input.classList.toggle("hidden", !active);
             input.required = active;
             if (!active) input.value = "";
+        }
+
+        // FUNGSI KHUSUS UNTUK MEMBUKA MODAL TAMBAH SECARA KONTEKSTUAL
+        function openTambahModal(context, targetKey, targetName, targetGender) {
+            formTambah.reset();
+            $("tambah-context").value = context;
+            $("tambah-target").value = targetKey || "";
+            
+            const wrapperParent = $("wrapper-parent-tambah");
+            const wrapperSpouse = $("wrapper-spouse-tambah");
+            const title = $("modal-tambah-title");
+
+            if (context === 'ADD_CHILD') {
+                title.innerHTML = `<i class="fas fa-child text-emerald-600 mr-2"></i>Tambah Anak dari ${escapeHtml(targetName)}`;
+                // Sembunyikan field Orang Tua & Pasangan biar UX gampang
+                wrapperParent.classList.add('hidden');
+                wrapperSpouse.classList.add('hidden');
+            } else if (context === 'ADD_SPOUSE') {
+                title.innerHTML = `<i class="fas fa-heart text-pink-500 mr-2"></i>Tambah Pasangan untuk ${escapeHtml(targetName)}`;
+                wrapperParent.classList.add('hidden');
+                wrapperSpouse.classList.add('hidden');
+                // Otomatis set gender lawan jenis
+                $("select-gender").value = targetGender === 'L' ? 'P' : 'L';
+            } else {
+                title.innerHTML = `<i class="fas fa-user-plus text-emerald-600 mr-2"></i>Tambah Individu`;
+                wrapperParent.classList.remove('hidden');
+                wrapperSpouse.classList.remove('hidden');
+                fillSelect($("select-parent"), "parent", "akar_utama");
+                fillSelect($("select-spouse"), "spouse", "");
+                syncManual($("select-parent"), $("input-parent-manual"));
+                syncManual($("select-spouse"), $("input-spouse-manual"));
+            }
+            
+            showModal(modalTambah);
+            setTimeout(() => $("input-nama").focus(), 100);
         }
 
         function fillSelect(sel, kind, selected = "") {
@@ -391,7 +425,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 g.selectAll(".spouse-link").data(spousePositions).join("path").attr("class", "spouse-link")
                     .attr("d", d => `M${d.source.x + 17},${d.source.y} L${d.x - 17},${d.y}`);
 
-                // TOMBOL PLUS DI TENGAH PASANGAN (TAMBAH ANAK DARI PASANGAN INI)
+                // TOMBOL PLUS DI TENGAH PASANGAN 
                 const addChildBtn = g.selectAll(".add-child-btn").data(spousePositions).join("g")
                     .attr("class", "add-child-btn")
                     .attr("transform", d => `translate(${(d.source.x + d.x) / 2}, ${d.source.y})`)
@@ -400,20 +434,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                     .on("click", (event, d) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        
-                        formTambah.reset();
-                        syncManual($("select-parent"), $("input-parent-manual"));
-                        syncManual($("select-spouse"), $("input-spouse-manual"));
-                        
-                        // Isi Orang Tua otomatis dari node sumber pasangan
-                        fillSelect($("select-parent"), "parent", d.source.data.dbKey);
-                        fillSelect($("select-spouse"), "spouse", "");
-                        
-                        // LOGIKA BARU: Sembunyikan field orang tua kandung karena sudah pasti
-                        $("wrapper-parent-tambah").classList.add("hidden");
-                        
-                        showModal(modalTambah);
-                        $("input-nama").focus();
+                        // Buka form Add Child, ambil ID bapak/ibu sbg source
+                        openTambahModal('ADD_CHILD', d.source.data.dbKey, d.source.data.name, null);
                     });
 
                 addChildBtn.append("circle")
@@ -468,10 +490,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             $("edit-dbkey").value = person.dbKey;
             $("edit-nama").value = person.name;
             $("edit-gender").value = person.gender;
-            fillSelect($("edit-parent"), "parent", person.parentId || "akar_utama");
-            fillSelect($("edit-spouse"), "spouse", person.spouseId || "");
-            syncManual($("edit-parent"), $("edit-parent-manual"));
-            syncManual($("edit-spouse"), $("edit-spouse-manual"));
             showModal(modalEdit);
         }
 
@@ -495,6 +513,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
             return value || "";
         }
 
+        // SAVE DATA BARU
         async function saveNew(e) {
             e.preventDefault();
             const button = formTambah.querySelector('button[type="submit"]');
@@ -503,25 +522,44 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 const name = $("input-nama").value.trim();
                 const gender = $("select-gender").value;
                 if (!name) throw new Error("Nama wajib diisi.");
-                let parentId = $("select-parent").value;
-                if (parentId === "manual") parentId = await resolvePerson(parentId, $("input-parent-manual"), gender);
-                if (parentId === "unknown" || !parentId) parentId = "akar_utama";
-                let spouseId = $("select-spouse").value;
-                if (spouseId === "manual") spouseId = await resolvePerson(spouseId, $("input-spouse-manual"), gender);
-                if (spouseId === "unknown") spouseId = "";
+                
+                const ctx = $("tambah-context").value;
+                const targetKey = $("tambah-target").value;
+                
+                let parentId = "akar_utama";
+                let spouseId = "";
+
+                if (ctx === 'ADD_CHILD') {
+                    // Otomatis assign parent tanpa tanya user
+                    parentId = targetKey;
+                } else if (ctx === 'ADD_SPOUSE') {
+                    // Otomatis assign pasangan tanpa tanya user
+                    spouseId = targetKey;
+                } else {
+                    // MAIN ADD - Baca dari dropdown
+                    parentId = $("select-parent").value;
+                    if (parentId === "manual") parentId = await resolvePerson(parentId, $("input-parent-manual"), gender);
+                    if (!parentId || parentId === "unknown") parentId = "akar_utama";
+                    
+                    spouseId = $("select-spouse").value;
+                    if (spouseId === "manual") spouseId = await resolvePerson(spouseId, $("input-spouse-manual"), gender);
+                    if (spouseId === "unknown") spouseId = "";
+                }
 
                 const newRef = push(wargaRef);
                 await set(newRef, { name, gender, parentId, spouseId: spouseId || "", ...randomCoords() });
-                if (spouseId && dataMap[spouseId]) await update(ref(db, `${DB_PATH}/${spouseId}`), { spouseId: newRef.key });
+                
+                // Two-way binding for spouse
+                if (spouseId && dataMap[spouseId]) {
+                    await update(ref(db, `${DB_PATH}/${spouseId}`), { spouseId: newRef.key });
+                }
                 
                 hideModal(modalTambah);
-                formTambah.reset();
-                syncManual($("select-parent"), $("input-parent-manual"));
-                syncManual($("select-spouse"), $("input-spouse-manual"));
             } catch (err) { notify("Gagal menyimpan: " + err.message); } 
             finally { button.disabled = false; }
         }
 
+        // UPDATE DATA (HANYA INFO DASAR)
         async function saveEdit(e) {
             e.preventDefault();
             const button = formEdit.querySelector('button[type="submit"]');
@@ -531,27 +569,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 const name = $("edit-nama").value.trim();
                 const gender = $("edit-gender").value;
                 if (!key || !name) throw new Error("Nama wajib diisi.");
-                
-                let parentId = $("edit-parent").value;
-                if (parentId === "manual") parentId = await resolvePerson(parentId, $("edit-parent-manual"), gender);
-                if (parentId === "unknown" || !parentId) parentId = "akar_utama";
-                if (key === "akar_utama") parentId = ""; 
-                else if (parentId === key) throw new Error("Orang tua tidak boleh dirinya sendiri.");
 
-                let spouseId = $("edit-spouse").value;
-                if (spouseId === "manual") spouseId = await resolvePerson(spouseId, $("edit-spouse-manual"), gender);
-                if (spouseId === "unknown") spouseId = "";
-                if (spouseId === key) throw new Error("Tidak dapat menikah dengan diri sendiri.");
-
-                const old = dataMap[key];
-                await update(ref(db, `${DB_PATH}/${key}`), { name, gender, parentId, spouseId: spouseId || "" });
-                
-                if (old?.spouseId && old.spouseId !== spouseId && dataMap[old.spouseId]) {
-                    await update(ref(db, `${DB_PATH}/${old.spouseId}`), { spouseId: "" });
-                }
-                if (spouseId && dataMap[spouseId]) {
-                    await update(ref(db, `${DB_PATH}/${spouseId}`), { spouseId: key });
-                }
+                await update(ref(db, `${DB_PATH}/${key}`), { name, gender });
                 hideModal(modalEdit);
             } catch (err) { notify("Gagal memperbarui: " + err.message); } 
             finally { button.disabled = false; }
@@ -574,14 +593,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
         }
 
         function wireEvents() {
-            $("btn-tambah-data").addEventListener("click", () => {
-                formTambah.reset();
-                $("wrapper-parent-tambah").classList.remove("hidden"); // Tampilkan lagi
-                fillSelect($("select-parent"), "parent", "akar_utama");
-                fillSelect($("select-spouse"), "spouse", "");
-                syncManual($("select-parent"), $("input-parent-manual"));
-                syncManual($("select-spouse"), $("input-spouse-manual"));
-                showModal(modalTambah);
+            $("btn-tambah-data-main").addEventListener("click", () => {
+                openTambahModal('MAIN', '', '', null);
             });
 
             $("btn-lihat-pohon").addEventListener("click", () => {
@@ -589,29 +602,32 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                 if (treeReady) renderTree();
             });
 
-            $("btn-close-modal").addEventListener("click", () => hideModal(modalTambah));
-            $("btn-close-edit").addEventListener("click", () => hideModal(modalEdit));
+            $("btn-close-modal-tambah").addEventListener("click", () => hideModal(modalTambah));
+            $("btn-close-modal-edit").addEventListener("click", () => hideModal(modalEdit));
             modalTambah.addEventListener("click", e => { if (e.target === modalTambah) hideModal(modalTambah); });
             modalEdit.addEventListener("click", e => { if (e.target === modalEdit) hideModal(modalEdit); });
+            
             $("select-parent").addEventListener("change", () => syncManual($("select-parent"), $("input-parent-manual")));
             $("select-spouse").addEventListener("change", () => syncManual($("select-spouse"), $("input-spouse-manual")));
-            $("edit-parent").addEventListener("change", () => syncManual($("edit-parent"), $("edit-parent-manual")));
-            $("edit-spouse").addEventListener("change", () => syncManual($("edit-spouse"), $("edit-spouse-manual")));
+            
             formTambah.addEventListener("submit", saveNew);
             formEdit.addEventListener("submit", saveEdit);
             $("btn-hapus-data").addEventListener("click", deletePerson);
 
+            // BUTTONS DI MODAL EDIT
+            $("btn-tambah-pasangan").addEventListener("click", () => {
+                const key = $("edit-dbkey").value;
+                const name = $("edit-nama").value;
+                const gender = $("edit-gender").value;
+                hideModal(modalEdit);
+                openTambahModal('ADD_SPOUSE', key, name, gender);
+            });
+
             $("btn-tambah-cabang").addEventListener("click", () => {
                 const key = $("edit-dbkey").value;
+                const name = $("edit-nama").value;
                 hideModal(modalEdit);
-                formTambah.reset();
-                $("wrapper-parent-tambah").classList.add("hidden"); // Sembunyikan karena sudah pasti
-                fillSelect($("select-parent"), "parent", key);
-                fillSelect($("select-spouse"), "spouse", "");
-                syncManual($("select-parent"), $("input-parent-manual"));
-                syncManual($("select-spouse"), $("input-spouse-manual"));
-                showModal(modalTambah);
-                $("input-nama").focus();
+                openTambahModal('ADD_CHILD', key, name, null);
             });
 
             $("input-pencarian").addEventListener("input", refreshSearch);
@@ -632,9 +648,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc}
                         dataMap = normalizeData(snapshot.val());
                         dataGlobal = Object.values(dataMap).map(p => ({ ...p, status: statusFor(p.dbKey) }));
                         $("stats-warga").textContent = `${dataGlobal.length} Warga`;
-                        fillSelect($("select-parent"), "parent", $("select-parent").value);
-                        fillSelect($("select-spouse"), "spouse", $("select-spouse").value);
-                        if (!$("edit-dbkey").value) { fillSelect($("edit-parent"), "parent"); fillSelect($("edit-spouse"), "spouse"); }
+                        
                         renderTree();
                         drawMap();
                         refreshSearch();
